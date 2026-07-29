@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AI Caretaker — App Keluarga (mockup)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="stage">
+    <!-- Semua UI hidup di dalam bingkai ini. Di layar lebar, bingkai tetap
+         seukuran HP dan sisi kiri-kanan dibiarkan kosong. -->
+    <div class="device" id="device">
+      <div class="statusbar" aria-hidden="true">
+        <span id="clock">09.41</span>
+        <span class="statusbar-right">
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+          <svg width="16" height="11" viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 3.6a10 10 0 0 1 14 0M3.6 6.3a6.3 6.3 0 0 1 8.8 0"/><circle cx="8" cy="9.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.6" y="0.6" width="21" height="10.8" rx="3" stroke="currentColor" stroke-opacity="0.4"/><rect x="2.2" y="2.2" width="15" height="7.6" rx="1.8" fill="currentColor"/><path d="M23.2 4.2v3.6a2 2 0 0 0 0-3.6Z" fill="currentColor" fill-opacity="0.45"/></svg>
+        </span>
+      </div>
+
+      <!-- diisi oleh app.js -->
+      <main id="root"></main>
+    </div>
+
+    <p class="stage-caption">AI Caretaker · mockup app keluarga · data contoh</p>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

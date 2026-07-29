@@ -1,0 +1,10 @@
+# Kredensial — jangan pernah masuk git
+.env
+.env.local
+*firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist
+
+node_modules/
+*.log
+.DS_Store

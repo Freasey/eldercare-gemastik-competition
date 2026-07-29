@@ -1,0 +1,246 @@
+# AI Caretaker — Development Plan
+
+> Dokumen acuan development. Update file ini setiap ada keputusan besar baru
+> (arsitektur, flow, stack) supaya tetap jadi single source of truth.
+> Kredensial environment ada terpisah di [`.env`](./.env) — **jangan taruh
+> secret di file ini**.
+
+Status (per 2026-07-29): desain selesai, kredensial dasar terkumpul.
+Implementasi dimulai — lihat §7.
+
+---
+
+## 1. Konsep Proyek
+
+AI Caretaker — aplikasi mobile untuk lansia di Indonesia, dibedakan lewat
+desain **voice-first**: lansia bisa memakai app sepenuhnya lewat suara
+(dengar, ngerti, jawab) tanpa perlu baca/ketik/navigasi UI sentuh. Kemungkinan
+besar untuk submission kompetisi **GEMASTIK**.
+
+Ekosistem dua sisi:
+- **App Lansia** — voice-first, UI minimal, reminder proaktif, deteksi
+  darurat, sinyal penurunan kognitif dari pola bicara.
+- **App/Portal Caregiver** — UI konvensional, buat setup awal, terima
+  ringkasan, dan alert darurat.
+
+**Kenapa voice-first**: lansia sering kesulitan dengan UI sentuh kecil dan
+app padat teks — ini diferensiator utama dibanding app kesehatan lansia lain.
+
+---
+
+## 2. Flow Inti
+
+### 2.1 Onboarding & Setup
+Dilakukan oleh **caregiver/keluarga**, bukan lansia:
+1. Registrasi (Google Sign-In)
+2. Setup jadwal obat, kontak darurat, preferensi agama (pengingat sholat)
+3. Pairing device lansia
+
+### 2.2 One-Button Assistant (interaksi inti sisi lansia)
+Home screen lansia = **satu tombol besar**. Ditekan → buka full-screen page
+ala Siri (indikator animasi listening/thinking/speaking, live caption
+sebagai fallback aksesibilitas, tanpa menu/teks berat).
+
+**Flow:**
+1. Tombol ditekan (nanti: bisa juga wake-word) → assistant page terbuka.
+2. Sebelum bicara, **context-check engine** cek diam-diam: waktu vs jadwal
+   (obat/tidur/sholat/aktivitas), reminder overdue/belum dikonfirmasi, waktu
+   sejak mood check-in terakhir, red flag terbaru (streak lupa obat, tren
+   mood menurun).
+3. App bicara duluan berdasar **prioritas** (bukan "ada yang bisa dibantu?"
+   generik):
+   `reminder overdue/urgent > reminder due sekarang > mood check-in overdue > sapaan umum`
+4. Percakapan lanjut turn-by-turn; pertanyaan proaktif dibatasi ~1-2 per sesi
+   biar nggak berasa interogasi — kalau lansia mau lanjut ngobrol, biarkan
+   bebas.
+5. Sesi berakhir: silence timeout, closing phrase, atau tombol ditekan lagi.
+6. Hasil (konfirmasi obat, sinyal mood/kognitif) → masuk ke ringkasan
+   caregiver (2.3).
+
+**Prinsip desain**: context-check engine yang sama dipakai baik untuk trigger
+manual (tombol) maupun reminder otomatis (app-initiated tanpa tekan tombol)
+— dianggap satu sistem, bukan dua. Aturan prioritas di atas adalah spec untuk
+scheduler/reminder logic.
+
+### 2.3 Daily Loop & Data ke Caregiver
+- App proaktif *speak* reminder terjadwal, tidak menunggu lansia buka app.
+- Percakapan bebas kapan saja ditangkap pasif sebagai sinyal mood/cognitive
+  decline.
+- **Ringkasan otomatis** (harian/mingguan) ke caregiver: kepatuhan obat,
+  mood, aktivitas, tren kognitif.
+- Caregiver bisa edit jadwal → sync balik ke app lansia tanpa lansia perlu
+  ngapa-ngapain.
+
+### 2.4 Emergency Flow
+- **Trigger**: kata kunci ("tolong"), deteksi jatuh, atau reminder kritis
+  berulang diabaikan.
+- App **konfirmasi dulu ke lansia** (hindari false positive) sebelum eskalasi.
+- **Eskalasi ke caregiver**: push notification (Expo) dulu. Kalau caregiver
+  offline/tidak merespons → **in-app messaging + in-app voice call**
+  (gaya WhatsApp, bukan telepon PSTN sungguhan) via **LiveKit**.
+  *(Ini menggantikan rencana awal SMS/telepon lewat Twilio — diputuskan
+  2026-07-29 supaya seluruh jalur darurat tetap in-app.)*
+
+### 2.5 Privacy & Consent
+First-class design concern, bukan sekadar checkbox compliance — potensi
+diferensiator penilaian lomba. Always-listening + share data kesehatan/
+percakapan ke keluarga perlu explicit consent control dari lansia.
+
+---
+
+## 3. Smart Glasses (Deferred)
+
+Ide awal: pairing dengan smart glasses (kamera+mic+speaker). **Ditunda ke
+fase lanjut** — MVP fokus phone-only dulu (no-glasses-first).
+
+Ringkasan riset (re-verify sebelum dipakai, landscape bergerak cepat):
+- **Meta Ray-Ban/Ray-Ban Display** — form factor paling natural, tapi publish
+  masih partner-gated per pertengahan 2026, risiko deadline kompetisi.
+- **Rokid** — Android-based, terjangkau, paling realistis buat demo fisik
+  dengan budget mahasiswa.
+- **Vuzix** — SDK paling matang/terbuka, tapi form factor enterprise, kurang
+  cocok secara sosial untuk lansia.
+- [xg-glass-sdk](https://github.com/hkust-spark/xg-glass-sdk) — unified API
+  lintas vendor + simulator, kandidat abstraction layer kalau nanti
+  diimplementasi.
+
+**Prinsip arsitektur**: glasses harus jadi enhancement layer opsional, bukan
+dependency keras — pengalaman inti harus tetap 100% jalan lewat mic/speaker
+HP saja.
+
+---
+
+## 4. Tech Stack (keputusan berlaku, 2026-07-29)
+
+| Layer | Pilihan | Catatan |
+|---|---|---|
+| Mobile app | **React Native (Expo)** | Satu codebase untuk mode Lansia & Caregiver. Menggantikan rencana Flutter awal. |
+| Backend | **Express.js** (manual, no BaaS) | Semua logic ditulis manual — tanpa auto-CRUD/rules ala Firestore. |
+| Hosting backend | **Back4app** (free container hosting) | Deploy dari GitHub repo, tanpa kartu kredit. Menggantikan rencana Vercel. |
+| Database | **NeonDB** (serverless Postgres, free tier) | Menggantikan rencana Firestore. |
+| Auth | **Manual JWT + Google Sign-In** | Lihat detail alur di §4.1. Tanpa Firebase Auth. |
+| LLM | **Groq free tier** | `llama-3.3-70b-versatile` untuk percakapan sehari-hari; `compound` dipakai terbatas (query real-time seperti cuaca, capped 250 req/hari). |
+| Voice I/O | **Native OS STT/TTS** | Default, gratis, offline-capable, dukung Bahasa Indonesia. Groq Whisper sbg fallback kalau device STT gagal. Groq TTS (Orpheus) di-ruled-out — no Indonesian support. |
+| Push notification | **Expo Push Notifications** | Perlu Firebase project terpisah untuk FCM V1 (lihat §4.2 — wajib sejak Google deprecate legacy FCM API pertengahan 2024). |
+| Emergency call/chat | **LiveKit** | In-app voice call + messaging, menggantikan rencana Twilio SMS/PSTN. |
+
+**Rule vs AI split**: logic prioritas jadwal/reminder = plain rule-based code,
+BUKAN LLM call. LLM cuma dipanggil untuk pemahaman percakapan bebas — hemat
+quota free-tier dan bikin behavior reminder obat predictable.
+
+**Filter tiap keputusan stack**: (1) harus jalan di free tier asli (budget
+mahasiswa GEMASTIK), (2) harus jalan di HP Android low/mid-range, bukan cuma
+flagship.
+
+### 4.1 Alur Auth (Google Sign-In → JWT)
+1. RN app pakai Google Sign-In SDK (`@react-native-google-signin/google-signin`)
+   → dapat Google **ID token**.
+2. RN kirim ID token ke backend Express.
+3. Backend verifikasi server-side pakai `google-auth-library` (cek `aud`
+   cocok web client ID, `iss`, expiry).
+4. Backend lookup/create user di NeonDB, keyed di `google_id` (klaim `sub`),
+   simpan email/name/avatar/role.
+5. Backend terbitkan **JWT session token sendiri**; RN simpan (secure
+   storage), kirim di request selanjutnya. Google ID token tidak dipakai
+   sebagai session (expire ~1 jam).
+
+Butuh 3 OAuth client ID terpisah di Google Cloud Console:
+- **Web** → dipakai sebagai `webClientId` di SDK RN (dipakai juga di
+  Android/iOS) DAN sebagai audience yang dicek backend.
+- **Android** → perlu package name + SHA-1 fingerprint (ambil dari
+  `eas credentials` kalau build via EAS).
+- **iOS** → perlu bundle ID.
+
+`GOOGLE_CLIENT_SECRET` tidak dipakai (ID-token verification, bukan
+authorization-code flow).
+
+Minimal `users` table: `id, google_id, email, name, avatar_url, role (lansia/keluarga), created_at`.
+
+### 4.2 Push Notification — yang masih kurang
+Expo Push butuh **Firebase project terpisah** (Cloud Messaging saja, tanpa
+fitur Firebase lain) karena migrasi wajib ke FCM V1:
+1. Buat Firebase project, daftarkan Android app (package name harus sama
+   dengan Google OAuth Android client).
+2. Download `google-services.json` → taruh di `android/app/` (perlu ada
+   walau build native lokal).
+3. Generate Service Account key (JSON) dari Firebase project settings →
+   upload ke Expo via `eas credentials` (Android → Push Notifications →
+   FCM V1 service account key) — tetap perlu walau build lokal, karena
+   kredensial ini disimpan di sisi Expo push service.
+
+Build Android dilakukan lokal (laptop/PC user sendiri), bukan lewat Claude.
+
+---
+
+## 5. Status Kredensial (update 2026-07-29)
+
+Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
+
+| Item | Status |
+|---|---|
+| NeonDB `DATABASE_URL` | ✅ Diterima |
+| Google OAuth — Web client ID + secret | ✅ Diterima |
+| Google OAuth — Android client ID | ⏳ Belum (butuh SHA-1 — baru bisa diambil setelah project RN/keystore ada) |
+| Google OAuth — iOS client ID | ⏳ Belum — **tidak diperlukan untuk fase ini**, scope Android-only (lihat §6) |
+| Groq API key | ✅ Diterima |
+| JWT secret | ✅ Digenerate otomatis |
+| Expo project ID | ✅ Diterima |
+| Firebase `google-services.json` | ✅ Ada di root (`project_id: competition-project-f87e2`, package `com.eldercare.app`) — dikonfirmasi user ini memang project untuk AI Caretaker |
+| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`) |
+| LiveKit (URL, API key, secret) | ✅ Diterima |
+| Back4app (App ID, API key, Master key) | ✅ Terisi di `.env`, tapi **backend belum benar-benar di-deploy** — masih dijalankan lokal (lihat §6) |
+
+---
+
+## 6. Open Items / Next Steps
+
+- [ ] Port mockup HTML keluarga ke React Native (Expo) — **sedang dikerjakan**.
+- [ ] Bangun app sisi lansia (voice-first) — ditunda atas instruksi user.
+- [ ] Buat Google OAuth client ID Android (butuh SHA-1, ambil dari
+      `eas credentials` atau debug keystore setelah project RN dibuat).
+- [ ] Deploy backend ke Back4app (`ALLOW_DEV_LOGIN` wajib dimatikan dulu).
+- [ ] Putuskan: LiveKit Cloud (free tier) vs self-host — saat ini asumsi
+      LiveKit Cloud (URL yang diberikan mengarah ke `*.livekit.cloud`).
+
+**Keputusan dev-environment (2026-07-29):**
+- Platform scope fase ini: **Android-only** (sesuai filter budget/HP
+  low-mid-range di §4). iOS ditunda, client ID iOS tidak dikejar dulu.
+- Backend selama development RN: tetap **lokal** (`npm run dev` + koneksi
+  LAN/tunnel dari device), belum deploy ke Back4app. Base URL app akan
+  dibuat configurable supaya gampang pindah ke URL Back4app nanti.
+- Auth di RN app: mulai dari `dev-login` (sudah didukung backend) supaya
+  tidak diblok Google Android client ID; ganti ke Google Sign-In asli
+  begitu SHA-1/client ID Android tersedia.
+
+---
+
+## 7. Progres Implementasi (2026-07-29)
+
+| Bagian | Status |
+|---|---|
+| [`backend/`](./backend) — Express API | ✅ Jalan, skema & data contoh sudah masuk NeonDB |
+| [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, siap dinilai |
+| App React Native (keluarga) | ⏳ Belum — nunggu mockup disetujui |
+| App lansia (voice-first) | ⏳ Ditunda atas instruksi user |
+
+**Backend** sudah mengimplementasi: auth (Google ID token → JWT + dev-login),
+CRUD lansia/jadwal/kontak, materialisasi reminder + sweep missed, context
+engine rule-based, endpoint assistant (terhubung ke Groq), alur darurat
+lengkap dengan token room LiveKit, Expo push, dan ringkasan harian/mingguan.
+Detail endpoint ada di [`backend/README.md`](./backend/README.md).
+
+Verifikasi end-to-end yang sudah dilakukan: `/health` hijau untuk DB, Groq,
+LiveKit, dan Google; satu sesi percakapan penuh (buka → turn via Groq →
+tutup + ringkasan otomatis); satu siklus darurat (deteksi → konfirmasi →
+eskalasi + token LiveKit → tutup).
+
+Catatan: `.env` root sekarang juga memuat variabel runtime backend
+(`NODE_ENV`, `PORT`, `ALLOW_DEV_LOGIN`, `GROQ_MODEL`).
+
+---
+
+## Referensi
+
+Detail lengkap tiap topik ada di memory system (untuk sesi Claude
+selanjutnya): `project-overview`, `flow-lansia-caregiver`,
+`flow-one-button-assistant`, `smart-glasses-hardware`, `tech-stack`.
