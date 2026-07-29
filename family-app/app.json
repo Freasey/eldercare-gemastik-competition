@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "AI Caretaker",
+    "slug": "ai-caretaker-family",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "aicaretaker",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.eldercare.app"
+    },
+    "android": {
+      "package": "com.eldercare.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0E7C6B",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

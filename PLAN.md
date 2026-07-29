@@ -194,7 +194,14 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 
 ## 6. Open Items / Next Steps
 
-- [ ] Port mockup HTML keluarga ke React Native (Expo) — **sedang dikerjakan**.
+- [x] Port mockup HTML keluarga ke React Native (Expo) → [`family-app/`](./family-app).
+- [ ] **Bug context engine**: judul jadwal yang diawali "Waktunya…" bikin
+      kalimat asisten dobel — "sekarang waktunya *waktunya* sholat Maghrib"
+      (`decideOpening` menempelkan "waktunya " di depan `title`). Perbaiki di
+      template `contextEngine.js` atau di penamaan judul jadwal.
+- [ ] Pasang LiveKit, push notification, dan Google Sign-In di app keluarga —
+      ketiganya butuh development build dulu.
+- [ ] Layar "tambah lansia" di app keluarga (endpoint `POST /api/elders` sudah ada).
 - [ ] Bangun app sisi lansia (voice-first) — ditunda atas instruksi user.
 - [ ] Buat Google OAuth client ID Android (butuh SHA-1, ambil dari
       `eas credentials` atau debug keystore setelah project RN dibuat).
@@ -219,9 +226,22 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 | Bagian | Status |
 |---|---|
 | [`backend/`](./backend) — Express API | ✅ Jalan, skema & data contoh sudah masuk NeonDB |
-| [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, siap dinilai |
-| App React Native (keluarga) | ⏳ Belum — nunggu mockup disetujui |
+| [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
+| [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti selesai & terhubung ke backend |
 | App lansia (voice-first) | ⏳ Ditunda atas instruksi user |
+
+**`family-app/`** (dibuat 2026-07-29, Expo SDK 57 + React Navigation): lima tab
+(Beranda, Jadwal, Riwayat, Darurat, Profil) plus layar percakapan, detail
+darurat, dan panggilan. Semua data dari backend — tidak ada data contoh yang
+ditanam di app. Detail ada di [`family-app/README.md`](./family-app/README.md).
+
+Verifikasi yang sudah dilakukan: bundle Android berhasil (975 modul, tanpa
+error), dan seluruh field yang dibaca tiap layar dicek ada di response backend
+lewat pemanggilan endpoint sungguhan dengan akun demo.
+
+Belum jalan karena butuh development build (bukan Expo Go): suara pada panggilan
+LiveKit, push notification, dan Google Sign-In. Ketiganya sudah disiapkan
+jalurnya di sisi backend maupun app.
 
 **Backend** sudah mengimplementasi: auth (Google ID token → JWT + dev-login),
 CRUD lansia/jadwal/kontak, materialisasi reminder + sweep missed, context
