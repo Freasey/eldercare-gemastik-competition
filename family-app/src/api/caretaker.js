@@ -9,6 +9,13 @@ import { api } from './client.js';
 export const loginWithGoogle = (idToken) =>
   api('/api/auth/google', { method: 'POST', auth: false, body: { idToken, role: 'keluarga' } });
 
+/**
+ * Login tamu — tanpa input, selalu masuk ke akun demo. Jalan di backend lokal
+ * maupun production, jadi ini jalur masuk yang dipakai app sampai Google
+ * Sign-In siap.
+ */
+export const guestLogin = () => api('/api/auth/guest', { method: 'POST', auth: false });
+
 /** Jalan pintas development — hanya hidup kalau backend memasang ALLOW_DEV_LOGIN. */
 export const devLogin = (email) =>
   api('/api/auth/dev-login', { method: 'POST', auth: false, body: { email, role: 'keluarga' } });

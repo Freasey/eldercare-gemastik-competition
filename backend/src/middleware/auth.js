@@ -1,6 +1,7 @@
 import { one } from '../db/pool.js';
 import { ApiError, asyncHandler } from './errors.js';
 import { verifySession } from '../services/tokens.js';
+import { touchLastSeen } from '../services/guest.js';
 
 /** Wajib login. Mengisi req.user dari JWT + baris users. */
 export const requireAuth = asyncHandler(async (req, res, next) => {
@@ -13,6 +14,16 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   if (!user) throw ApiError.unauthorized('User tidak ditemukan');
 
   req.user = user;
+  req.isGuest = user.is_guest === true;
+
+  // Dipakai dua hal: menjaga tamu aktif dari sweep, dan menentukan lansia
+  // siapa yang ringkasannya masih perlu disegarkan scheduler. Di-throttle di
+  // dalam touchLastSeen, dan sengaja tidak di-await supaya tidak menambah
+  // latensi — kalau gagal, request tetap jalan.
+  touchLastSeen(user.id).catch((err) =>
+    console.warn('[auth] gagal menyegarkan last_seen_at:', err.message),
+  );
+
   next();
 });
 

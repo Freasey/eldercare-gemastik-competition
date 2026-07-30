@@ -3,7 +3,8 @@
  *
  * Tombol Google masih dimatikan: Android OAuth client ID belum ada karena
  * butuh SHA-1 dari keystore, dan keystore baru terbit setelah build pertama
- * (PLAN §5). Sampai itu selesai, masuk lewat `dev-login` backend.
+ * (PLAN §5). Sampai itu selesai, masuk lewat login tamu — satu-satunya jalur
+ * yang jalan di backend lokal maupun production.
  */
 import { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
@@ -16,13 +17,13 @@ import { API_URL } from '../api/client.js';
 
 export function LoginScreen() {
   const c = useColors();
-  const { signInAsDemo } = useAuth();
+  const { signInAsGuest } = useAuth();
   const [busy, setBusy] = useState(false);
 
   async function masuk() {
     setBusy(true);
     try {
-      await signInAsDemo();
+      await signInAsGuest();
     } catch (err) {
       Alert.alert('Tidak bisa masuk', err.message);
     } finally {
@@ -71,10 +72,14 @@ export function LoginScreen() {
               )
             }
           />
-          <Button label="Masuk sebagai demo keluarga" onPress={masuk} loading={busy} />
+          <Button label="Coba sebagai tamu" onPress={masuk} loading={busy} />
         </View>
 
         <View style={{ gap: 6, marginTop: 6 }}>
+          <Note>
+            Mode tamu membuat akun sementara berisi data contoh — bebas kamu ubah. Akunnya
+            terhapus kalau tidak dipakai 7 hari; masuk dengan Google untuk menyimpannya.
+          </Note>
           <Note>Data kesehatan hanya dibagikan sesuai izin yang diberikan lansia.</Note>
           <Note style={{ color: c.ink3 }}>Server: {API_URL}</Note>
         </View>

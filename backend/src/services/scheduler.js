@@ -9,6 +9,7 @@
 import { many, one } from '../db/pool.js';
 import { notifyCaregivers } from './push.js';
 import { buildDailySummary } from './summary.js';
+import { sweepExpiredGuests } from './guest.js';
 
 /** Reminder yang lewat sekian menit tanpa respons dianggap missed. */
 const MISSED_AFTER_MINUTES = 90;
@@ -96,12 +97,35 @@ function formatTime(ts) {
   return new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
+/** Ringkasan hanya disegarkan untuk lansia yang ada orangnya aktif sekian jam terakhir. */
+const ACTIVE_WITHIN_HOURS = 24;
+
 /**
- * Segarkan ringkasan hari ini untuk semua lansia, supaya kartu di app
- * keluarga ikut bergerak sepanjang hari — bukan cuma saat tutup hari.
+ * Segarkan ringkasan hari ini, supaya kartu di app keluarga ikut bergerak
+ * sepanjang hari — bukan cuma saat tutup hari.
+ *
+ * Endpoint "ringkasan hari ini" sebenarnya sudah menghitung ulang sendiri saat
+ * dipanggil; yang butuh baris tersimpan cuma agregat mingguan. Jadi ini murni
+ * demi kartu yang bergerak, dan tidak layak dibayar untuk lansia yang tidak
+ * ada yang menonton — mayoritasnya akun tamu yang cuma mampir sekali.
  */
 export async function refreshTodaySummaries() {
-  const elders = await many('SELECT id FROM elders');
+  const elders = await many(
+    `SELECT e.id FROM elders e
+      WHERE EXISTS (
+              SELECT 1 FROM caregiver_links cl
+                JOIN users u ON u.id = cl.caregiver_user_id
+               WHERE cl.elder_id = e.id
+                 AND u.last_seen_at >= now() - ($1 || ' hours')::interval
+            )
+         OR EXISTS (
+              SELECT 1 FROM users u
+               WHERE u.id = e.user_id
+                 AND u.last_seen_at >= now() - ($1 || ' hours')::interval
+            )`,
+    [ACTIVE_WITHIN_HOURS],
+  );
+
   for (const e of elders) {
     await buildDailySummary(e.id).catch((err) =>
       console.error(`[scheduler] ringkasan lansia ${e.id} gagal:`, err.message),
@@ -110,15 +134,29 @@ export async function refreshTodaySummaries() {
   return { summaries: elders.length };
 }
 
+/** Pembersihan akun tamu tidak perlu tiap tick — cukup beberapa jam sekali. */
+const GUEST_SWEEP_EVERY_MS = 6 * 3_600_000;
+let lastGuestSweep = 0;
+
 /** Satu putaran penuh. */
 export async function runSchedulerTick() {
   const mat = await materializeReminders();
   const sweep = await sweepMissedReminders();
   const sum = await refreshTodaySummaries();
+
+  let guests = null;
+  if (Date.now() - lastGuestSweep >= GUEST_SWEEP_EVERY_MS) {
+    lastGuestSweep = Date.now();
+    guests = await sweepExpiredGuests().catch((err) => {
+      console.error('[scheduler] sweep tamu gagal:', err.message);
+      return null;
+    });
+  }
+
   if (mat.created || sweep.missed) {
     console.log(`[scheduler] +${mat.created} reminder, ${sweep.missed} ditandai missed`);
   }
-  return { ...mat, ...sweep, ...sum };
+  return { ...mat, ...sweep, ...sum, guests };
 }
 
 export function startScheduler({ intervalMs = 5 * 60_000 } = {}) {

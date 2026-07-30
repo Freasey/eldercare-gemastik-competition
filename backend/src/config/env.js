@@ -32,6 +32,12 @@ export const env = {
   allowDevLogin:
     process.env.ALLOW_DEV_LOGIN === 'true' && process.env.NODE_ENV !== 'production',
 
+  // Login tamu — fitur produk, selalu hidup termasuk di production.
+  // Tiap tamu dapat akun sendiri; yang nganggur dihapus otomatis.
+  guestRetentionDays: Number(process.env.GUEST_RETENTION_DAYS || 7),
+  // Sesi tamu sengaja lebih pendek dari sesi keluarga asli.
+  guestJwtExpiresIn: process.env.GUEST_JWT_EXPIRES_IN || '7d',
+
   groqApiKey: process.env.GROQ_API_KEY || '',
   groqModel: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
 

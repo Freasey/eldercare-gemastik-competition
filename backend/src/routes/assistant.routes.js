@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { many, one } from '../db/pool.js';
 import { ApiError, asyncHandler } from '../middleware/errors.js';
 import { requireAuth, requireElderAccess } from '../middleware/auth.js';
+import { byUserOrIp, rateLimit } from '../middleware/rateLimit.js';
 import {
   buildContext,
   decideOpening,
@@ -16,6 +17,18 @@ import { chat, interpretReminderReply, isGroqConfigured, summarizeConversation }
 
 export const assistantRouter = Router({ mergeParams: true });
 assistantRouter.use(requireAuth);
+
+/**
+ * Pagar kuota Groq. Dipasang hanya di jalur yang benar-benar memanggil LLM
+ * (percakapan bebas dan peringkasan akhir sesi) — bukan di seluruh router,
+ * supaya membaca konteks dan menjawab reminder tetap bebas.
+ */
+const llmLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  key: byUserOrIp,
+  message: 'Terlalu banyak percakapan dalam satu jam. Coba lagi sebentar lagi.',
+});
 
 /**
  * GET /api/elders/:elderId/assistant/context
@@ -97,6 +110,7 @@ assistantRouter.post(
 assistantRouter.post(
   '/sessions/:conversationId/turns',
   requireElderAccess,
+  llmLimiter,
   asyncHandler(async (req, res) => {
     const { text, reminderId, expects } = z
       .object({
@@ -191,6 +205,7 @@ assistantRouter.post(
 assistantRouter.post(
   '/sessions/:conversationId/end',
   requireElderAccess,
+  llmLimiter,
   asyncHandler(async (req, res) => {
     const { reason } = z
       .object({ reason: z.enum(['silence', 'closing_phrase', 'button', 'error']).optional() })

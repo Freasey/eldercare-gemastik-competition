@@ -5,6 +5,7 @@ import { many, one, transaction } from '../db/pool.js';
 import { ApiError, asyncHandler } from '../middleware/errors.js';
 import { requireAuth, requireElderAccess } from '../middleware/auth.js';
 import { buildContext } from '../services/contextEngine.js';
+import { countElders, GUEST_MAX_ELDERS } from '../services/guest.js';
 import { weeklySummary } from '../services/summary.js';
 
 export const eldersRouter = Router();
@@ -64,10 +65,20 @@ eldersRouter.get(
  * POST /api/elders
  * Keluarga membuat profil lansia. Mengembalikan pairing_code yang dimasukkan
  * di device lansia saat setup (PLAN §2.1).
+ *
+ * Akun tamu dibatasi GUEST_MAX_ELDERS: endpoint tamu terbuka di production,
+ * jadi tanpa batas ini database gampang digelembungkan.
  */
 eldersRouter.post(
   '/',
   asyncHandler(async (req, res) => {
+    if (req.isGuest && (await countElders(req.user.id)) >= GUEST_MAX_ELDERS) {
+      throw ApiError.forbidden(
+        `Akun tamu hanya bisa memantau ${GUEST_MAX_ELDERS} lansia. Masuk dengan Google untuk menambah lagi — data yang sudah ada ikut terbawa.`,
+        'GUEST_ELDER_LIMIT',
+      );
+    }
+
     const body = z
       .object({
         name: z.string().min(2),

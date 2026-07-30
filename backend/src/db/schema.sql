@@ -13,6 +13,17 @@ CREATE TABLE IF NOT EXISTS users (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Akun tamu: dibuat otomatis saat orang menekan "Coba sebagai tamu", punya
+-- data demo sendiri, dan dihapus setelah sekian hari tidak dipakai. Kalau
+-- tamunya login Google, baris yang sama dipakai ulang (is_guest -> false)
+-- supaya datanya ikut terbawa. ADD COLUMN IF NOT EXISTS supaya migrate.js
+-- tetap idempoten di database yang sudah ada.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_guest     BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Dipakai sweep penghapusan tamu kedaluwarsa.
+CREATE INDEX IF NOT EXISTS idx_users_guest_last_seen ON users (last_seen_at) WHERE is_guest;
+
 -- Profil lansia. `user_id` boleh NULL: lansia belum tentu punya akun Google
 -- sendiri — device-nya bisa di-pair pakai pairing_code oleh keluarga.
 CREATE TABLE IF NOT EXISTS elders (
