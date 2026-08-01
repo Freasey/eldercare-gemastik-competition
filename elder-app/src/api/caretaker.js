@@ -1,0 +1,71 @@
+/**
+ * Satu fungsi per endpoint backend yang dipakai sisi lansia.
+ * Urutannya mengikuti tabel endpoint di `backend/README.md`.
+ *
+ * App lansia sengaja hanya menyentuh sebagian kecil API: masuk lewat kode
+ * pairing, menjalankan sesi assistant, menjawab reminder, dan memicu darurat.
+ * Semua urusan setup (jadwal, kontak, profil) milik app keluarga.
+ */
+import { api } from './client.js';
+
+/* ---------------- masuk ---------------- */
+
+/**
+ * Tukar kode pairing jadi sesi. Satu-satunya jalur masuk HP lansia: tidak ada
+ * Google Sign-In, tidak ada layar login (PLAN §2.6).
+ */
+export const pairDevice = (code) =>
+  api('/api/auth/pair', { method: 'POST', auth: false, body: { code } });
+
+/* ---------------- assistant ---------------- */
+
+/**
+ * Buka sesi. Backend yang menjalankan context-check dan memutuskan kalimat
+ * pembuka beserta prioritasnya — app tidak ikut menghitung apa pun.
+ *
+ * @param {'button'|'scheduled'|'wake_word'|'emergency'} trigger
+ */
+export const openSession = (elderId, trigger) =>
+  api(`/api/elders/${elderId}/assistant/sessions`, { method: 'POST', body: { trigger } });
+
+/**
+ * Satu giliran bicara.
+ *
+ * `expects`, `reminderId`, dan `consentKey` dikembalikan lagi apa adanya dari
+ * respons sebelumnya: state percakapan dipegang backend, app cuma meneruskan.
+ */
+export const sendTurn = (elderId, conversationId, body) =>
+  api(`/api/elders/${elderId}/assistant/sessions/${conversationId}/turns`, { method: 'POST', body });
+
+/** @param {'silence'|'closing_phrase'|'button'|'error'} reason */
+export const endSession = (elderId, conversationId, reason) =>
+  api(`/api/elders/${elderId}/assistant/sessions/${conversationId}/end`, {
+    method: 'POST',
+    body: { reason },
+  });
+
+/* ---------------- reminder ---------------- */
+
+/**
+ * Jadwal beberapa hari ke depan, untuk di-cache dan dijadwalkan jadi
+ * notifikasi lokal (PLAN §2.6 — pengingat harus tetap bunyi tanpa internet).
+ */
+export const fetchReminders = (elderId, days = 2) =>
+  api(`/api/elders/${elderId}/reminders?days=${days}`);
+
+/** Dipakai jalur offline: jawaban yang sempat tertunda dikirim menyusul. */
+export const respondReminder = (elderId, reminderId, body) =>
+  api(`/api/elders/${elderId}/reminders/${reminderId}/respond`, { method: 'POST', body });
+
+/* ---------------- darurat ---------------- */
+
+/** Status awal `detected` — belum mengganggu keluarga sampai dikonfirmasi. */
+export const triggerEmergency = (elderId, body) =>
+  api(`/api/elders/${elderId}/emergencies`, { method: 'POST', body });
+
+/** confirmed=false menutup kejadian sebagai false positive. */
+export const confirmEmergency = (elderId, eventId, confirmed) =>
+  api(`/api/elders/${elderId}/emergencies/${eventId}/confirm`, {
+    method: 'POST',
+    body: { confirmed },
+  });

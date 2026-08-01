@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Teman Bicara",
+    "slug": "ai-caretaker-elder",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "aicaretaker",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#f4f7f6",
+    "android": {
+      "package": "com.eldercare.elder",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-secure-store",
+      "expo-status-bar",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Kamera dipakai sekali saja, untuk memindai kode dari aplikasi keluarga."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Mikrofon dipakai supaya Anda bisa berbicara dengan asisten.",
+          "speechRecognitionPermission": "Digunakan untuk memahami ucapan Anda.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0e7c6b"
+        }
+      ]
+    ]
+  }
+}

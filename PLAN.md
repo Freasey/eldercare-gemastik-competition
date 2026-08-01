@@ -174,7 +174,7 @@ HP saja.
 
 | Layer | Pilihan | Catatan |
 |---|---|---|
-| Mobile app | **React Native (Expo)** | Satu codebase untuk mode Lansia & Caregiver. Menggantikan rencana Flutter awal. |
+| Mobile app | **React Native (Expo)** | **Dua project terpisah** — [`family-app/`](./family-app) dan [`elder-app/`](./elder-app), lihat §4.3. Menggantikan rencana Flutter awal. |
 | Backend | **Express.js** (manual, no BaaS) | Semua logic ditulis manual — tanpa auto-CRUD/rules ala Firestore. |
 | Hosting backend | **Back4app** (free container hosting) | Deploy dari GitHub repo, tanpa kartu kredit. Menggantikan rencana Vercel. |
 | Database | **NeonDB** (serverless Postgres, free tier) | Menggantikan rencana Firestore. |
@@ -230,6 +230,31 @@ fitur Firebase lain) karena migrasi wajib ke FCM V1:
 
 Build Android dilakukan lokal (laptop/PC user sendiri), bukan lewat Claude.
 
+### 4.3 Dua project RN terpisah (keputusan 2026-08-01)
+
+Rencana awal "satu codebase untuk dua mode" **dibatalkan**. App keluarga dan app
+lansia tidak berbagi satu komponen pun: yang satu lima tab + grafik + navigasi,
+yang satu lagi satu layar tanpa navigasi sama sekali (§2.6). Menyatukannya
+berarti tiap build memuat dependency milik peran lain — kamera QR + STT ikut ke
+HP keluarga, react-navigation + chart SVG ikut ke HP lansia — padahal filter di
+§4 justru "harus jalan di HP Android low/mid-range".
+
+Akibatnya:
+- Package name berbeda: `com.eldercare.app` (keluarga) vs `com.eldercare.elder`
+  (lansia).
+- App lansia **tidak** memakai Google Sign-In dan **tidak** menerima push, jadi
+  tidak butuh `google-services.json` maupun OAuth client Android sendiri.
+  Masuknya lewat kode pairing (§2.6), pengingatnya lewat notifikasi lokal.
+- Yang dipakai bersama hanya kontrak backend, bukan kode. Pola yang sengaja
+  ditiru (bukan di-share): pembungkus `api()` dan pola `.env` dua file.
+- App lansia **tidak bisa dijalankan di Expo Go** — modul native STT, kamera,
+  dan notifikasi mengharuskan development build (`npx expo run:android`).
+
+Stack tambahan khusus app lansia: `expo-speech` (TTS), `expo-speech-recognition`
+(STT, seluruh ketergantungannya dikurung di satu file), `expo-notifications`
+(pengingat lokal), `expo-camera` (QR pairing), `expo-sqlite/kv-store` (cache
+jadwal + antrean offline).
+
 ---
 
 ## 5. Status Kredensial (update 2026-07-29)
@@ -273,9 +298,12 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 - [x] Endpoint `POST /api/auth/pair` — login device lansia tanpa Google (§2.6),
       selesai 2026-08-01.
 - [x] Consent lewat suara (§2.5) — selesai 2026-08-01.
-- [ ] Bangun app sisi lansia (voice-first, tanpa UI — §2.6).
-- [ ] Batalkan sesi percakapan kosong saat `/end` (lansia tidak sengaja membuka
-      app tetap menghasilkan baris `conversations` di timeline keluarga).
+- [x] Bangun app sisi lansia (voice-first, tanpa UI — §2.6) →
+      [`elder-app/`](./elder-app), selesai 2026-08-01. Project RN terpisah,
+      lihat §4.3.
+- [x] Batalkan sesi percakapan kosong saat `/end` — selesai 2026-08-01. Sesi
+      tanpa satu pun jawaban lansia dihapus, bukan disembunyikan; reminder yang
+      sempat dibacakan tetap `spoken` sehingga sweep tetap menandainya terlewat.
 - [ ] Buat Google OAuth client ID Android (butuh SHA-1, ambil dari
       `eas credentials` atau debug keystore setelah project RN dibuat).
 - [ ] Deploy backend ke Back4app (`ALLOW_DEV_LOGIN` wajib dimatikan dulu).
@@ -301,7 +329,7 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 | [`backend/`](./backend) — Express API | ✅ Jalan, skema & data contoh sudah masuk NeonDB |
 | [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
 | [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti selesai & terhubung ke backend |
-| App lansia (voice-first) | ⏳ Belum dibangun — kontrak backend-nya sudah siap |
+| [`elder-app/`](./elder-app) — React Native (Expo) app lansia | ✅ Alur pairing + loop suara + pengingat offline selesai; belum diuji di perangkat |
 
 **Update 2026-08-01** — backend & app keluarga disiapkan untuk app lansia
 tanpa UI (§2.6): endpoint pairing device lansia, consent lewat suara, dan
@@ -309,6 +337,26 @@ perbaikan zona waktu di sisi backend; layar Tambah lansia + Hubungkan
 perangkat (QR) di app keluarga. Verifikasi: alur pairing, consent, dan zona
 waktu diuji end-to-end ke backend yang jalan dengan NeonDB sungguhan, dan
 bundle Android app keluarga berhasil (1176 modul).
+
+**`elder-app/`** (dibuat 2026-08-01, Expo SDK 57, tanpa router): dua keadaan —
+layar pairing (QR + kode ketik) dan layar sesi suara. Loop percakapannya satu
+alur `async` lurus (bicara → dengar → kirim → bicara) supaya "jangan menyalakan
+mikrofon selagi speaker bunyi" tidak bisa dilanggar diam-diam. State percakapan
+sepenuhnya dipegang backend: app hanya mengembalikan `expects`, `reminderId`,
+dan `consentKey` yang barusan diterimanya. Detail ada di
+[`elder-app/README.md`](./elder-app/README.md).
+
+Yang sengaja dikerjakan di HP, bukan di backend: deteksi kata darurat (tidak
+boleh menunggu round-trip, dan harus tetap jalan tanpa sinyal), kalimat penutup
+(tidak ada endpoint penafsirnya), serta salinan aturan jawaban obat yang hanya
+dipakai saat offline — salinan ini wajib ikut diubah kalau aturan di backend
+berubah.
+
+Verifikasi: bundle Android berhasil (720 modul), dan seluruh endpoint yang
+dipanggil app diuji sungguhan ke backend + NeonDB memakai token device lansia
+hasil `POST /api/auth/pair` (ambil jadwal `?days=2` → buka sesi → satu giliran
+bicara → picu darurat lalu batalkan → tutup sesi). Belum diuji di perangkat:
+TTS, STT, notifikasi lokal, dan kamera QR — semuanya butuh development build.
 
 **`family-app/`** (dibuat 2026-07-29, Expo SDK 57 + React Navigation): lima tab
 (Beranda, Jadwal, Riwayat, Darurat, Profil) plus layar percakapan, detail

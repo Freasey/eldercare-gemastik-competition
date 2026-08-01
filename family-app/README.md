@@ -5,7 +5,8 @@ dan menerima peringatan darurat. Hasil porting dari prototipe
 [`../mockup-keluarga/`](../mockup-keluarga/) ke React Native, memakai backend di
 [`../backend/`](../backend/). Acuan desain: [`../PLAN.md`](../PLAN.md).
 
-App sisi lansia (voice-first) belum ada di sini — nanti folder terpisah.
+App sisi lansia (voice-first, tanpa UI) ada di project terpisah:
+[`../elder-app/`](../elder-app/) — alasan pemisahannya di PLAN §4.3.
 
 ## Menjalankan
 

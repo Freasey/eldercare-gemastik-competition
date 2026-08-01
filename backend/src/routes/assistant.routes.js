@@ -308,6 +308,22 @@ assistantRouter.post(
       [req.params.conversationId],
     );
 
+    // Sesi tanpa satu pun jawaban lansia dibuang, bukan disimpan. App lansia
+    // memulai percakapan begitu dibuka (PLAN §2.6), jadi HP yang tersenggol di
+    // saku menghasilkan sesi berisi kalimat pembuka saja — dan tanpa ini,
+    // timeline keluarga penuh "percakapan" yang tidak pernah terjadi.
+    // Reminder yang sempat dibacakan tetap berstatus `spoken` dan tetap akan
+    // ditandai `missed` oleh sweep, jadi tidak ada kabar yang ikut hilang.
+    if (!messages.some((m) => m.role === 'elder')) {
+      const dibuang = await one(
+        'DELETE FROM conversations WHERE id = $1 AND elder_id = $2 RETURNING id',
+        [req.params.conversationId, req.elder.id],
+      );
+      if (!dibuang) throw ApiError.notFound('Sesi percakapan tidak ditemukan');
+
+      return res.json({ conversation: null, discarded: true, endedBecause: reason ?? 'button' });
+    }
+
     let summary = null;
     if (messages.length >= 2 && isGroqConfigured()) {
       // Ringkasan dibuat sekali di akhir sesi, bukan tiap turn — hemat kuota.
