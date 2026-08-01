@@ -71,6 +71,15 @@ scheduler/reminder logic.
 - Caregiver bisa edit jadwal → sync balik ke app lansia tanpa lansia perlu
   ngapa-ngapain.
 
+#### 2.3.1 Penundaan reminder (keputusan 2026-08-01)
+"Nanti ya" menggeser `due_at` **baris yang sama** (+15 menit, maksimal 3 kali),
+bukan membuat baris baru. Kalau baris baru yang dibuat, baris lamanya
+tertinggal berstatus `snoozed` dengan waktu lewat, lalu ditandai `missed` oleh
+sweep — menunda obat kritis malah langsung memicu notifikasi "terlewat" ke
+keluarga sekaligus merusak angka kepatuhan. Satu kewajiban = satu baris;
+berapa kali ditunda terbaca dari `attempts`. Logikanya dipakai bersama jalur
+suara dan jalur app keluarga ([`backend/src/services/reminders.js`](./backend/src/services/reminders.js)).
+
 ### 2.4 Emergency Flow
 - **Trigger**: kata kunci ("tolong"), deteksi jatuh, atau reminder kritis
   berulang diabaikan.
@@ -85,6 +94,57 @@ scheduler/reminder logic.
 First-class design concern, bukan sekadar checkbox compliance — potensi
 diferensiator penilaian lomba. Always-listening + share data kesehatan/
 percakapan ke keluarga perlu explicit consent control dari lansia.
+
+Backend menolak keluarga mengubah consent (`CONSENT_ELDER_ONLY`), dan default
+`share_conversation_transcript` + `always_listening` = **mati**. Karena app
+lansia tidak punya UI (§2.6), izin diberikan lewat **suara** — sudah
+diimplementasi 2026-08-01:
+
+- Izin yang masih mati ditanyakan **sekali sehari** (hari menurut jam lansia);
+  yang sudah menyala tidak pernah diungkit lagi.
+- Muncul sebagai pembuka di hari yang sepi, atau menyusul sebagai pertanyaan
+  kedua setelah jawaban reminder/mood — jatah proaktif per sesi tetap 1-2.
+- Dicatat saat diucapkan, bukan saat dijawab, supaya lansia yang diam tidak
+  ditanyai berulang kali dalam sehari.
+- Hanya device lansia yang boleh menjawab; percobaan dari sesi keluarga
+  ditolak `CONSENT_ELDER_ONLY`.
+- Jawabannya ditafsirkan rule-based, bukan LLM — urutan pengecekannya penting
+  karena "tidak boleh" mengandung kata "boleh" dan "tidak apa-apa" justru
+  berarti setuju.
+
+`always_listening` sengaja belum ikut ditanyakan: wake-word-nya sendiri belum
+ada, dan meminta izin untuk fitur yang belum jalan sama saja menjanjikan
+sesuatu yang tidak ada.
+
+### 2.6 App Lansia — Tanpa UI (keputusan 2026-08-01)
+
+Perombakan dari "satu tombol besar" (§2.2) jadi **nol tombol**:
+
+- **Buka app = langsung sesi suara.** Tidak ada menu, tidak ada beranda, tidak
+  ada yang perlu diketuk lansia. Layar hanya indikator status
+  (listening/thinking/speaking) + live caption.
+- **Belum ter-pair** → app langsung bicara sendiri, meminta bantuan keluarga
+  ("Minta tolong anak atau cucu Ibu untuk membuka aplikasi keluarga…") dan
+  menampilkan pemindai QR. Setup dikerjakan keluarga, sesuai §2.1.
+- **Pairing lewat QR atau kode**: di app keluarga, pilih profil lansia →
+  "Hubungkan perangkat" → tampil QR + kode 6 huruf. Device lansia memindai QR
+  itu, atau kodenya diketik manual kalau kamera bermasalah.
+- **Login device lansia tanpa Google** (selesai 2026-08-01): `POST /api/auth/pair`
+  tanpa `requireAuth` menukar kode jadi akun role `lansia` + JWT panjang umur.
+  Menggantikan `POST /api/elders/pair` yang lama, yang mensyaratkan user sudah
+  login dan karena itu tidak pernah bisa dipakai HP lansia. Kode pairing naik
+  status jadi kredensial: berlaku 15 menit, hangus sekali pakai, 20 percobaan
+  per jam per IP, dan diterbitkan saat keluarga menekan tombolnya — bukan saat
+  profil dibuat. Pencabutan akses lewat "putuskan perangkat" (mengosongkan
+  `elders.user_id`), bukan lewat expiry token.
+- **Pengecualian yang jujur**: izin mikrofon dan kamera Android tetap lewat
+  dialog sistem yang harus diketuk. "Tanpa UI" berlaku setelah setup selesai.
+
+**Reminder saat offline (keputusan 2026-08-01)**: dibunyikan **notifikasi lokal
+di device** (`expo-notifications`), bukan push dari server — jadi tetap jalan
+tanpa internet. Konsekuensinya app lansia menyimpan cache jadwal
+(`GET /reminders?days=2`), menjadwalkan ulang notifikasi tiap sinkron, dan
+mengantre jawaban lansia untuk dikirim belakangan saat online.
 
 ---
 
@@ -195,14 +255,27 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 ## 6. Open Items / Next Steps
 
 - [x] Port mockup HTML keluarga ke React Native (Expo) → [`family-app/`](./family-app).
-- [ ] **Bug context engine**: judul jadwal yang diawali "Waktunya…" bikin
-      kalimat asisten dobel — "sekarang waktunya *waktunya* sholat Maghrib"
-      (`decideOpening` menempelkan "waktunya " di depan `title`). Perbaiki di
-      template `contextEngine.js` atau di penamaan judul jadwal.
+- [x] **Bug context engine**: judul "Waktunya…" bikin kalimat dobel. Diperbaiki
+      2026-08-01 lewat helper `subject()` di `contextEngine.js` yang membuang
+      awalan "waktunya/saatnya/jadwal" dari judul — penamaan jadwal tetap bebas.
+- [x] **Bug snooze**: "nanti ya" lewat suara tidak pernah kembali menagih.
+      Diperbaiki 2026-08-01, lihat §2.3.1.
+- [x] **Zona waktu diabaikan scheduler** — diperbaiki 2026-08-01: semua
+      perhitungan tanggal/jam pindah ke Postgres lewat
+      `AT TIME ZONE elders.timezone` (materialisasi reminder, filter harian,
+      grafik kepatuhan, ringkasan harian/mingguan, sapaan pagi/siang/sore).
+      Diuji: jadwal 07:00 WIB vs 07:00 WIT tersimpan terpaut tepat 2 jam dan
+      dua-duanya jatuh di jam 07:00 lokal masing-masing.
 - [ ] Pasang LiveKit, push notification, dan Google Sign-In di app keluarga —
       ketiganya butuh development build dulu.
-- [ ] Layar "tambah lansia" di app keluarga (endpoint `POST /api/elders` sudah ada).
-- [ ] Bangun app sisi lansia (voice-first) — ditunda atas instruksi user.
+- [x] Layar "tambah lansia" + "hubungkan perangkat" (QR & kode) di app keluarga
+      (2026-08-01).
+- [x] Endpoint `POST /api/auth/pair` — login device lansia tanpa Google (§2.6),
+      selesai 2026-08-01.
+- [x] Consent lewat suara (§2.5) — selesai 2026-08-01.
+- [ ] Bangun app sisi lansia (voice-first, tanpa UI — §2.6).
+- [ ] Batalkan sesi percakapan kosong saat `/end` (lansia tidak sengaja membuka
+      app tetap menghasilkan baris `conversations` di timeline keluarga).
 - [ ] Buat Google OAuth client ID Android (butuh SHA-1, ambil dari
       `eas credentials` atau debug keystore setelah project RN dibuat).
 - [ ] Deploy backend ke Back4app (`ALLOW_DEV_LOGIN` wajib dimatikan dulu).
@@ -228,7 +301,14 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 | [`backend/`](./backend) — Express API | ✅ Jalan, skema & data contoh sudah masuk NeonDB |
 | [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
 | [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti selesai & terhubung ke backend |
-| App lansia (voice-first) | ⏳ Ditunda atas instruksi user |
+| App lansia (voice-first) | ⏳ Belum dibangun — kontrak backend-nya sudah siap |
+
+**Update 2026-08-01** — backend & app keluarga disiapkan untuk app lansia
+tanpa UI (§2.6): endpoint pairing device lansia, consent lewat suara, dan
+perbaikan zona waktu di sisi backend; layar Tambah lansia + Hubungkan
+perangkat (QR) di app keluarga. Verifikasi: alur pairing, consent, dan zona
+waktu diuji end-to-end ke backend yang jalan dengan NeonDB sungguhan, dan
+bundle Android app keluarga berhasil (1176 modul).
 
 **`family-app/`** (dibuat 2026-07-29, Expo SDK 57 + React Navigation): lima tab
 (Beranda, Jadwal, Riwayat, Darurat, Profil) plus layar percakapan, detail

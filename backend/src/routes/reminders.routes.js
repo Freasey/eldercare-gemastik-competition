@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { many, one } from '../db/pool.js';
+import { many } from '../db/pool.js';
 import { ApiError, asyncHandler } from '../middleware/errors.js';
 import { requireAuth, requireElderAccess } from '../middleware/auth.js';
+import { respondToReminder } from '../services/reminders.js';
 
 export const remindersRouter = Router({ mergeParams: true });
 remindersRouter.use(requireAuth);
@@ -30,8 +31,13 @@ remindersRouter.get(
       params.push(days);
       where += ` AND due_at >= now() - ($${params.length} || ' days')::interval`;
     } else {
-      params.push(date ?? new Date().toISOString().slice(0, 10));
-      where += ` AND due_at::date = $${params.length}::date`;
+      // "Hari ini" harus hari menurut jam lansia. Tanpa AT TIME ZONE, jadwal
+      // malam hari hilang dari daftar begitu server jalan di UTC.
+      params.push(req.elder.timezone);
+      const tz = `$${params.length}`;
+      params.push(date ?? null);
+      where += ` AND (due_at AT TIME ZONE ${tz})::date
+                     = COALESCE($${params.length}::date, (now() AT TIME ZONE ${tz})::date)`;
     }
 
     if (status) {
@@ -65,31 +71,16 @@ remindersRouter.post(
       })
       .parse(req.body);
 
-    const reminder = await one(
-      `UPDATE reminder_events
-          SET status = $3,
-              responded_at = now(),
-              response_note = COALESCE($4, response_note),
-              attempts = attempts + 1
-        WHERE id = $1 AND elder_id = $2
-        RETURNING *`,
-      [req.params.reminderId, req.elder.id, status, note ?? null],
-    );
+    const { reminder, snoozedUntil } = await respondToReminder({
+      reminderId: req.params.reminderId,
+      elderId: req.elder.id,
+      status,
+      note,
+    });
 
     if (!reminder) throw ApiError.notFound('Reminder tidak ditemukan');
 
-    // Snooze = geser 15 menit, tapi jangan bikin event baru kalau sudah
-    // terlalu sering ditunda (batas 3x) supaya tidak jadi loop tak berujung.
-    if (status === 'snoozed' && reminder.attempts <= 3) {
-      await one(
-        `INSERT INTO reminder_events (elder_id, schedule_id, title, type, is_critical, due_at, status)
-         VALUES ($1, $2, $3, $4, $5, now() + interval '15 minutes', 'pending')
-         ON CONFLICT (schedule_id, due_at) DO NOTHING RETURNING id`,
-        [reminder.elder_id, reminder.schedule_id, reminder.title, reminder.type, reminder.is_critical],
-      );
-    }
-
-    res.json({ reminder });
+    res.json({ reminder, snoozedUntil });
   }),
 );
 
@@ -98,16 +89,18 @@ remindersRouter.get(
   '/adherence',
   requireElderAccess,
   asyncHandler(async (req, res) => {
+    // Pengelompokan per hari mengikuti tanggal di tempat lansia — kalau tidak,
+    // obat jam 9 malam WIB tercatat di hari berikutnya saat server UTC.
     const rows = await many(
-      `SELECT due_at::date AS date,
+      `SELECT (due_at AT TIME ZONE $2)::date AS date,
               COUNT(*) FILTER (WHERE status = 'confirmed') AS taken,
               COUNT(*) AS total
          FROM reminder_events
         WHERE elder_id = $1 AND type = 'medication'
-          AND due_at >= current_date - interval '13 days'
+          AND (due_at AT TIME ZONE $2)::date >= (now() AT TIME ZONE $2)::date - 13
           AND due_at < now()
         GROUP BY 1 ORDER BY 1 ASC`,
-      [req.elder.id],
+      [req.elder.id, req.elder.timezone],
     );
 
     res.json({

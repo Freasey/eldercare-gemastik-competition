@@ -4,6 +4,7 @@
  */
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Chip, Avatar } from './ui.js';
 import { useColors } from '../theme/theme.js';
 import { useElders } from '../context/ElderContext.js';
@@ -14,6 +15,7 @@ export function ScreenShell({ title, subtitle, children, refreshing, onRefresh }
   const c = useColors();
   const { user } = useAuth();
   const { elders, elderId, setElderId } = useElders();
+  const navigation = useNavigation();
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.surface }}>
@@ -38,22 +40,23 @@ export function ScreenShell({ title, subtitle, children, refreshing, onRefresh }
           <Avatar name={user?.name} size={38} />
         </View>
 
-        {elders.length > 1 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 8, paddingRight: 8 }}
-          >
-            {elders.map((e) => (
-              <Chip
-                key={e.id}
-                label={shortName(e.name)}
-                active={e.id === elderId}
-                onPress={() => setElderId(e.id)}
-              />
-            ))}
-          </ScrollView>
-        ) : null}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingRight: 8 }}
+        >
+          {elders.length > 1
+            ? elders.map((e) => (
+                <Chip
+                  key={e.id}
+                  label={shortName(e.name)}
+                  active={e.id === elderId}
+                  onPress={() => setElderId(e.id)}
+                />
+              ))
+            : null}
+          <Chip label="Tambah" icon="plus" onPress={() => navigation.navigate('TambahLansia')} />
+        </ScrollView>
       </View>
 
       <ScrollView

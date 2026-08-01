@@ -1,23 +1,15 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import crypto from 'node:crypto';
 import { many, one, transaction } from '../db/pool.js';
 import { ApiError, asyncHandler } from '../middleware/errors.js';
 import { requireAuth, requireElderAccess } from '../middleware/auth.js';
 import { buildContext } from '../services/contextEngine.js';
 import { countElders, GUEST_MAX_ELDERS } from '../services/guest.js';
+import { issuePairingCode, PAIRING_CODE_TTL_MINUTES, unpairElder } from '../services/pairing.js';
 import { weeklySummary } from '../services/summary.js';
 
 export const eldersRouter = Router();
 eldersRouter.use(requireAuth);
-
-function pairingCode() {
-  // 6 karakter, tanpa huruf/angka yang mudah tertukar saat dibacakan.
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from(crypto.randomBytes(6))
-    .map((b) => alphabet[b % alphabet.length])
-    .join('');
-}
 
 /**
  * GET /api/elders
@@ -93,9 +85,12 @@ eldersRouter.post(
       .parse(req.body);
 
     const elder = await transaction(async (c) => {
+      // Sengaja tanpa pairing_code: kode dibuat saat keluarga benar-benar
+      // menekan "Hubungkan perangkat", karena umurnya cuma 15 menit
+      // (services/pairing.js).
       const { rows: [created] } = await c.query(
-        `INSERT INTO elders (name, birth_year, phone, address, religion, prayer_reminder, timezone, pairing_code)
-         VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, 'Asia/Jakarta'), $8)
+        `INSERT INTO elders (name, birth_year, phone, address, religion, prayer_reminder, timezone)
+         VALUES ($1, $2, $3, $4, $5, $6, COALESCE($7, 'Asia/Jakarta'))
          RETURNING *`,
         [
           body.name,
@@ -105,7 +100,6 @@ eldersRouter.post(
           body.religion ?? null,
           body.prayerReminder ?? false,
           body.timezone ?? null,
-          pairingCode(),
         ],
       );
 
@@ -204,28 +198,43 @@ eldersRouter.patch(
 );
 
 /**
- * POST /api/elders/pair
- * Dipanggil dari device lansia: menukar pairing_code jadi tautan ke akun
- * lansia yang sedang login.
+ * POST /api/elders/:elderId/pairing-code
+ * Keluarga menekan "Hubungkan perangkat" → kode baru berumur pendek, untuk
+ * ditampilkan sebagai QR + teks dan dipindai HP lansia (PLAN §2.6).
+ *
+ * Penukarannya sendiri ada di `POST /api/auth/pair` — tanpa auth, karena HP
+ * lansia belum punya akun saat itu.
  */
 eldersRouter.post(
-  '/pair',
+  '/:elderId/pairing-code',
+  requireElderAccess,
   asyncHandler(async (req, res) => {
-    const { code } = z.object({ code: z.string().min(4) }).parse(req.body);
-
-    const elder = await one('SELECT * FROM elders WHERE pairing_code = $1', [code.toUpperCase()]);
-    if (!elder) throw ApiError.notFound('Kode pairing tidak ditemukan');
-    if (elder.user_id && elder.user_id !== req.user.id) {
-      throw ApiError.conflict('Profil ini sudah terhubung ke akun lain');
+    if (req.elder.user_id) {
+      throw ApiError.conflict(
+        'Perangkat lansia sudah terhubung. Putuskan dulu sebelum menghubungkan yang baru.',
+        'ALREADY_PAIRED',
+      );
     }
 
-    const updated = await one(
-      `UPDATE elders SET user_id = $2, paired_at = now(), pairing_code = NULL
-        WHERE id = $1 RETURNING *`,
-      [elder.id, req.user.id],
-    );
+    const elder = await issuePairingCode(req.elder.id);
 
-    res.json({ elder: updated });
+    res.status(201).json({
+      pairingCode: elder.pairing_code,
+      expiresAt: elder.pairing_code_expires_at,
+      expiresInMinutes: PAIRING_CODE_TTL_MINUTES,
+    });
+  }),
+);
+
+/**
+ * POST /api/elders/:elderId/unpair
+ * Melepas perangkat lansia — dipakai saat HP-nya diganti atau hilang.
+ */
+eldersRouter.post(
+  '/:elderId/unpair',
+  requireElderAccess,
+  asyncHandler(async (req, res) => {
+    res.json({ elder: await unpairElder(req.elder.id) });
   }),
 );
 

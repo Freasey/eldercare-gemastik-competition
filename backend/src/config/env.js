@@ -38,6 +38,12 @@ export const env = {
   // Sesi tamu sengaja lebih pendek dari sesi keluarga asli.
   guestJwtExpiresIn: process.env.GUEST_JWT_EXPIRES_IN || '7d',
 
+  // Device lansia tidak punya layar login: kalau sesinya kedaluwarsa, app-nya
+  // mati total tanpa ada yang bisa memperbaiki dari sisi lansia. Karena itu
+  // umurnya sengaja sangat panjang; pencabutan akses dilakukan keluarga lewat
+  // "putuskan perangkat", bukan lewat expiry (lihat services/pairing.js).
+  elderJwtExpiresIn: process.env.ELDER_JWT_EXPIRES_IN || '3650d',
+
   groqApiKey: process.env.GROQ_API_KEY || '',
   groqModel: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
 

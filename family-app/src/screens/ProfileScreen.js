@@ -24,6 +24,7 @@ import {
   Switch,
   Title,
 } from '../components/ui.js';
+import { Icon } from '../components/Icon.js';
 import { useColors } from '../theme/theme.js';
 import { useAuth } from '../context/AuthContext.js';
 import { useElders } from '../context/ElderContext.js';
@@ -33,7 +34,7 @@ import { shortName, tanggal, umur } from '../lib/format.js';
 import { CONSENT_LABELS } from '../lib/constants.js';
 import { API_URL } from '../api/client.js';
 
-export function ProfileScreen() {
+export function ProfileScreen({ navigation }) {
   const c = useColors();
   const { user, signOut } = useAuth();
   const { elder } = useElders();
@@ -86,13 +87,23 @@ export function ProfileScreen() {
                 title={data.elder.prayer_reminder ? 'Aktif — jadwal sholat' : 'Tidak aktif'}
                 sub="Pengingat ibadah"
               />
+              {/* Kodenya tidak ditampilkan di sini: umurnya cuma 15 menit,
+                  jadi yang tampil pasti sudah kedaluwarsa. Kode baru diambil
+                  saat layar Hubungkan perangkat dibuka. */}
               <Row
                 title={
                   data.elder.paired_at
                     ? `Terhubung sejak ${tanggal(data.elder.paired_at)}`
-                    : `Belum terhubung · kode ${data.elder.pairing_code || '—'}`
+                    : 'Belum terhubung'
                 }
                 sub="Perangkat lansia"
+                onPress={() => navigation.navigate('HubungkanPerangkat', { elderId })}
+                end={
+                  <>
+                    {data.elder.paired_at ? null : <Pill tone="warning">Perlu dihubungkan</Pill>}
+                    <Icon name="chevron" size={16} color={c.ink3} />
+                  </>
+                }
               />
             </Rows>
           </Card>

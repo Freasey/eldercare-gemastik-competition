@@ -87,6 +87,8 @@ src/
 | Layar | Isi | Endpoint |
 |---|---|---|
 | Masuk | dev-login, alamat server | `POST /api/auth/dev-login` |
+| Tambah lansia | nama, tahun lahir, telepon, relasi, **zona waktu**, pengingat sholat | `POST /api/elders` |
+| Hubungkan perangkat | QR + kode, hitung mundur, putuskan perangkat | `POST /api/elders/:id/pairing-code`, `.../unpair` |
 | Beranda | status lansia, **kalimat berikutnya dari asisten**, red flag, sisa jadwal, aktivitas terbaru | `assistant/context`, `reminders`, `timeline`, `summaries/week` |
 | Jadwal | daftar jadwal berulang, filter, tambah/ubah/hapus | `schedules` (GET/POST/PATCH/DELETE) |
 | Riwayat | grafik kepatuhan & suasana hati, pola bicara, percakapan, ringkasan harian | `reminders/adherence`, `checkins`, `summaries`, `timeline` |
@@ -107,7 +109,9 @@ Sama seperti di mockup — ini pembeda produk, jadi dibuat kelihatan:
 2. **Privasi sebagai fitur.** Panel izin di Profil bisa dilihat tapi tidak bisa
    diubah keluarga; backend menolaknya lewat `CONSENT_ELDER_ONLY`. Transkrip
    percakapan yang belum diizinkan tampil sebagai penjelasan, bukan error —
-   ringkasannya tetap terkirim.
+   ringkasannya tetap terkirim. Izin dinyalakan lansia sendiri lewat suara:
+   asisten menanyakannya sekali sehari selama masih mati (lihat
+   `backend/README.md` bagian "Consent lewat suara").
 3. **Darurat tetap di dalam app.** Notifikasi → panggilan suara in-app, tanpa
    SMS/telepon pulsa.
 
@@ -123,8 +127,6 @@ sampai build pertama dibuat:
 - **Notifikasi push.** `expo-notifications` + FCM V1 belum dipasang; sakelar di
   Profil masih mati. Endpoint `POST /api/devices` di backend sudah siap.
 - **Google Sign-In.** Lihat bagian Masuk di atas.
-- **Tambah lansia baru** dari app (backend `POST /api/elders` sudah ada, layarnya
-  belum dibuat — sekarang profil lansia dibuat lewat seed/backend).
 
 ## Catatan porting dari mockup
 

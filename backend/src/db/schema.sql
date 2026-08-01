@@ -41,6 +41,13 @@ CREATE TABLE IF NOT EXISTS elders (
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Kode pairing dipakai device lansia untuk masuk TANPA akun Google, jadi
+-- statusnya naik jadi kredensial: berlaku singkat dan digenerate ulang dari
+-- app keluarga tepat sebelum dipakai. NULL = sudah tidak berlaku (termasuk
+-- kode lama bikinan seed), supaya tidak ada kode yang menganggur selamanya
+-- sebagai kunci masuk.
+ALTER TABLE elders ADD COLUMN IF NOT EXISTS pairing_code_expires_at TIMESTAMPTZ;
+
 -- Relasi keluarga <-> lansia (satu lansia bisa dipantau beberapa keluarga).
 CREATE TABLE IF NOT EXISTS caregiver_links (
   id                  BIGSERIAL PRIMARY KEY,
@@ -193,6 +200,11 @@ CREATE TABLE IF NOT EXISTS consents (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (elder_id, key)
 );
+
+-- Kapan terakhir asisten MENANYAKAN izin ini lewat suara (bukan kapan
+-- dijawab). Izin yang masih mati ditanyakan ulang sekali sehari; yang sudah
+-- menyala tidak pernah ditanya lagi. Lihat services/consentVoice.js.
+ALTER TABLE consents ADD COLUMN IF NOT EXISTS last_asked_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS daily_summaries (
   id                    BIGSERIAL PRIMARY KEY,

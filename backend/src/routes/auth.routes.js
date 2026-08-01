@@ -7,6 +7,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { verifyGoogleIdToken } from '../services/googleAuth.js';
 import { createGuestAccount } from '../services/guest.js';
+import { redeemPairingCode } from '../services/pairing.js';
 import { signSession, verifySession } from '../services/tokens.js';
 
 export const authRouter = Router();
@@ -154,6 +155,49 @@ authRouter.post(
       token: signSession(user, { guest: true, expiresIn: env.guestJwtExpiresIn }),
       user: publicUser(user),
       expiresAfterDays: env.guestRetentionDays,
+    });
+  }),
+);
+
+/**
+ * POST /api/auth/pair
+ * Body: { code }
+ *
+ * Login device lansia — satu-satunya endpoint yang menerbitkan sesi tanpa
+ * Google. Sengaja tanpa `requireAuth`: HP lansia belum punya akun apa pun saat
+ * memanggil ini, dan lansia tidak boleh dihadapkan layar login (PLAN §2.6).
+ * Kode itu sendiri yang jadi kredensial, jadi jalurnya dibatasi ketat.
+ */
+authRouter.post(
+  '/pair',
+  rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 20,
+    message: 'Terlalu banyak percobaan kode dari jaringan ini. Coba lagi sebentar lagi.',
+  }),
+  asyncHandler(async (req, res) => {
+    const { code } = z.object({ code: z.string().min(4).max(16) }).parse(req.body);
+
+    const result = await redeemPairingCode(code);
+
+    if (result.error === 'NOT_FOUND') {
+      throw ApiError.notFound('Kode tidak dikenali. Minta keluarga menampilkan kode baru.', 'PAIRING_CODE_INVALID');
+    }
+    if (result.error === 'EXPIRED') {
+      throw new ApiError(
+        410,
+        'Kode sudah kedaluwarsa. Minta keluarga menekan "tampilkan kode baru".',
+        'PAIRING_CODE_EXPIRED',
+      );
+    }
+    if (result.error === 'ALREADY_PAIRED') {
+      throw ApiError.conflict('Profil ini sudah terhubung ke perangkat lain.', 'PAIRING_ALREADY_PAIRED');
+    }
+
+    res.status(201).json({
+      token: signSession(result.user, { expiresIn: env.elderJwtExpiresIn }),
+      user: publicUser(result.user),
+      elder: result.elder,
     });
   }),
 );

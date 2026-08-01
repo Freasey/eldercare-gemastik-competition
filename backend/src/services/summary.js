@@ -4,35 +4,53 @@
  */
 import { many, one } from '../db/pool.js';
 
-/** Hitung ulang ringkasan satu hari dan simpan (upsert) ke daily_summaries. */
+/**
+ * Hitung ulang ringkasan satu hari dan simpan (upsert) ke daily_summaries.
+ *
+ * "Satu hari" di sini adalah hari menurut jam lansia. Sebelumnya tanggalnya
+ * diambil dari `toISOString()` (selalu UTC) lalu dibandingkan dengan
+ * `due_at::date` (zona server) — dua acuan berbeda dalam satu fungsi, dan
+ * dua-duanya bukan zona lansia. Efeknya: obat malam masuk hitungan hari
+ * berikutnya, dan ringkasan "hari ini" berganti jam 7 pagi WIB.
+ */
 export async function buildDailySummary(elderId, date = new Date()) {
-  const day = date.toISOString().slice(0, 10);
+  const tz = await elderTimezone(elderId);
+
+  // Diambil sebagai teks, bukan DATE: kolom DATE dari pg datang sebagai
+  // timestamp yang sudah digeser ke zona lokal proses — persis jebakan yang
+  // sedang diperbaiki di sini.
+  const { day } = await one(
+    `SELECT to_char(($1::timestamptz AT TIME ZONE $2)::date, 'YYYY-MM-DD') AS day`,
+    [date, tz],
+  );
 
   const meds = await one(
     `SELECT
        COUNT(*) FILTER (WHERE status = 'confirmed') AS taken,
        COUNT(*) AS total
      FROM reminder_events
-      WHERE elder_id = $1 AND type = 'medication' AND due_at::date = $2::date`,
-    [elderId, day],
+      WHERE elder_id = $1 AND type = 'medication'
+        AND (due_at AT TIME ZONE $3)::date = $2::date`,
+    [elderId, day, tz],
   );
 
   const mood = await one(
     `SELECT AVG(mood_score)::numeric(3,2) AS avg FROM checkins
-      WHERE elder_id = $1 AND created_at::date = $2::date`,
-    [elderId, day],
+      WHERE elder_id = $1 AND (created_at AT TIME ZONE $3)::date = $2::date`,
+    [elderId, day, tz],
   );
 
   const convo = await one(
     `SELECT COUNT(*) AS count FROM conversations
-      WHERE elder_id = $1 AND started_at::date = $2::date`,
-    [elderId, day],
+      WHERE elder_id = $1 AND (started_at AT TIME ZONE $3)::date = $2::date`,
+    [elderId, day, tz],
   );
 
   const missedList = await many(
     `SELECT title FROM reminder_events
-      WHERE elder_id = $1 AND due_at::date = $2::date AND status IN ('missed', 'skipped')`,
-    [elderId, day],
+      WHERE elder_id = $1 AND (due_at AT TIME ZONE $3)::date = $2::date
+        AND status IN ('missed', 'skipped')`,
+    [elderId, day, tz],
   );
 
   const highlights = missedList.length
@@ -68,6 +86,11 @@ export async function buildDailySummary(elderId, date = new Date()) {
   return row;
 }
 
+async function elderTimezone(elderId) {
+  const row = await one('SELECT timezone FROM elders WHERE id = $1', [elderId]);
+  return row?.timezone || 'Asia/Jakarta';
+}
+
 /**
  * Tren kasar dari cognitive_signals: bandingkan rata-rata 7 hari terakhir
  * dengan 7 hari sebelumnya. Nilai signal makin tinggi = makin perlu perhatian.
@@ -94,9 +117,11 @@ async function cognitiveTrend(elderId) {
 /** Agregat mingguan untuk kartu ringkasan di app keluarga. */
 export async function weeklySummary(elderId) {
   const days = await many(
-    `SELECT * FROM daily_summaries
-      WHERE elder_id = $1 AND summary_date >= current_date - interval '7 days'
-      ORDER BY summary_date ASC`,
+    `SELECT ds.* FROM daily_summaries ds
+       JOIN elders e ON e.id = ds.elder_id
+      WHERE ds.elder_id = $1
+        AND ds.summary_date >= (now() AT TIME ZONE e.timezone)::date - 7
+      ORDER BY ds.summary_date ASC`,
     [elderId],
   );
 

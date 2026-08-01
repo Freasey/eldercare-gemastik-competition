@@ -37,6 +37,9 @@ src/
     googleAuth.js        verifikasi Google ID token
     tokens.js            terbitkan/verifikasi JWT session
     contextEngine.js     ATURAN PRIORITAS reminder (rule-based, tanpa LLM)
+    consentVoice.js      izin privasi lewat suara + gating sehari sekali
+    pairing.js           kode pairing device lansia (kredensial, umur pendek)
+    reminders.js         respons reminder + aturan penundaan (dipakai 2 jalur)
     scheduler.js         schedules -> reminder_events, sweep missed, ringkasan
     groq.js              LLM untuk percakapan bebas + ringkasan
     livekit.js           token room untuk voice call darurat
@@ -54,10 +57,41 @@ Ini keputusan inti dari PLAN §4. Jangan dibalik:
 | Prioritas reminder, jadwal, deteksi red flag | **Rule-based** (`contextEngine.js`) |
 | Interpretasi jawaban "sudah/belum" atas obat | **Rule-based** (keyword, `groq.js: interpretReminderReply`) |
 | Skor mood dari kalimat | **Rule-based** (`assistant.routes.js: scoreMood`) |
+| Jawaban ya/tidak atas izin privasi | **Rule-based** (`consentVoice.js: interpretConsentReply`) |
 | Percakapan bebas | **LLM (Groq)** |
 | Ringkasan percakapan untuk keluarga | **LLM (Groq)**, sekali di akhir sesi |
 
 Alasannya: kuota free tier hemat, dan behavior reminder obat harus predictable.
+Khusus izin privasi ada alasan tambahan — keputusan sepenting itu tidak boleh
+bergantung pada kuota Groq atau pada model yang bisa salah tafsir.
+
+## Consent lewat suara
+
+App lansia tidak punya UI (PLAN §2.6), jadi izin diberikan lewat percakapan:
+
+- Izin yang masih **mati** ditanyakan **sekali sehari** (hari menurut jam
+  lansia). Izin yang sudah **menyala** tidak pernah diungkit lagi.
+- Ditanyakan sebagai pembuka kalau harinya sepi, atau menyusul sebagai
+  pertanyaan kedua setelah jawaban reminder/mood — jatah proaktif per sesi
+  tetap 1-2 (PLAN §2.2).
+- Dicatat `last_asked_at` saat **diucapkan**, bukan saat dijawab, supaya lansia
+  yang diam tidak ditanyai berulang kali dalam sehari.
+- Hanya device lansia yang boleh menjawab. Sesi milik keluarga tidak pernah
+  memunculkan pertanyaannya, dan kalau tetap dicoba backend menolak dengan
+  `CONSENT_ELDER_ONLY`.
+- Daftar izin yang boleh ditanyakan ada di `consentVoice.js: ASKABLE_CONSENTS`.
+  `always_listening` belum masuk karena wake-word-nya sendiri belum ada —
+  menanyakan izin untuk fitur yang belum jalan sama saja menjanjikan yang
+  tidak ada.
+
+## Zona waktu
+
+`schedules.time_of_day` adalah **jam dinding di tempat lansia**. Semua
+perhitungan tanggal/jam karenanya lewat `AT TIME ZONE elders.timezone` dan
+dikerjakan Postgres, bukan JavaScript — termasuk materialisasi reminder,
+pengelompokan grafik kepatuhan, dan batas hari ringkasan harian. Jangan
+memakai `due_at::date`, `current_date`, `setHours()`, atau `toISOString()`
+untuk urusan ini: semuanya mengikuti zona server, yang di Back4app adalah UTC.
 
 ## Autentikasi
 
@@ -75,19 +109,36 @@ atau `ALLOW_DEV_LOGIN` bukan `true`. **Matikan sebelum deploy ke Back4app.**
 | Method | Path | Keterangan |
 |---|---|---|
 | POST | `/api/auth/google` | tukar Google ID token jadi JWT |
+| POST | `/api/auth/guest` | akun tamu + data demo sendiri |
+| POST | `/api/auth/pair` | **device lansia**: tukar kode pairing jadi sesi, tanpa Google |
 | POST | `/api/auth/dev-login` | jalan pintas dev (email saja) |
 | GET | `/api/auth/me` | profil user yang login |
+
+`POST /api/auth/pair` adalah satu-satunya endpoint selain tamu yang
+menerbitkan sesi tanpa Google. HP lansia belum punya akun saat memanggilnya
+dan tidak boleh dihadapkan layar login (PLAN §2.6), jadi kodenya sendiri yang
+jadi kredensial: berlaku 15 menit, hangus sekali pakai, dibatasi 20 percobaan
+per jam per IP. Akun `users` berperan `lansia` dibuat otomatis dengan email
+sintetis `@device.invalid` — lansia tidak pernah melihat atau mengetiknya.
+Sesinya berumur sangat panjang (`ELDER_JWT_EXPIRES_IN`, default 10 tahun)
+karena tidak ada siapa pun di sisi lansia yang bisa login ulang; pencabutan
+akses lewat "putuskan perangkat", bukan lewat expiry.
 
 ### Lansia
 | Method | Path | Keterangan |
 |---|---|---|
 | GET | `/api/elders` | daftar lansia + status ringkas untuk dashboard |
-| POST | `/api/elders` | buat profil lansia, mengembalikan `pairing_code` |
+| POST | `/api/elders` | buat profil lansia (tanpa kode pairing — lihat di bawah) |
 | GET | `/api/elders/:id` | detail + kontak, obat, jadwal, consent, red flag |
 | PATCH | `/api/elders/:id` | ubah profil |
-| POST | `/api/elders/pair` | device lansia menukar pairing code |
+| POST | `/api/elders/:id/pairing-code` | terbitkan kode pairing baru (umur 15 menit) |
+| POST | `/api/elders/:id/unpair` | lepas perangkat lansia |
 | GET/POST | `/api/elders/:id/contacts` | kontak darurat |
 | PATCH | `/api/elders/:id/consents` | ubah consent (**hanya dari device lansia**) |
+
+Profil baru sengaja dibuat **tanpa** kode pairing: kode cuma berumur 15 menit,
+jadi diterbitkan saat keluarga benar-benar menekan "Hubungkan perangkat".
+Kode lama bikinan seed (tanpa masa berlaku) diperlakukan kedaluwarsa.
 
 ### Jadwal & reminder
 | Method | Path | Keterangan |
@@ -112,9 +163,14 @@ atau `ALLOW_DEV_LOGIN` bukan `true`. **Matikan sebelum deploy ke Back4app.**
 | Method | Path | Keterangan |
 |---|---|---|
 | GET | `/api/elders/:id/assistant/context` | intip prioritas tanpa membuka sesi |
-| POST | `/api/elders/:id/assistant/sessions` | tombol ditekan → assistant bicara duluan |
+| POST | `/api/elders/:id/assistant/sessions` | app dibuka → assistant bicara duluan |
 | POST | `.../sessions/:cid/turns` | satu giliran bicara |
 | POST | `.../sessions/:cid/end` | tutup sesi + buat ringkasan |
+
+Sesi dan tiap giliran mengembalikan `expects`
+(`confirmation` \| `mood` \| `consent` \| `free`) plus `reminderId`/`consentKey`
+bila relevan. App lansia tinggal mengirimkannya balik di giliran berikutnya —
+tidak perlu menyimpan state percakapan sendiri.
 
 ### Darurat & device
 | Method | Path | Keterangan |

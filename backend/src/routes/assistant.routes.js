@@ -14,9 +14,26 @@ import {
   MAX_PROACTIVE_QUESTIONS,
 } from '../services/contextEngine.js';
 import { chat, interpretReminderReply, isGroqConfigured, summarizeConversation } from '../services/groq.js';
+import { respondToReminder, SNOOZE_MINUTES } from '../services/reminders.js';
+import {
+  ASKABLE_CONSENTS,
+  findConsentToAsk,
+  interpretConsentReply,
+  markConsentAsked,
+  setConsent,
+} from '../services/consentVoice.js';
 
 export const assistantRouter = Router({ mergeParams: true });
 assistantRouter.use(requireAuth);
+
+/**
+ * Apakah pemanggilnya device lansia sendiri, bukan HP keluarga. Dipakai untuk
+ * memagari pertanyaan izin privasi — keluarga boleh membuka sesi assistant
+ * (mis. untuk mencoba), tapi tidak boleh menjawab izin atas nama lansia.
+ */
+function isElderDevice(req) {
+  return req.elder.user_id != null && String(req.elder.user_id) === String(req.user.id);
+}
 
 /**
  * Pagar kuota Groq. Dipasang hanya di jalur yang benar-benar memanggil LLM
@@ -39,7 +56,9 @@ assistantRouter.get(
   '/context',
   requireElderAccess,
   asyncHandler(async (req, res) => {
-    const context = await buildContext(req.elder.id);
+    const context = await buildContext(req.elder.id, new Date(), {
+      canAskConsent: isElderDevice(req),
+    });
     if (!context) throw ApiError.notFound('Lansia tidak ditemukan');
 
     res.json({
@@ -66,7 +85,9 @@ assistantRouter.post(
       .object({ trigger: z.enum(['button', 'scheduled', 'wake_word', 'emergency']).optional() })
       .parse(req.body ?? {});
 
-    const context = await buildContext(req.elder.id);
+    const context = await buildContext(req.elder.id, new Date(), {
+      canAskConsent: isElderDevice(req),
+    });
     if (!context) throw ApiError.notFound('Lansia tidak ditemukan');
 
     const opening = decideOpening(context);
@@ -91,12 +112,17 @@ assistantRouter.post(
       );
     }
 
+    // Dicatat begitu diucapkan, bukan begitu dijawab — lansia yang diam tetap
+    // dihitung sudah ditanya hari ini.
+    if (opening.consentKey) await markConsentAsked(req.elder.id, opening.consentKey);
+
     res.status(201).json({
       conversationId: conversation.id,
       speech: opening.speech,
       openingKind: opening.kind,
       expects: opening.expects,
       reminderId: opening.reminder?.id ?? null,
+      consentKey: opening.consentKey ?? null,
       proactiveQuestionsLeft: MAX_PROACTIVE_QUESTIONS - (opening.expects === 'free' ? 0 : 1),
     });
   }),
@@ -112,11 +138,12 @@ assistantRouter.post(
   requireElderAccess,
   llmLimiter,
   asyncHandler(async (req, res) => {
-    const { text, reminderId, expects } = z
+    const { text, reminderId, expects, consentKey } = z
       .object({
         text: z.string().min(1).max(2000),
         reminderId: z.coerce.number().int().optional(),
-        expects: z.enum(['confirmation', 'mood', 'free']).optional(),
+        expects: z.enum(['confirmation', 'mood', 'consent', 'free']).optional(),
+        consentKey: z.string().max(64).optional(),
       })
       .parse(req.body);
 
@@ -134,6 +161,10 @@ assistantRouter.post(
 
     let reply = null;
     let handledBy = 'llm';
+    // Jalur yang balasannya sudah berisi pertanyaan sendiri. Dipakai supaya
+    // pertanyaan izin tidak ditempel di belakangnya jadi dua pertanyaan
+    // sekaligus — lansia hanya akan menjawab salah satunya.
+    let replyAsksSomething = false;
 
     // --- jalur 1: jawaban atas reminder (rule-based, tanpa LLM) ---
     if (expects === 'confirmation' && reminderId) {
@@ -141,16 +172,26 @@ assistantRouter.post(
       handledBy = 'rule';
 
       if (intent === 'confirmed') {
-        await respondToReminder(reminderId, req.elder.id, 'confirmed', text);
+        await respondToReminder({ reminderId, elderId: req.elder.id, status: 'confirmed', note: text });
         reply = 'Bagus, terima kasih sudah memberi tahu. Saya catat ya.';
       } else if (intent === 'snoozed') {
-        await respondToReminder(reminderId, req.elder.id, 'snoozed', text);
-        reply = 'Baik, nanti saya ingatkan lagi lima belas menit lagi.';
+        const { snoozedUntil } = await respondToReminder({
+          reminderId,
+          elderId: req.elder.id,
+          status: 'snoozed',
+          note: text,
+        });
+        // Jatah penundaan bisa habis — jangan menjanjikan tagihan yang tidak
+        // akan datang.
+        reply = snoozedUntil
+          ? `Baik, nanti saya ingatkan lagi ${SNOOZE_MINUTES} menit lagi.`
+          : 'Baik. Tapi ini sudah beberapa kali ditunda, jadi nanti saya kabari keluarga ya.';
       } else if (intent === 'skipped') {
-        await respondToReminder(reminderId, req.elder.id, 'skipped', text);
+        await respondToReminder({ reminderId, elderId: req.elder.id, status: 'skipped', note: text });
         reply = 'Baik, saya catat belum diminum. Nanti saya kabari keluarga ya.';
       } else {
         reply = 'Maaf, saya kurang menangkap. Obatnya sudah diminum atau belum?';
+        replyAsksSomething = true;
       }
     }
 
@@ -166,9 +207,38 @@ assistantRouter.post(
         score <= 2
           ? 'Terima kasih sudah cerita. Kalau tidak enak badan, boleh saya kabari keluarga?'
           : 'Syukurlah kalau begitu. Ada lagi yang ingin diceritakan?';
+      replyAsksSomething = score <= 2;
     }
 
-    // --- jalur 3: percakapan bebas (baru di sini LLM dipanggil) ---
+    // --- jalur 3: jawaban izin privasi (rule-based, tanpa LLM) ---
+    if (!reply && expects === 'consent' && consentKey) {
+      handledBy = 'rule';
+
+      // Izin cuma sah kalau lansia sendiri yang menjawab. Sesi milik keluarga
+      // tidak pernah dapat pertanyaan ini (buildContext menahannya), jadi
+      // sampai ke sini artinya ada yang mencoba jalan pintas.
+      if (!isElderDevice(req)) {
+        throw ApiError.forbidden(
+          'Izin privasi hanya bisa dijawab dari perangkat lansia sendiri',
+          'CONSENT_ELDER_ONLY',
+        );
+      }
+      if (!ASKABLE_CONSENTS[consentKey]) {
+        throw ApiError.badRequest(`Izin "${consentKey}" tidak ditanyakan lewat suara`, 'CONSENT_NOT_ASKABLE');
+      }
+
+      const answer = interpretConsentReply(text);
+      if (answer === 'granted' || answer === 'denied') {
+        await setConsent(req.elder.id, consentKey, answer === 'granted');
+        reply = ASKABLE_CONSENTS[consentKey][answer];
+      } else {
+        // Tidak dipaksa mengulang: sudah ditandai ditanya hari ini, jadi
+        // pertanyaannya datang lagi besok dengan sendirinya.
+        reply = 'Baik, tidak apa-apa. Nanti saya tanyakan lagi lain kali ya.';
+      }
+    }
+
+    // --- jalur 4: percakapan bebas (baru di sini LLM dipanggil) ---
     if (!reply) {
       const history = await many(
         `SELECT role, content FROM messages WHERE conversation_id = $1
@@ -189,12 +259,34 @@ assistantRouter.post(
       }
     }
 
+    // Pertanyaan izin menyusul sebagai pertanyaan KEDUA di sesi ini — jatah
+    // proaktif per sesi memang 1-2 (PLAN §2.2). Sengaja hanya menempel di
+    // jalur rule-based yang sudah tuntas: percakapan bebas dibiarkan
+    // mengalir, dan kalau lansia sendiri yang mengajak ngobrol dia tidak
+    // pantas dipotong pertanyaan izin.
+    let followUp = null;
+    if (handledBy === 'rule' && !replyAsksSomething && expects !== 'consent' && isElderDevice(req)) {
+      followUp = await findConsentToAsk(req.elder.id, req.elder.timezone);
+      if (followUp) {
+        reply = `${reply} ${followUp.question}`;
+        await markConsentAsked(req.elder.id, followUp.key);
+      }
+    }
+
     await one(
       `INSERT INTO messages (conversation_id, role, content) VALUES ($1, 'assistant', $2) RETURNING id`,
       [conversation.id, reply],
     );
 
-    res.json({ speech: reply, handledBy });
+    res.json({
+      speech: reply,
+      handledBy,
+      // Apa yang diharapkan dari jawaban berikutnya. Sebelumnya app yang
+      // menebak sendiri; sekarang backend yang menyatakan, supaya app lansia
+      // tidak perlu menyimpan state percakapan.
+      expects: followUp ? 'consent' : replyAsksSomething ? expects ?? 'free' : 'free',
+      consentKey: followUp?.key ?? null,
+    });
   }),
 );
 
@@ -236,15 +328,6 @@ assistantRouter.post(
     res.json({ conversation, endedBecause: reason ?? 'button' });
   }),
 );
-
-async function respondToReminder(reminderId, elderId, status, note) {
-  return one(
-    `UPDATE reminder_events
-        SET status = $3, responded_at = now(), response_note = $4, attempts = attempts + 1
-      WHERE id = $1 AND elder_id = $2 RETURNING *`,
-    [reminderId, elderId, status, note.slice(0, 500)],
-  );
-}
 
 /**
  * Skor mood 1..5 dari kata kunci. Sengaja kasar dan rule-based: sinyalnya

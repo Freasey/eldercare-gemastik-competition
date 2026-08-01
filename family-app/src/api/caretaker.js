@@ -30,6 +30,17 @@ export const createElder = (body) => api('/api/elders', { method: 'POST', body }
 export const updateElder = (elderId, body) => api(`/api/elders/${elderId}`, { method: 'PATCH', body });
 export const fetchContacts = (elderId) => api(`/api/elders/${elderId}/contacts`);
 
+/* ---------------- perangkat lansia ---------------- */
+
+/**
+ * Kode pairing baru untuk ditampilkan sebagai QR. Umurnya pendek (15 menit),
+ * jadi dipanggil saat layar dibuka, bukan disimpan.
+ */
+export const createPairingCode = (elderId) =>
+  api(`/api/elders/${elderId}/pairing-code`, { method: 'POST' });
+
+export const unpairElder = (elderId) => api(`/api/elders/${elderId}/unpair`, { method: 'POST' });
+
 /* ---------------- jadwal & reminder ---------------- */
 
 export const fetchSchedules = (elderId) => api(`/api/elders/${elderId}/schedules`);

@@ -74,7 +74,7 @@ schedulesRouter.post(
 
     const schedule = await one(
       `INSERT INTO schedules (elder_id, medication_id, type, title, time_of_day, days_of_week, is_critical, created_by)
-       VALUES ($1, $2, $3, $4, $5, COALESCE($6, '{0,1,2,3,4,5,6}'), COALESCE($7, false), $8)
+       VALUES ($1, $2, $3, $4, $5, COALESCE($6, '{0,1,2,3,4,5,6}'::smallint[]), COALESCE($7, false), $8)
        RETURNING *`,
       [
         req.elder.id,

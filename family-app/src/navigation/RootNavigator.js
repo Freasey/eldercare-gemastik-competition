@@ -16,6 +16,8 @@ import { ProfileScreen } from '../screens/ProfileScreen.js';
 import { TranscriptScreen } from '../screens/TranscriptScreen.js';
 import { CallScreen } from '../screens/CallScreen.js';
 import { LoginScreen } from '../screens/LoginScreen.js';
+import { AddElderScreen, NoElderScreen } from '../screens/AddElderScreen.js';
+import { PairDeviceScreen } from '../screens/PairDeviceScreen.js';
 
 import { Icon } from '../components/Icon.js';
 import { Loading } from '../components/ui.js';
@@ -67,6 +69,19 @@ function Tabs() {
   );
 }
 
+/**
+ * Akun baru belum memantau siapa pun. Tab-nya sengaja tidak ditampilkan sama
+ * sekali dalam keadaan itu — semua tab bergantung pada `elder` yang belum ada,
+ * jadi yang muncul cuma layar kosong tanpa penjelasan.
+ */
+function TabsOrEmpty(props) {
+  const { elders, loading } = useElders();
+
+  if (loading) return <Loading label="Memuat data lansia…" />;
+  if (elders.length === 0) return <NoElderScreen {...props} />;
+  return <Tabs />;
+}
+
 export function RootNavigator() {
   const c = useColors();
   const isDark = useIsDark();
@@ -104,7 +119,7 @@ export function RootNavigator() {
               contentStyle: { backgroundColor: c.backdrop },
             }}
           >
-            <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
+            <Stack.Screen name="Tabs" component={TabsOrEmpty} options={{ headerShown: false }} />
             <Stack.Screen
               name="Percakapan"
               component={TranscriptScreen}
@@ -119,6 +134,16 @@ export function RootNavigator() {
               name="Panggilan"
               component={CallScreen}
               options={{ headerShown: false, presentation: 'fullScreenModal' }}
+            />
+            <Stack.Screen
+              name="TambahLansia"
+              component={AddElderScreen}
+              options={{ title: 'Tambah lansia' }}
+            />
+            <Stack.Screen
+              name="HubungkanPerangkat"
+              component={PairDeviceScreen}
+              options={{ title: 'Hubungkan perangkat' }}
             />
           </Stack.Navigator>
         </ElderProvider>

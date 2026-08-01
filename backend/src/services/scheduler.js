@@ -19,50 +19,40 @@ const HORIZON_HOURS = 36;
 /**
  * Buat reminder_events untuk semua jadwal aktif dalam horizon ke depan.
  * Idempoten berkat UNIQUE (schedule_id, due_at).
+ *
+ * Seluruh perhitungan tanggal sengaja dilakukan Postgres, bukan JavaScript.
+ * `schedules.time_of_day` itu jam dinding di tempat lansia ("07:00 WIB"), dan
+ * satu-satunya cara benar mengubahnya jadi titik waktu absolut adalah lewat
+ * `AT TIME ZONE elders.timezone`. Versi JS sebelumnya memakai `setHours()`
+ * yang mengikuti jam server: benar selama backend jalan di laptop WIB, meleset
+ * 7 jam begitu dideploy ke container Back4app yang UTC — dan tetap salah untuk
+ * lansia di WITA/WIT sekalipun servernya di Jakarta. Postgres sekalian
+ * menangani database zona waktu dan DST tanpa dependency tambahan.
  */
-export async function materializeReminders(now = new Date()) {
-  const schedules = await many(
-    `SELECT s.*, e.timezone FROM schedules s
+export async function materializeReminders() {
+  const created = await many(
+    `INSERT INTO reminder_events (elder_id, schedule_id, title, type, is_critical, due_at, status)
+     SELECT s.elder_id, s.id, s.title, s.type, s.is_critical, occurrence.due_at, 'pending'
+       FROM schedules s
        JOIN elders e ON e.id = s.elder_id
-      WHERE s.active = true`,
+       CROSS JOIN LATERAL (
+              SELECT ((day::date + s.time_of_day) AT TIME ZONE e.timezone) AS due_at
+                FROM generate_series(
+                       (now() AT TIME ZONE e.timezone)::date,
+                       ((now() + ($1 || ' hours')::interval) AT TIME ZONE e.timezone)::date,
+                       interval '1 day'
+                     ) AS day
+            ) AS occurrence
+      WHERE s.active = true
+        AND EXTRACT(DOW FROM (occurrence.due_at AT TIME ZONE e.timezone))::smallint = ANY (s.days_of_week)
+        AND occurrence.due_at >= now()
+        AND occurrence.due_at <= now() + ($1 || ' hours')::interval
+     ON CONFLICT (schedule_id, due_at) DO NOTHING
+     RETURNING id`,
+    [HORIZON_HOURS],
   );
 
-  let created = 0;
-
-  for (const s of schedules) {
-    for (const due of upcomingOccurrences(s, now)) {
-      const res = await one(
-        `INSERT INTO reminder_events (elder_id, schedule_id, title, type, is_critical, due_at, status)
-         VALUES ($1, $2, $3, $4, $5, $6, 'pending')
-         ON CONFLICT (schedule_id, due_at) DO NOTHING
-         RETURNING id`,
-        [s.elder_id, s.id, s.title, s.type, s.is_critical, due],
-      );
-      if (res) created++;
-    }
-  }
-
-  return { created };
-}
-
-/** Kejadian jadwal `s` antara sekarang dan HORIZON_HOURS ke depan. */
-function upcomingOccurrences(schedule, now) {
-  const [h, m] = String(schedule.time_of_day).split(':').map(Number);
-  const out = [];
-  const horizonEnd = new Date(now.getTime() + HORIZON_HOURS * 3_600_000);
-
-  for (let dayOffset = 0; dayOffset <= Math.ceil(HORIZON_HOURS / 24); dayOffset++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + dayOffset);
-    d.setHours(h, m, 0, 0);
-
-    if (d < now || d > horizonEnd) continue;
-    if (!schedule.days_of_week.includes(d.getDay())) continue;
-
-    out.push(new Date(d));
-  }
-
-  return out;
+  return { created: created.length };
 }
 
 /**
@@ -81,10 +71,10 @@ export async function sweepMissedReminders(now = new Date()) {
   );
 
   for (const r of missed.filter((x) => x.is_critical)) {
-    const elder = await one('SELECT name FROM elders WHERE id = $1', [r.elder_id]);
+    const elder = await one('SELECT name, timezone FROM elders WHERE id = $1', [r.elder_id]);
     await notifyCaregivers(r.elder_id, {
       title: `${elder?.name ?? 'Lansia'} melewatkan jadwal penting`,
-      body: `${r.title} belum dikonfirmasi sejak ${formatTime(r.due_at)}.`,
+      body: `${r.title} belum dikonfirmasi sejak ${formatTime(r.due_at, elder?.timezone)}.`,
       data: { type: 'missed_critical', reminderId: r.id, elderId: r.elder_id },
       critical: true,
     });
@@ -93,8 +83,13 @@ export async function sweepMissedReminders(now = new Date()) {
   return { missed: missed.length };
 }
 
-function formatTime(ts) {
-  return new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+/** Jam yang disebut di notifikasi harus jam tempat lansia, bukan jam server. */
+function formatTime(ts, timezone = 'Asia/Jakarta') {
+  return new Date(ts).toLocaleTimeString('id-ID', {
+    timeZone: timezone,
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 /** Ringkasan hanya disegarkan untuk lansia yang ada orangnya aktif sekian jam terakhir. */
