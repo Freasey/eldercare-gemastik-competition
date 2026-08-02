@@ -1,6 +1,11 @@
-# Kredensial — jangan pernah masuk git
+# Kredensial — jangan pernah masuk git.
+# Pola `.env.*` sengaja menyapu semua varian (.env.local, .env.vercel, ...)
+# supaya file baru tidak perlu diingat satu per satu; hanya .env.example yang
+# ditarik kembali karena memang tidak berisi nilai asli.
 .env
-.env.local
+.env.*
+!.env.example
+.cron-secret.txt
 *firebase-adminsdk*.json
 google-services.json
 GoogleService-Info.plist

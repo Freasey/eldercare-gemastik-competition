@@ -258,6 +258,12 @@ Root directory project Vercel diarahkan ke `backend/`. Konfigurasinya ada di
 [`vercel.json`](./vercel.json): semua trafik di-*rewrite* ke `api/index.js`,
 yang cuma mengekspor app Express dari `src/app.js`.
 
+Nilai env-nya sudah disiapkan di **`backend/.env.vercel`** (tidak masuk git),
+siap ditempel ke kotak *Import .env* di dashboard Vercel. File itu sengaja
+tanpa komentar dan tanpa baris kosong supaya bisa ditempel apa adanya. Isinya
+persis variabel yang dibaca `config/env.js` — tidak termasuk `PORT` (diabaikan
+Vercel), kunci Back4app, maupun variabel `EXPO_PUBLIC_*` milik app.
+
 - **Region wajib `sin1`.** Neon ada di `ap-southeast-1`; kalau fungsinya
   tertinggal di default `iad1` (US East), tiap query menyeberang Pasifik dan
   satu request yang melakukan beberapa query berurutan ikut menanggungnya.
