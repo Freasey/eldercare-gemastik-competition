@@ -26,12 +26,12 @@ untuk menjalankannya. Setelah terpasang sekali, `npm start` cukup.
 
 ### Mengarahkan app ke backend
 
-Default `.env`: `https://gemastikproject-i48g9adu.b4a.run`. Untuk backend lokal,
+Default `.env`: `https://eldercare-gemastik-competition.vercel.app`. Untuk backend lokal,
 buat `.env.local` (menang atas `.env`) lalu jalankan `cd ../backend && npm run dev`.
 
 | Cara menjalankan | Alamat |
 |---|---|
-| Backend production | `https://gemastikproject-i48g9adu.b4a.run` |
+| Backend production | `https://eldercare-gemastik-competition.vercel.app` |
 | Emulator Android | `http://10.0.2.2:4000` |
 | HP fisik satu Wi-Fi | `http://<IP-LAN-laptop>:4000` |
 

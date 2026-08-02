@@ -179,7 +179,7 @@ HP saja.
 |---|---|---|
 | Mobile app | **React Native (Expo)** | **Dua project terpisah** — [`family-app/`](./family-app) dan [`elder-app/`](./elder-app), lihat §4.3. Menggantikan rencana Flutter awal. |
 | Backend | **Express.js** (manual, no BaaS) | Semua logic ditulis manual — tanpa auto-CRUD/rules ala Firestore. |
-| Hosting backend | **Back4app** (free container hosting) | Deploy dari GitHub repo, tanpa kartu kredit. Menggantikan rencana Vercel. |
+| Hosting backend | **Vercel** (serverless, Hobby) | Deploy dari GitHub repo, tanpa kartu kredit. Sempat di Back4app (container) 2026-08-02, lalu pindah ke Vercel di hari yang sama — konsekuensinya ada di catatan migrasi di bawah. |
 | Database | **NeonDB** (serverless Postgres, free tier) | Menggantikan rencana Firestore. |
 | Auth | **Manual JWT + Google Sign-In** | Lihat detail alur di §4.1. Tanpa Firebase Auth. |
 | LLM | **Groq free tier** | `llama-3.3-70b-versatile` untuk percakapan sehari-hari; `compound` dipakai terbatas (query real-time seperti cuaca, capped 250 req/hari). |
@@ -274,9 +274,9 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 | JWT secret | ✅ Digenerate otomatis |
 | Expo project ID | ✅ Diterima |
 | Firebase `google-services.json` | ✅ Ada di root (`project_id: competition-project-f87e2`, package `com.eldercare.app`) — dikonfirmasi user ini memang project untuk AI Caretaker |
-| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`). Untuk deploy, isinya dikirim sebagai `FIREBASE_SERVICE_ACCOUNT_B64` — container Back4app tidak punya file yang bisa ditunjuk |
+| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`). Untuk deploy, isinya dikirim sebagai `FIREBASE_SERVICE_ACCOUNT_B64` — host serverless tidak punya file yang bisa ditunjuk |
 | LiveKit (URL, API key, secret) | ✅ Diterima |
-| Back4app | ✅ **Backend sudah di-deploy**: `https://gemastikproject-i48g9adu.b4a.run` (`/health` → database, groq, livekit, google semuanya ok). Kedua app sudah menunjuk ke sana secara default |
+| Vercel | ✅ **Backend sudah di-deploy**: `https://eldercare-gemastik-competition.vercel.app` (`/health` → database, groq, livekit, google, push, cron semuanya ok, region `sin1`). Kedua app sudah menunjuk ke sana secara default |
 
 ---
 
@@ -307,9 +307,10 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 - [x] Batalkan sesi percakapan kosong saat `/end` — selesai 2026-08-01. Sesi
       tanpa satu pun jawaban lansia dihapus, bukan disembunyikan; reminder yang
       sempat dibacakan tetap `spoken` sehingga sweep tetap menandainya terlewat.
-- [x] Deploy backend ke Back4app — selesai 2026-08-02:
-      `https://gemastikproject-i48g9adu.b4a.run`. Jalur masuk app keluarga
-      sekarang login tamu.
+- [x] Deploy backend — selesai 2026-08-02. Mula-mula ke Back4app, lalu pindah
+      ke Vercel di hari yang sama:
+      `https://eldercare-gemastik-competition.vercel.app`. Jalur masuk app
+      keluarga sekarang login tamu.
 - [x] Push notification darurat sampai ke HP keluarga — selesai 2026-08-02.
       FCM V1 langsung lewat `firebase-admin`, bukan Expo Push Service; app
       mendaftarkan token FCM mentah. Alasannya di `backend/README.md`.
@@ -337,7 +338,7 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 - Platform scope fase ini: **Android-only** (sesuai filter budget/HP
   low-mid-range di §4). iOS ditunda, client ID iOS tidak dikejar dulu.
 - ~~Backend tetap lokal selama development~~ → **sudah di-deploy** (2026-08-02).
-  Kedua app menunjuk ke URL Back4app lewat `.env`; untuk kerja lokal, buat
+  Kedua app menunjuk ke URL Vercel lewat `.env`; untuk kerja lokal, buat
   `.env.local` yang menang atas `.env`.
 - Auth di RN app: jalur masuknya **login tamu** (`POST /api/auth/guest`)
   sampai Google Sign-In siap. Jalan pintas `dev-login` sudah dihapus dari
@@ -353,7 +354,7 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 
 | Bagian | Status |
 |---|---|
-| [`backend/`](./backend) — Express API | ✅ **Di-deploy** ke `https://gemastikproject-i48g9adu.b4a.run` |
+| [`backend/`](./backend) — Express API | ✅ **Di-deploy** ke `https://eldercare-gemastik-competition.vercel.app` |
 | [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
 | [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti + push notif + audio panggilan; belum diuji di perangkat |
 | [`elder-app/`](./elder-app) — React Native (Expo) app lansia | ✅ Pairing, loop suara, pengingat offline, wake word, deteksi jatuh, fallback Whisper, audio darurat; belum diuji di perangkat |
