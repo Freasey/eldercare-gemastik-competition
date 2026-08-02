@@ -41,7 +41,8 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "cmakeVersion": "3.31.6"
           }
         }
       ],

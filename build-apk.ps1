@@ -296,20 +296,39 @@ function Siapkan-Berkas($appDir, $butuhGoogleServices) {
         }
     }
 
+    <#
+        @expo/env memuat .env.local dengan prioritas LEBIH TINGGI dari .env
+        (dipakai PLAN.md sebagai pola resmi untuk kerja lokal — lihat §6).
+        Kalau file itu ada dan mendefinisikan EXPO_PUBLIC_API_URL, ITULAH
+        nilai yang benar-benar ditanam ke build, bukan isi .env. Memeriksa
+        .env saja di sini berarti pengecekan bisa bilang "aman" sementara
+        APK-nya diam-diam menanam alamat lain (mis. http://localhost yang
+        ketinggalan dari sesi dev lokal).
+    #>
+    $envLocalPath = Join-Path $appDir '.env.local'
+    $sumberUrl = $envPath
+    if (Test-Path $envLocalPath) {
+        $barisLocal = Select-String -Path $envLocalPath -Pattern '^EXPO_PUBLIC_API_URL=(.+)$' | Select-Object -First 1
+        if ($barisLocal) { $sumberUrl = $envLocalPath }
+    }
+
     # Nilai ini DITANAM ke bundle saat build, bukan dibaca saat runtime. Salah di
     # sini berarti APK-nya mati total tanpa pesan yang jelas, jadi ditampilkan
     # supaya ketahuan sebelum menunggu Gradle setengah jam.
-    $baris = Select-String -Path $envPath -Pattern '^EXPO_PUBLIC_API_URL=(.+)$' | Select-Object -First 1
-    if (-not $baris) { Berhenti "EXPO_PUBLIC_API_URL tidak ada di $envPath" }
+    $baris = Select-String -Path $sumberUrl -Pattern '^EXPO_PUBLIC_API_URL=(.+)$' | Select-Object -First 1
+    if (-not $baris) { Berhenti "EXPO_PUBLIC_API_URL tidak ada di $sumberUrl" }
     $url = $baris.Matches[0].Groups[1].Value.Trim()
 
-    Write-Host "  ->  Backend yang akan ditanam: $url"
+    Write-Host "  ->  Backend yang akan ditanam: $url (dari $(Split-Path $sumberUrl -Leaf))"
+    if ($sumberUrl -eq $envLocalPath) {
+        Tulis-Ingat ".env.local ada dan menang atas .env — kalau ini bukan yang dimaksud untuk APK yang dibagikan, hapus atau kosongkan dulu."
+    }
     if ($url -notmatch '^https://') {
         Berhenti @"
 Alamat backend bukan https.
 
 Build release memblokir cleartext HTTP, jadi APK-nya akan gagal menghubungi
-server di HP mana pun. Ubah EXPO_PUBLIC_API_URL di $envPath jadi alamat https.
+server di HP mana pun. Ubah EXPO_PUBLIC_API_URL di $sumberUrl jadi alamat https.
 "@
     }
 }
@@ -324,31 +343,75 @@ function Build-App($nama, $folder, $butuhGoogleServices) {
 
     Push-Location $appDir
     try {
+        <#
+            $ErrorActionPreference diturunkan ke 'Continue' cuma di sekitar
+            pemanggilan proses native (npm/expo/gradle). Dengan 'Stop' (nilai
+            script ini di level atas), PowerShell 5.1 mempromosikan SETIAP
+            baris stderr proses native jadi terminating error begitu output
+            tidak mengarah ke konsol interaktif (persis situasi saat script
+            dijalankan lewat automation/background) — termasuk baris yang
+            cuma catatan/warning tidak berbahaya (mis. "Note: ... deprecated
+            API" dari javac). Trap di atas lalu keburu menangkapnya duluan
+            sebelum baris pengecekan $LASTEXITCODE di bawah ini sempat
+            jalan, jadi build yang sebenarnya sukses (atau gagal karena
+            alasan lain) malah dilaporkan gagal dengan pesan yang tidak
+            menjelaskan apa-apa.
+        #>
+        $ErrorActionPreference = 'Continue'
+
         # npm install harus duluan: tanpa node_modules, `npx expo` belum bisa
         # memakai CLI lokal dan akan mengunduh versi lain.
+        <#
+            Setiap panggilan native di bawah dipipa lewat 2>&1 ke Out-Host
+            secara eksplisit. Bukan kosmetik: kalau script ini sendiri
+            dipanggil lewat redirection di level pemanggil (`*>&1 |
+            Tee-Object`, `Start-Transcript`, dsb. — persis situasi paling
+            masuk akal untuk menyimpan log build), output konsol native yang
+            biasanya lewat begitu saja ke terminal malah ikut tertangkap
+            sebagai object pipeline (baik stream sukses maupun stream error
+            yang sudah diturunkan jadi non-terminating oleh 'Continue' di
+            atas), dan karena function ini tidak eksplisit menampungnya,
+            SEMUA baris itu ikut jadi bagian dari `return $tujuan` di bawah —
+            $hasil di `main` berubah dari dua path APK jadi ribuan baris log
+            (teramati sendiri: 2565 baris "adb install" bukan 2). Out-Host
+            menghabiskan pipeline-nya di tempat, jadi tidak ada yang bisa
+            bocor ke nilai balik function ini apa pun cara pemanggilnya.
+            `2>&1` di sini aman walau ada catatan di atas soal PS 5.1: yang
+            dipengaruhi cuma nilai $? (tidak dipakai di sini), $LASTEXITCODE
+            tetap apa adanya dari proses native-nya.
+        #>
         Write-Host '  ->  npm install'
-        & npm install --silent
-        if ($LASTEXITCODE -ne 0) { Berhenti "npm install gagal di $folder" }
+        & npm install --silent 2>&1 | Out-Host
+        if ($LASTEXITCODE -ne 0) { $ErrorActionPreference = 'Stop'; Berhenti "npm install gagal di $folder" }
 
         if ($LewatiPrebuild -and (Test-Path (Join-Path $appDir 'android'))) {
             Tulis-Ingat 'Prebuild dilewati, memakai folder android\ yang sudah ada'
         } else {
             Write-Host '  ->  expo prebuild (android, clean)'
             # --no-install karena npm install sudah dijalankan di atas.
-            & npx expo prebuild --platform android --clean --no-install
-            if ($LASTEXITCODE -ne 0) { Berhenti "expo prebuild gagal di $folder" }
+            & npx expo prebuild --platform android --clean --no-install 2>&1 | Out-Host
+            if ($LASTEXITCODE -ne 0) { $ErrorActionPreference = 'Stop'; Berhenti "expo prebuild gagal di $folder" }
         }
 
         Write-Host '  ->  gradlew assembleRelease (bisa 20-40 menit pada build pertama)'
         Push-Location (Join-Path $appDir 'android')
         try {
+            <#
+                gradlew memanggil task bundling JS lewat @expo/env, yang
+                mengharuskan NODE_ENV terisi untuk tahu urutan prioritas
+                .env.production / .env.local / .env. `npx expo` biasa
+                menyetel ini sendiri, tapi gradlew.bat dipanggil langsung di
+                sini sehingga tidak pernah diset tanpa baris ini.
+            #>
+            $env:NODE_ENV = 'production'
             # Tidak ada konfigurasi signing di sini, dan itu disengaja: template
             # Expo SDK 57 sudah menulis `signingConfig signingConfigs.debug` pada
             # buildType release, dan `expo prebuild` ikut menaruh debug.keystore
             # di android\app\. Hasilnya APK yang sah dipasang tanpa satu pun
             # kredensial yang perlu diurus — cukup untuk app yang tidak diunggah
             # ke Play Store.
-            & .\gradlew.bat assembleRelease --console=plain
+            & .\gradlew.bat assembleRelease --console=plain 2>&1 | Out-Host
+            $ErrorActionPreference = 'Stop'
             if ($LASTEXITCODE -ne 0) {
                 Berhenti @"
 Gradle gagal di $folder.
