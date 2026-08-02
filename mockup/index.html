@@ -1,0 +1,2776 @@
+<title>AI Caretaker — Mockup Dua Aplikasi</title>
+
+<style>
+  /* ============================================================
+     Token warna diambil apa adanya dari:
+       family-app/src/theme/tokens.js   (dua mode)
+       elder-app/src/theme.js           (dikunci terang)
+     Supaya mockup ini tidak berbeda dari app yang sudah dibangun.
+     ============================================================ */
+
+  :root {
+    color-scheme: light dark;
+
+    /* --- kertas halaman (bukan bagian dari app) --- */
+    --pg-ground: #d5dcd8;
+    --pg-panel: #e8ece9;
+    --pg-ink: #12181b;
+    --pg-ink2: #57626a;
+    --pg-ink3: #86918f;
+    --pg-rule: rgba(17, 24, 28, .16);
+    --pg-rule-soft: rgba(17, 24, 28, .09);
+    --pg-accent: #0e7c6b;
+    --pg-accent-soft: #dfeeea;
+    --pg-bezel: #b9c3bf;
+    --pg-bezel-2: #97a4a0;
+
+    /* --- token app keluarga: terang --- */
+    --c-backdrop: #dde2df;
+    --c-surface: #ffffff;
+    --c-surface2: #f3f6f4;
+    --c-surface3: #e9eeeb;
+    --c-line: rgba(17, 24, 28, .10);
+    --c-line-strong: rgba(17, 24, 28, .16);
+    --c-ink: #12181b;
+    --c-ink2: #59646a;
+    --c-ink3: #8b959a;
+    --c-accent: #0e7c6b;
+    --c-accent-ink: #0a5f52;
+    --c-accent-soft: #e2f1ee;
+    --c-on-accent: #ffffff;
+    --c-good: #0ca30c;
+    --c-warning: #fab219;
+    --c-critical: #d03b3b;
+    --c-good-soft: #e6f5e6;
+    --c-warning-soft: #fdf2dc;
+    --c-critical-soft: #fae8e8;
+    --c-series1: #2a78d6;
+    --c-grid: #e6e9e7;
+    --c-axis: #c8cecb;
+    --c-shadow: rgba(17, 24, 28, .10);
+
+    /* --- huruf --- */
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --ui: Roboto, "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --pg-ground: #0b0d0e;
+      --pg-panel: #16191b;
+      --pg-ink: #eef2f0;
+      --pg-ink2: #a3adb1;
+      --pg-ink3: #79837f;
+      --pg-rule: rgba(255, 255, 255, .17);
+      --pg-rule-soft: rgba(255, 255, 255, .09);
+      --pg-accent: #3fbfa8;
+      --pg-accent-soft: #12332d;
+      --pg-bezel: #2a2f31;
+      --pg-bezel-2: #43494b;
+
+      --c-backdrop: #08090a;
+      --c-surface: #171a1c;
+      --c-surface2: #1f2427;
+      --c-surface3: #252b2e;
+      --c-line: rgba(255, 255, 255, .10);
+      --c-line-strong: rgba(255, 255, 255, .18);
+      --c-ink: #f1f4f3;
+      --c-ink2: #a8b2b6;
+      --c-ink3: #7b8589;
+      --c-accent: #3fbfa8;
+      --c-accent-ink: #6fd6c3;
+      --c-accent-soft: #10302b;
+      --c-on-accent: #08201c;
+      --c-good: #4cc94c;
+      --c-warning: #fab219;
+      --c-critical: #e56a6a;
+      --c-good-soft: #122c12;
+      --c-warning-soft: #33280d;
+      --c-critical-soft: #341717;
+      --c-series1: #3987e5;
+      --c-grid: #262b2e;
+      --c-axis: #363c3f;
+      --c-shadow: rgba(0, 0, 0, .5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --pg-ground: #0b0d0e;
+    --pg-panel: #16191b;
+    --pg-ink: #eef2f0;
+    --pg-ink2: #a3adb1;
+    --pg-ink3: #79837f;
+    --pg-rule: rgba(255, 255, 255, .17);
+    --pg-rule-soft: rgba(255, 255, 255, .09);
+    --pg-accent: #3fbfa8;
+    --pg-accent-soft: #12332d;
+    --pg-bezel: #2a2f31;
+    --pg-bezel-2: #43494b;
+
+    --c-backdrop: #08090a;
+    --c-surface: #171a1c;
+    --c-surface2: #1f2427;
+    --c-surface3: #252b2e;
+    --c-line: rgba(255, 255, 255, .10);
+    --c-line-strong: rgba(255, 255, 255, .18);
+    --c-ink: #f1f4f3;
+    --c-ink2: #a8b2b6;
+    --c-ink3: #7b8589;
+    --c-accent: #3fbfa8;
+    --c-accent-ink: #6fd6c3;
+    --c-accent-soft: #10302b;
+    --c-on-accent: #08201c;
+    --c-good: #4cc94c;
+    --c-warning: #fab219;
+    --c-critical: #e56a6a;
+    --c-good-soft: #122c12;
+    --c-warning-soft: #33280d;
+    --c-critical-soft: #341717;
+    --c-series1: #3987e5;
+    --c-grid: #262b2e;
+    --c-axis: #363c3f;
+    --c-shadow: rgba(0, 0, 0, .5);
+  }
+
+  :root[data-theme="light"] {
+    --pg-ground: #d5dcd8;
+    --pg-panel: #e8ece9;
+    --pg-ink: #12181b;
+    --pg-ink2: #57626a;
+    --pg-ink3: #86918f;
+    --pg-rule: rgba(17, 24, 28, .16);
+    --pg-rule-soft: rgba(17, 24, 28, .09);
+    --pg-accent: #0e7c6b;
+    --pg-accent-soft: #dfeeea;
+    --pg-bezel: #b9c3bf;
+    --pg-bezel-2: #97a4a0;
+
+    --c-backdrop: #dde2df;
+    --c-surface: #ffffff;
+    --c-surface2: #f3f6f4;
+    --c-surface3: #e9eeeb;
+    --c-line: rgba(17, 24, 28, .10);
+    --c-line-strong: rgba(17, 24, 28, .16);
+    --c-ink: #12181b;
+    --c-ink2: #59646a;
+    --c-ink3: #8b959a;
+    --c-accent: #0e7c6b;
+    --c-accent-ink: #0a5f52;
+    --c-accent-soft: #e2f1ee;
+    --c-on-accent: #ffffff;
+    --c-good: #0ca30c;
+    --c-warning: #fab219;
+    --c-critical: #d03b3b;
+    --c-good-soft: #e6f5e6;
+    --c-warning-soft: #fdf2dc;
+    --c-critical-soft: #fae8e8;
+    --c-series1: #2a78d6;
+    --c-grid: #e6e9e7;
+    --c-axis: #c8cecb;
+    --c-shadow: rgba(17, 24, 28, .10);
+  }
+
+  /* ============================================================
+     Kertas halaman
+     ============================================================ */
+
+  body {
+    background: var(--pg-ground);
+    color: var(--pg-ink);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(28px, 6vw, 76px) clamp(18px, 4vw, 40px) 90px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--pg-ink3);
+  }
+
+  /* --- kepala halaman --- */
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 34px;
+    border-bottom: 1px solid var(--pg-rule);
+  }
+
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(34px, 6.4vw, 62px);
+    line-height: 1.06;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    max-width: 15ch;
+  }
+
+  .masthead h1 em {
+    font-style: italic;
+    color: var(--pg-accent);
+  }
+
+  .lede {
+    max-width: 62ch;
+    font-size: 17px;
+    color: var(--pg-ink2);
+  }
+
+  .factbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    padding-top: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--pg-ink2);
+  }
+
+  .factbar b {
+    color: var(--pg-ink);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- bagian --- */
+
+  .section {
+    padding-top: clamp(46px, 7vw, 82px);
+  }
+
+  .section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 30px;
+  }
+
+  .section-head h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(26px, 3.6vw, 38px);
+    line-height: 1.15;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+
+  .section-head p {
+    max-width: 60ch;
+    color: var(--pg-ink2);
+  }
+
+  /* Kalimat yang benar-benar diucapkan asisten — inti produknya, jadi
+     diperlakukan sebagai kutipan, bukan sebagai keterangan kecil. */
+  .spoken {
+    display: grid;
+    gap: 10px;
+    margin: 4px 0 2px;
+    padding: 20px 22px;
+    background: var(--pg-accent-soft);
+    border-left: 2px solid var(--pg-accent);
+    border-radius: 3px 14px 14px 3px;
+  }
+
+  .spoken q {
+    font-family: var(--serif);
+    font-size: clamp(19px, 2.4vw, 25px);
+    line-height: 1.42;
+    quotes: "“" "”";
+    text-wrap: pretty;
+  }
+
+  .spoken .who {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--pg-accent);
+  }
+
+  /* --- lembar data contoh --- */
+
+  .datasheet {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    background: var(--pg-rule-soft);
+    border: 1px solid var(--pg-rule-soft);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .datasheet div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 18px 20px;
+    background: var(--pg-panel);
+  }
+
+  .datasheet dt {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--pg-ink3);
+  }
+
+  .datasheet dd {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .datasheet dd small {
+    display: block;
+    font-size: 13px;
+    color: var(--pg-ink2);
+  }
+
+  /* --- kisi bingkai --- */
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: clamp(30px, 4vw, 46px) clamp(22px, 3vw, 34px);
+    justify-items: center;
+  }
+
+  .frame {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    max-width: 340px;
+  }
+
+  .frame-tag {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--pg-ink);
+  }
+
+  .frame-tag .num {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--pg-accent);
+  }
+
+  .frame figcaption {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--pg-ink2);
+    text-wrap: pretty;
+  }
+
+  /* --- bingkai perangkat --- */
+
+  .device {
+    width: 320px;
+    height: 668px;
+    padding: 9px;
+    border-radius: 38px;
+    background: linear-gradient(160deg, var(--pg-bezel-2), var(--pg-bezel));
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, .25) inset,
+      0 18px 34px -18px rgba(0, 0, 0, .5);
+    flex: none;
+  }
+
+  .screen {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 30px;
+    background: var(--c-surface);
+    color: var(--c-ink);
+    font-family: var(--ui);
+    font-size: 13.5px;
+    line-height: 1.48;
+  }
+
+  /* App lansia mengunci tema terang dengan sengaja (elder-app/src/theme.js):
+     latar gelap lebih sulit dibaca mata dengan katarak. */
+  .device.is-elder .screen,
+  .device.is-call .screen {
+    --c-backdrop: #f4f7f6;
+    --c-surface: #ffffff;
+    --c-surface2: #f3f6f4;
+    --c-line: rgba(17, 24, 28, .10);
+    --c-ink: #12181b;
+    --c-ink2: #4b565c;
+    --c-ink3: #8b959a;
+    --c-accent: #0e7c6b;
+    --c-accent-soft: #d9ece8;
+    --c-on-accent: #ffffff;
+    --c-critical: #c22f2f;
+    --c-critical-soft: #fbe6e6;
+  }
+
+  /* --- baris status perangkat --- */
+
+  .statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 18px 2px;
+    background: var(--c-surface);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink);
+    flex: none;
+  }
+
+  .statusbar .sig {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 9px;
+  }
+
+  .statusbar .sig i {
+    width: 2.5px;
+    background: var(--c-ink);
+    border-radius: 1px;
+  }
+
+  .statusbar .sig i:nth-child(1) { height: 3px }
+  .statusbar .sig i:nth-child(2) { height: 5px }
+  .statusbar .sig i:nth-child(3) { height: 7px }
+  .statusbar .sig i:nth-child(4) { height: 9px }
+
+  .statusbar .batt {
+    width: 18px;
+    height: 9px;
+    border: 1px solid var(--c-ink);
+    border-radius: 2.5px;
+    padding: 1px;
+  }
+
+  .statusbar .batt span {
+    display: block;
+    width: 72%;
+    height: 100%;
+    background: var(--c-ink);
+    border-radius: 1px;
+  }
+
+  /* --- kerangka tab (ScreenShell) --- */
+
+  .appbar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 6px 18px 12px;
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-line);
+    flex: none;
+  }
+
+  .appbar-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .appbar-top div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .appbar h2 {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+    line-height: 1.2;
+  }
+
+  .appbar .sub {
+    font-size: 12.5px;
+    color: var(--c-ink2);
+  }
+
+  .chiprow {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .chiprow::-webkit-scrollbar { display: none }
+
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 16px 28px;
+    background: var(--c-backdrop);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-axis) transparent;
+  }
+
+  .tabbar {
+    display: flex;
+    padding: 7px 0 9px;
+    background: var(--c-surface);
+    border-top: 1px solid var(--c-line);
+    flex: none;
+  }
+
+  .tabbar a {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--c-ink3);
+    text-decoration: none;
+  }
+
+  .tabbar a.on { color: var(--c-accent) }
+  .tabbar .ic { width: 21px; height: 21px }
+
+  .tabbar .badge {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    margin-left: 3px;
+    min-width: 15px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--c-critical);
+    color: #fff;
+    font-size: 10px;
+    line-height: 15px;
+    text-align: center;
+  }
+
+  /* --- primitif (ui.js) --- */
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    padding: 15px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: 18px;
+    box-shadow: 0 3px 10px var(--c-shadow);
+  }
+
+  .card.center {
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .cardhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ttl { font-size: 14.5px; font-weight: 700 }
+  .ttl.lg { font-size: 16px }
+  .bd { font-size: 13.5px; line-height: 20px }
+  .nt { font-size: 12px; line-height: 18px; color: var(--c-ink2) }
+  .nt.dim { color: var(--c-ink3) }
+  .ctr { text-align: center }
+
+  .sectitle {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--c-ink3);
+  }
+
+  .link {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--c-accent);
+  }
+
+  .empty {
+    padding: 16px 0;
+    font-size: 13px;
+    text-align: center;
+    color: var(--c-ink3);
+  }
+
+  .rows > .row + .row { border-top: 1px solid var(--c-line) }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 0;
+  }
+
+  .row .time {
+    width: 42px;
+    flex: none;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink2);
+  }
+
+  .row .box {
+    width: 32px;
+    height: 32px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--c-surface2);
+    color: var(--c-ink2);
+  }
+
+  .row .box .ic { width: 16px; height: 16px }
+  .row .box.accent { background: var(--c-accent-soft); color: var(--c-accent-ink) }
+  .row .box.crit { background: var(--c-critical-soft); color: var(--c-critical) }
+
+  .row .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .row .main .t { font-size: 13.5px; font-weight: 600 }
+
+  .row .end {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+  }
+
+  .row .end .ic { width: 16px; height: 16px; color: var(--c-ink3) }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--c-surface2);
+    color: var(--c-ink2);
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor }
+  .pill .ic { width: 12px; height: 12px }
+  .pill.good { background: var(--c-good-soft); color: var(--c-good) }
+  .pill.warn { background: var(--c-warning-soft); color: var(--c-warning) }
+  .pill.crit { background: var(--c-critical-soft); color: var(--c-critical) }
+
+  .stat {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--c-surface2);
+    color: var(--c-ink3);
+  }
+
+  .stat .ic { width: 13px; height: 13px }
+  .stat.good { background: var(--c-good-soft); color: var(--c-good) }
+  .stat.warn { background: var(--c-warning-soft); color: var(--c-warning) }
+  .stat.crit { background: var(--c-critical-soft); color: var(--c-critical) }
+
+  .av {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--c-accent-soft);
+    color: var(--c-accent-ink);
+    font-weight: 700;
+    font-size: 13.6px;
+  }
+
+  .av.s32 { width: 32px; height: 32px; font-size: 11px }
+  .av.s38 { width: 38px; height: 38px; font-size: 13px }
+  .av.s46 { width: 46px; height: 46px; font-size: 15.6px }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 16px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: var(--c-accent);
+    color: var(--c-on-accent);
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  .btn .ic { width: 17px; height: 17px }
+  .btn.ghost { background: var(--c-surface2); color: var(--c-ink); border-color: var(--c-line) }
+  .btn.danger { background: var(--c-critical); color: #fff }
+  .btn.off { opacity: .5 }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 13px;
+    border: 1px solid var(--c-line);
+    border-radius: 999px;
+    background: var(--c-surface);
+    color: var(--c-ink2);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .chip .ic { width: 14px; height: 14px }
+  .chip.on { background: var(--c-accent); border-color: transparent; color: var(--c-on-accent) }
+
+  .sw {
+    width: 46px;
+    height: 28px;
+    flex: none;
+    padding: 3px;
+    border-radius: 14px;
+    background: var(--c-surface3);
+  }
+
+  .sw span {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--c-surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+  }
+
+  .sw.on { background: var(--c-accent) }
+  .sw.on span { transform: translateX(18px) }
+
+  .flag {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .flag .ic { width: 16px; height: 16px; flex: none; margin-top: 2px }
+  .flag.crit { background: var(--c-critical-soft); color: var(--c-critical) }
+  .flag.warn { background: var(--c-warning-soft); color: var(--c-warning) }
+  .flag span { color: var(--c-ink) }
+
+  /* kartu prioritas — pembeda utama app keluarga */
+  .priority {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 15px;
+    border-radius: 18px;
+    background: var(--c-accent-soft);
+  }
+
+  .priority .kind {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--c-accent-ink);
+  }
+
+  .priority .kind .ic { width: 13px; height: 13px }
+
+  .priority .say {
+    font-size: 15.5px;
+    line-height: 23px;
+    font-weight: 600;
+  }
+
+  .priority .why { font-size: 12px; line-height: 18px; color: var(--c-accent-ink) }
+
+  .statrow {
+    display: flex;
+    gap: 4px;
+    padding-top: 12px;
+    margin-top: 2px;
+    border-top: 1px solid var(--c-line);
+  }
+
+  .statrow div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .statrow b {
+    font-size: 21px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .statrow b sub {
+    font-size: 12px;
+    font-weight: 400;
+    vertical-align: baseline;
+    color: var(--c-ink2);
+  }
+
+  .statrow small { font-size: 11px; color: var(--c-ink3) }
+
+  .hero {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .hero b { font-size: 27px; font-weight: 700; font-variant-numeric: tabular-nums }
+  .hero small { font-size: 12px; color: var(--c-ink2) }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .legend span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--c-ink2);
+  }
+
+  .legend i { width: 10px; height: 10px; border-radius: 3px }
+
+  /* gelembung transkrip */
+  .bubbles { display: flex; flex-direction: column; gap: 8px }
+
+  .bub {
+    max-width: 86%;
+    padding: 10px 13px;
+    border-radius: 16px;
+    background: var(--c-surface);
+    font-size: 13.5px;
+    line-height: 20px;
+  }
+
+  .bub time {
+    display: block;
+    margin-top: 4px;
+    text-align: right;
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ink3);
+  }
+
+  .bub.them { align-self: flex-start; border-bottom-left-radius: 4px }
+
+  .bub.elder {
+    align-self: flex-end;
+    background: var(--c-accent);
+    color: var(--c-on-accent);
+    border-bottom-right-radius: 4px;
+  }
+
+  .bub.elder time { color: rgba(255, 255, 255, .7) }
+
+  /* --- sheet --- */
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: rgba(0, 0, 0, .45);
+  }
+
+  .sheet {
+    max-height: 90%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 10px 20px 26px;
+    border-radius: 24px 24px 0 0;
+    background: var(--c-surface);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .sheet .grab {
+    width: 40px;
+    height: 4px;
+    margin: 0 auto 4px;
+    border-radius: 2px;
+    background: var(--c-surface3);
+    flex: none;
+  }
+
+  .sheet h3 { font-size: 19px; font-weight: 700 }
+
+  .field { display: flex; flex-direction: column; gap: 6px }
+  .field > label { font-size: 12.5px; font-weight: 600; color: var(--c-ink2) }
+  .field .hint { font-size: 12px; color: var(--c-ink3) }
+  .field .wrapchips { display: flex; flex-wrap: wrap; gap: 8px }
+
+  .input {
+    padding: 12px 13px;
+    border: 1px solid var(--c-line-strong);
+    border-radius: 12px;
+    background: var(--c-surface2);
+    font-size: 14.5px;
+    color: var(--c-ink);
+  }
+
+  .input.ph { color: var(--c-ink3) }
+
+  /* --- layar penuh: masuk, panggilan, lansia --- */
+
+  .full {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: 26px;
+    background: var(--c-surface);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .full.mid { align-items: center; text-align: center }
+
+  .mark {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: var(--c-accent-soft);
+    color: var(--c-accent);
+  }
+
+  .mark .ic { width: 30px; height: 30px }
+
+  .display {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 38px;
+    letter-spacing: -.4px;
+  }
+
+  /* panggilan darurat */
+  .call {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 28px;
+    background: #12181b;
+    color: #fff;
+    text-align: center;
+  }
+
+  .call .tagline {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .12);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .call .who { font-size: 24px; font-weight: 700 }
+  .call .timer { font-size: 15px; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .72) }
+  .call .hintline { font-size: 12px; line-height: 18px; color: rgba(255, 255, 255, .55) }
+  .call .avatar { width: 104px; height: 104px; font-size: 35px; background: rgba(255, 255, 255, .14); color: #fff }
+
+  .callbtns { display: flex; gap: 22px; margin-top: 26px }
+
+  .cbtn {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+  }
+
+  .cbtn .ic { width: 22px; height: 22px }
+  .cbtn.on { background: #fff; color: #12181b }
+  .cbtn.hang { width: 68px; height: 68px; background: #d03b3b }
+  .cbtn.hang .ic { width: 26px; height: 26px }
+
+  /* --- app lansia --- */
+
+  .elder {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 24px;
+    background: var(--c-backdrop);
+    text-align: center;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .elder.alert { background: var(--c-critical-soft) }
+
+  .orb {
+    position: relative;
+    width: 208px;
+    height: 208px;
+    flex: none;
+    display: grid;
+    place-items: center;
+  }
+
+  .orb i, .orb b {
+    position: absolute;
+    border-radius: 50%;
+    display: block;
+  }
+
+  .orb i { width: 160px; height: 160px; opacity: .18 }
+  .orb b { width: 160px; height: 160px }
+
+  .orb.listen i, .orb.listen b { background: #0e7c6b }
+  .orb.speak i, .orb.speak b { background: #2a78d6 }
+  .orb.idle i, .orb.idle b { background: #7a8a90 }
+  .orb.ready i, .orb.ready b { background: #0e7c6b }
+  .orb.panic i, .orb.panic b { background: #c22f2f }
+
+  @keyframes breathe {
+    from { transform: scale(1) }
+    to { transform: scale(var(--to, 1.2)) }
+  }
+
+  .orb.listen b { --to: 1.22; animation: breathe .9s ease-in-out infinite alternate }
+  .orb.listen i { --to: 1.4; animation: breathe .9s ease-in-out infinite alternate }
+  .orb.speak b { --to: 1.14; animation: breathe 1.8s ease-in-out infinite alternate }
+  .orb.speak i { --to: 1.31; animation: breathe 1.8s ease-in-out infinite alternate }
+  .orb.panic b { --to: 1.25; animation: breathe .6s ease-in-out infinite alternate }
+  .orb.panic i { --to: 1.44; animation: breathe .6s ease-in-out infinite alternate }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb i, .orb b { animation: none !important }
+  }
+
+  .caption {
+    font-size: 30px;
+    line-height: 43px;
+    font-weight: 600;
+    padding: 0 4px;
+    text-wrap: pretty;
+  }
+
+  .caption.sm { font-size: 24px; line-height: 35px }
+  .caption.alert { color: var(--c-critical) }
+
+  .elderlabel { font-size: 18px; color: var(--c-ink2) }
+
+  .scanbox {
+    width: 240px;
+    height: 240px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 24px;
+    background: var(--c-accent-soft);
+    overflow: hidden;
+  }
+
+  .codebox {
+    align-self: stretch;
+    padding: 12px;
+    border: 2px solid var(--c-accent-soft);
+    border-radius: 16px;
+    background: #fff;
+    font-size: 44px;
+    letter-spacing: 8px;
+    text-align: center;
+    color: var(--c-ink);
+  }
+
+  .codebox.ph { color: #a9b3b7 }
+
+  .bigbtn {
+    align-self: stretch;
+    padding: 20px;
+    border-radius: 18px;
+    background: var(--c-accent);
+    color: var(--c-on-accent);
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  /* --- kode pasangan di app keluarga --- */
+
+  .paircode {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .qrpad {
+    padding: 16px;
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  /* --- catatan kaki --- */
+
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px 34px;
+    padding-top: 26px;
+    border-top: 1px solid var(--pg-rule);
+  }
+
+  .notes h4 {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--pg-ink3);
+    margin-bottom: 7px;
+  }
+
+  .notes p { font-size: 14px; color: var(--pg-ink2); text-wrap: pretty }
+  .notes code { font-family: var(--mono); font-size: 12.5px; color: var(--pg-ink) }
+
+  .colophon {
+    padding-top: 44px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .06em;
+    color: var(--pg-ink3);
+  }
+
+  .ic { display: inline-block; flex: none }
+  .ic svg { display: block; width: 100%; height: 100% }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Mockup antarmuka · seluruh data adalah contoh</p>
+    <h1>Satu asisten, <em>dua sisi</em> layar</h1>
+    <p class="lede">
+      AI Caretaker berdiri di dua perangkat sekaligus. Di HP lansia, aplikasinya hampir tidak punya
+      antarmuka — ia membuka dirinya dengan berbicara. Di HP keluarga, hasil percakapan itu berubah
+      jadi kabar yang bisa dibaca sambil berdiri di halte. Delapan belas layar berikut memakai satu
+      hari yang sama sebagai cerita, supaya kedua sisi bisa dibaca sebagai satu peristiwa.
+    </p>
+    <div class="factbar">
+      <span><b>18</b> layar</span>
+      <span><b>2</b> aplikasi</span>
+      <span>Hari yang diperagakan <b>Minggu, 2 Agustus 2026</b></span>
+      <span>Data <b>fiktif</b></span>
+    </div>
+  </header>
+
+  <!-- ================= data contoh ================= -->
+  <section class="section" id="data">
+    <div class="section-head">
+      <p class="eyebrow">Data contoh</p>
+      <h2>Satu keluarga, satu hari</h2>
+      <p>
+        Semua nama, nomor, dan angka di halaman ini dikarang. Yang tidak dikarang adalah bentuknya:
+        struktur data mengikuti bidang yang benar-benar dikirim backend, dan warna serta ukuran
+        huruf diambil langsung dari berkas token kedua aplikasi.
+      </p>
+    </div>
+
+    <dl class="datasheet">
+      <div>
+        <dt>Lansia (utama)</dt>
+        <dd>Ibu Sri Wahyuni<small>73 tahun · hipertensi &amp; diabetes tipe 2</small></dd>
+      </div>
+      <div>
+        <dt>Lansia (kedua)</dt>
+        <dd>Bapak Suryadi<small>77 tahun · suami Bu Sri, satu rumah</small></dd>
+      </div>
+      <div>
+        <dt>Akun keluarga</dt>
+        <dd>Rina Kusuma<small>anak · rina@contoh.id</small></dd>
+      </div>
+      <div>
+        <dt>Peristiwa hari itu</dt>
+        <dd>Metformin siang terlewat<small>82 menit, ditandai penting</small></dd>
+      </div>
+    </dl>
+  </section>
+
+  <!-- ================= app keluarga ================= -->
+  <section class="section" id="keluarga">
+    <div class="section-head">
+      <p class="eyebrow">Aplikasi 1 · untuk keluarga</p>
+      <h2>Kabar yang bisa dibaca sambil berdiri</h2>
+      <p>
+        Lima tab, ditambah beberapa layar yang ditumpuk di atasnya. Yang membedakannya dari aplikasi
+        pemantau biasa ada di kartu tengah beranda: keluarga bisa membaca kalimat persis yang akan
+        diucapkan asisten ke ibunya berikutnya — bukan sekadar daftar centang.
+      </p>
+      <blockquote class="spoken">
+        <p class="who">Kalimat berikutnya untuk Bu Sri</p>
+        <q>Bu Sri, tadi jam satu siang belum sempat minum Metformin ya? Kalau sudah, bilang saja
+          sudah. Kalau belum, saya temani sekarang.</q>
+      </blockquote>
+    </div>
+
+    <div class="grid">
+
+      <!-- 01 masuk -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">01</span> Masuk</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.18</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="full">
+              <div class="mark"><span class="ic" data-icon="heart"></span></div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <p class="display">Tetap dekat<br>dengan orang tua</p>
+                <p class="bd" style="color:var(--c-ink2)">
+                  Atur pengingat obat, lihat kabar harian, dan terima peringatan darurat — tanpa
+                  harus terus menelepon.
+                </p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+                <div class="btn ghost off"><span class="ic" data-icon="google"></span>Masuk dengan Google</div>
+                <div class="btn">Coba sebagai tamu</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+                <p class="nt">
+                  Mode tamu membuat akun sementara berisi data contoh — bebas kamu ubah. Akunnya
+                  terhapus kalau tidak dipakai 7 hari; masuk dengan Google untuk menyimpannya.
+                </p>
+                <p class="nt">Data kesehatan hanya dibagikan sesuai izin yang diberikan lansia.</p>
+                <p class="nt dim">Server: https://api.aicaretaker.id</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Tombol Google sengaja dimatikan sampai Android OAuth client ID terbit — layar ini
+          menyatakannya, bukan menyembunyikannya.
+        </figcaption>
+      </figure>
+
+      <!-- 02 beranda -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">02</span> Beranda</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.22</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar">
+              <div class="appbar-top">
+                <div>
+                  <h2>Kabar hari ini</h2>
+                  <p class="sub">Min, 2 Agu</p>
+                </div>
+                <span class="av s38">RI</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on">Bu Sri Wahyuni</span>
+                <span class="chip">Pak Suryadi</span>
+                <span class="chip"><span class="ic" data-icon="plus"></span>Tambah</span>
+              </div>
+            </div>
+
+            <div class="body">
+              <div class="card">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span class="av s46">SR</span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <p class="ttl lg">Ibu Sri Wahyuni</p>
+                    <p class="nt">73 tahun · Ibu</p>
+                    <p class="nt">Terakhir aktif 4 jam lalu</p>
+                  </div>
+                  <span class="pill warn"><span class="dot"></span>Perlu perhatian</span>
+                </div>
+                <div class="statrow">
+                  <div><b>1<sub>/3</sub></b><small>Obat hari ini</small></div>
+                  <div><b>3<sub>/5</sub></b><small>Suasana hati</small></div>
+                  <div><b>2<sub>×</sub></b><small>Ngobrol</small></div>
+                </div>
+              </div>
+
+              <div class="priority">
+                <p class="kind"><span class="ic" data-icon="chat"></span>Pengingat penting terlewat</p>
+                <p class="say">“Bu Sri, tadi jam satu siang belum sempat minum Metformin ya? Kalau
+                  sudah, bilang saja sudah. Kalau belum, saya temani sekarang.”</p>
+                <p class="why">Kalimat ini yang akan diucapkan asisten ke Bu Sri Wahyuni saat tombol
+                  ditekan berikutnya.</p>
+              </div>
+
+              <p class="sectitle">Perlu diperhatikan</p>
+              <div class="flag crit">
+                <span class="ic" data-icon="alert"></span>
+                <span>Metformin 500 mg terlewat 1 jam 22 menit — obat ini ditandai penting.</span>
+              </div>
+              <div class="flag warn">
+                <span class="ic" data-icon="alert"></span>
+                <span>Suasana hati turun ke 2 dari 5 kemarin, terendah dalam dua minggu.</span>
+              </div>
+
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Sisa jadwal hari ini</p>
+                  <span class="link">Semua jadwal</span>
+                </div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="time">13.00</span>
+                    <span class="box"><span class="ic" data-icon="pill"></span></span>
+                    <span class="main"><span class="t">Metformin 500 mg</span><span class="nt">Obat · penting · belum dikonfirmasi</span></span>
+                    <span class="end"><span class="stat crit"><span class="ic" data-icon="alert"></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">18.10</span>
+                    <span class="box"><span class="ic" data-icon="moon"></span></span>
+                    <span class="main"><span class="t">Sholat Maghrib</span><span class="nt">Ibadah</span></span>
+                    <span class="end"><span class="stat"><span class="ic" data-icon="clock"></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">19.00</span>
+                    <span class="box"><span class="ic" data-icon="pill"></span></span>
+                    <span class="main"><span class="t">Amlodipin 5 mg</span><span class="nt">Obat · penting</span></span>
+                    <span class="end"><span class="stat"><span class="ic" data-icon="clock"></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">21.00</span>
+                    <span class="box"><span class="ic" data-icon="bed"></span></span>
+                    <span class="main"><span class="t">Waktunya istirahat</span><span class="nt">Istirahat</span></span>
+                    <span class="end"><span class="stat"><span class="ic" data-icon="clock"></span></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Aktivitas terbaru</p>
+                  <span class="link">Lihat riwayat</span>
+                </div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="moon"></span></span>
+                    <span class="main"><span class="t">Sholat Dzuhur</span><span class="nt">Dikonfirmasi sudah dilakukan</span></span>
+                    <span class="end"><span class="stat good"><span class="ic" data-icon="check"></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="heart"></span></span>
+                    <span class="main"><span class="t">Suasana hati 3/5</span><span class="nt">Agak capek karena semalam susah tidur.</span></span>
+                    <span class="end"><span class="nt">10.18</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">Tanya kabar</span><span class="nt">Cerita soal cucu yang mau libur sekolah; suara terdengar segar.</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="bowl"></span></span>
+                    <span class="main"><span class="t">Sarapan</span><span class="nt">Dikonfirmasi sudah dilakukan</span></span>
+                    <span class="end"><span class="stat good"><span class="ic" data-icon="check"></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">Pengingat tepat waktu</span><span class="nt">Candesartan diminum bersama bubur ayam.</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <nav class="tabbar">
+              <a class="on"><span class="badge">2</span><span class="ic" data-icon="home"></span>Beranda</a>
+              <a><span class="ic" data-icon="calendar"></span>Jadwal</a>
+              <a><span class="ic" data-icon="chart"></span>Riwayat</a>
+              <a><span class="ic" data-icon="siren"></span>Darurat</a>
+              <a><span class="ic" data-icon="user"></span>Profil</a>
+            </nav>
+          </div>
+        </div>
+        <figcaption>
+          Layar utama. Angka pada kartu prioritas datang dari context engine di backend, bukan dari
+          aturan yang ditulis ulang di sisi aplikasi. <em>Gulir bingkai untuk melihat sisanya.</em>
+        </figcaption>
+      </figure>
+
+      <!-- 03 jadwal -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">03</span> Jadwal</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.24</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar">
+              <div class="appbar-top">
+                <div>
+                  <h2>Jadwal</h2>
+                  <p class="sub">Atur pengingat harian</p>
+                </div>
+                <span class="av s38">RI</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on">Bu Sri Wahyuni</span>
+                <span class="chip">Pak Suryadi</span>
+                <span class="chip"><span class="ic" data-icon="plus"></span>Tambah</span>
+              </div>
+            </div>
+
+            <div class="body">
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <span class="chip on">Semua</span>
+                <span class="chip">Obat</span>
+                <span class="chip">Ibadah</span>
+                <span class="chip">Aktivitas</span>
+                <span class="chip">Istirahat</span>
+              </div>
+
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Jadwal berulang</p>
+                  <span class="nt">9 jadwal aktif</span>
+                </div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="time">06.00</span>
+                    <span class="box"><span class="ic" data-icon="walk"></span></span>
+                    <span class="main"><span class="t">Jalan pagi keliling komplek</span><span class="nt">Hari kerja (Sen–Jum)</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">06.30</span>
+                    <span class="box"><span class="ic" data-icon="pill"></span></span>
+                    <span class="main"><span class="t">Candesartan 8 mg</span><span class="nt">Setiap hari · 1 tablet · penting</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">07.00</span>
+                    <span class="box"><span class="ic" data-icon="bowl"></span></span>
+                    <span class="main"><span class="t">Sarapan</span><span class="nt">Setiap hari</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">09.00</span>
+                    <span class="box"><span class="ic" data-icon="stethoscope"></span></span>
+                    <span class="main"><span class="t">Kontrol ke Puskesmas</span><span class="nt">Setiap Rabu · penting</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">12.00</span>
+                    <span class="box"><span class="ic" data-icon="moon"></span></span>
+                    <span class="main"><span class="t">Sholat Dzuhur</span><span class="nt">Setiap hari</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">13.00</span>
+                    <span class="box"><span class="ic" data-icon="pill"></span></span>
+                    <span class="main"><span class="t">Metformin 500 mg</span><span class="nt">Setiap hari · 1 tablet · penting</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">18.10</span>
+                    <span class="box"><span class="ic" data-icon="moon"></span></span>
+                    <span class="main"><span class="t">Sholat Maghrib</span><span class="nt">Setiap hari</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">19.00</span>
+                    <span class="box"><span class="ic" data-icon="pill"></span></span>
+                    <span class="main"><span class="t">Amlodipin 5 mg</span><span class="nt">Setiap hari · 1 tablet · penting</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="time">21.00</span>
+                    <span class="box"><span class="ic" data-icon="bed"></span></span>
+                    <span class="main"><span class="t">Waktunya istirahat</span><span class="nt">Setiap hari</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn"><span class="ic" data-icon="plus"></span>Tambah jadwal</div>
+
+              <div class="card">
+                <div style="display:flex;gap:11px;align-items:flex-start">
+                  <span class="box accent"><span class="ic" data-icon="sync"></span></span>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                    <p class="ttl">Langsung tersinkron</p>
+                    <p class="nt">
+                      Perubahan jadwal langsung dikirim ke HP Bu Sri Wahyuni. Beliau tidak perlu
+                      melakukan apa pun — asisten yang akan mengingatkan sesuai jam baru.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <nav class="tabbar">
+              <a><span class="badge">2</span><span class="ic" data-icon="home"></span>Beranda</a>
+              <a class="on"><span class="ic" data-icon="calendar"></span>Jadwal</a>
+              <a><span class="ic" data-icon="chart"></span>Riwayat</a>
+              <a><span class="ic" data-icon="siren"></span>Darurat</a>
+              <a><span class="ic" data-icon="user"></span>Profil</a>
+            </nav>
+          </div>
+        </div>
+        <figcaption>
+          Sembilan jadwal berulang. Ikon per jenis dipakai bersama teks, jadi kategori tetap
+          terbaca tanpa mengandalkan warna.
+        </figcaption>
+      </figure>
+
+      <!-- 04 sheet ubah jadwal -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">04</span> Ubah jadwal</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.25</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar">
+              <div class="appbar-top">
+                <div>
+                  <h2>Jadwal</h2>
+                  <p class="sub">Atur pengingat harian</p>
+                </div>
+                <span class="av s38">RI</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on">Bu Sri Wahyuni</span>
+                <span class="chip">Pak Suryadi</span>
+              </div>
+            </div>
+            <div class="body" style="overflow:hidden">
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Jadwal berulang</p>
+                  <span class="nt">9 jadwal aktif</span>
+                </div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="time">06.30</span>
+                    <span class="box"><span class="ic" data-icon="pill"></span></span>
+                    <span class="main"><span class="t">Candesartan 8 mg</span><span class="nt">Setiap hari · penting</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="scrim">
+              <div class="sheet">
+                <span class="grab"></span>
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  <h3>Ubah jadwal</h3>
+                  <p class="nt">Jadwal yang diubah langsung dikirim ke HP Bu Sri Wahyuni.</p>
+                </div>
+
+                <div class="field">
+                  <label>Jenis</label>
+                  <div class="wrapchips">
+                    <span class="chip on"><span class="ic" data-icon="pill"></span>Obat</span>
+                    <span class="chip"><span class="ic" data-icon="walk"></span>Aktivitas</span>
+                    <span class="chip"><span class="ic" data-icon="moon"></span>Ibadah</span>
+                    <span class="chip"><span class="ic" data-icon="bed"></span>Istirahat</span>
+                  </div>
+                  <p class="hint">Jenis jadwal tidak bisa diubah setelah dibuat.</p>
+                </div>
+
+                <div class="field">
+                  <label>Nama jadwal</label>
+                  <div class="input">Metformin 500 mg</div>
+                </div>
+
+                <div style="display:flex;gap:12px">
+                  <div class="field" style="flex:1">
+                    <label>Jam</label>
+                    <div class="input">13:00</div>
+                    <p class="hint">Format 24 jam</p>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Hari</label>
+                  <div class="wrapchips" style="margin-bottom:4px">
+                    <span class="chip on">Setiap hari</span>
+                    <span class="chip">Hari kerja</span>
+                    <span class="chip">Akhir pekan</span>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <span class="chip on">Sen</span><span class="chip on">Sel</span>
+                    <span class="chip on">Rab</span><span class="chip on">Kam</span>
+                    <span class="chip on">Jum</span><span class="chip on">Sab</span>
+                    <span class="chip on">Min</span>
+                  </div>
+                  <p class="hint">Berlaku: Setiap hari</p>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:12px;padding:4px 0">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+                    <p class="bd" style="font-weight:600">Tandai penting</p>
+                    <p class="nt">Kalau terlewat, keluarga langsung diberi tahu.</p>
+                  </div>
+                  <span class="sw on"><span></span></span>
+                </div>
+
+                <div class="btn">Simpan perubahan</div>
+                <div class="btn ghost"><span class="ic" data-icon="trash"></span>Hapus jadwal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Panel naik dari bawah. Jenis jadwal dikunci saat mengubah karena memindahkannya akan
+          memutus kaitan dengan data obat di backend.
+        </figcaption>
+      </figure>
+
+      <!-- 05 riwayat -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">05</span> Riwayat</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.31</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar">
+              <div class="appbar-top">
+                <div>
+                  <h2>Riwayat</h2>
+                  <p class="sub">Pola 7 hari terakhir</p>
+                </div>
+                <span class="av s38">RI</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on">Bu Sri Wahyuni</span>
+                <span class="chip">Pak Suryadi</span>
+                <span class="chip"><span class="ic" data-icon="plus"></span>Tambah</span>
+              </div>
+            </div>
+
+            <div class="body">
+              <div style="display:flex;gap:8px">
+                <span class="chip on">7 hari terakhir</span>
+                <span class="chip">14 hari terakhir</span>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Kepatuhan minum obat</p></div>
+                <div class="hero"><b>81%</b><small>17 dari 21 dosis</small></div>
+                <div id="chart-adherence"></div>
+                <div class="legend">
+                  <span><i style="background:var(--c-series1)"></i>Lengkap</span>
+                  <span><i style="background:var(--c-critical)"></i>Ada yang terlewat</span>
+                </div>
+                <span class="link">Lihat sebagai tabel</span>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Suasana hati</p></div>
+                <div class="hero"><b>3.3</b><small>rata-rata dari skala 5</small></div>
+                <div id="chart-mood"></div>
+                <div class="legend">
+                  <span><i style="background:var(--c-warning)"></i>Hari dengan suasana hati rendah</span>
+                </div>
+                <span class="link">Lihat sebagai tabel</span>
+              </div>
+
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Pola bicara</p>
+                  <span class="pill warn"><span class="dot"></span>perlu diperhatikan</span>
+                </div>
+                <p class="nt">
+                  Dihitung dari kecepatan bicara, jeda mencari kata, dan pengulangan saat mengobrol
+                  dengan asisten. Ini bukan diagnosis — hanya pola yang tercatat, untuk bahan cerita
+                  ke dokter.
+                </p>
+              </div>
+
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Percakapan</p>
+                  <span class="nt">4 percakapan</span>
+                </div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">Tanya kabar</span><span class="nt">Min, 2 Agu 10.15 · Cerita soal cucu yang mau libur sekolah.</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">Pengingat tepat waktu</span><span class="nt">Min, 2 Agu 06.32 · Candesartan diminum bersama sarapan.</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">Pengingat terlewat</span><span class="nt">Sab, 1 Agu 19.05 · Amlodipin baru diminum jam delapan malam.</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">Sapaan biasa</span><span class="nt">Sab, 1 Agu 08.00 · Mengeluh sulit tidur dua malam terakhir.</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Ringkasan harian</p></div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="main"><span class="t">Min, 2 Agu</span><span class="nt">Metformin siang terlewat · suasana hati biasa</span></span>
+                    <span class="end"><span class="pill crit"><span class="dot"></span>1/3 obat</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Sab, 1 Agu</span><span class="nt">Tidur larut · Amlodipin malam terlambat sejam</span></span>
+                    <span class="end"><span class="pill crit"><span class="dot"></span>2/3 obat</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Jum, 31 Jul</span><span class="nt">Jalan pagi 20 menit · suasana hati baik</span></span>
+                    <span class="end"><span class="pill good"><span class="dot"></span>3/3 obat</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Kam, 30 Jul</span><span class="nt">Tidak ada catatan khusus</span></span>
+                    <span class="end"><span class="pill good"><span class="dot"></span>3/3 obat</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <nav class="tabbar">
+              <a><span class="badge">2</span><span class="ic" data-icon="home"></span>Beranda</a>
+              <a><span class="ic" data-icon="calendar"></span>Jadwal</a>
+              <a class="on"><span class="ic" data-icon="chart"></span>Riwayat</a>
+              <a><span class="ic" data-icon="siren"></span>Darurat</a>
+              <a><span class="ic" data-icon="user"></span>Profil</a>
+            </nav>
+          </div>
+        </div>
+        <figcaption>
+          Hari bermasalah diberi penanda bentuk, bukan hanya warna, dan setiap grafik punya versi
+          tabel. <em>Gulir bingkai untuk melihat sisanya.</em>
+        </figcaption>
+      </figure>
+
+      <!-- 06 darurat -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">06</span> Darurat</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.34</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar">
+              <div class="appbar-top">
+                <div>
+                  <h2>Darurat</h2>
+                  <p class="sub">Status dan kontak penting</p>
+                </div>
+                <span class="av s38">RI</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on">Bu Sri Wahyuni</span>
+                <span class="chip">Pak Suryadi</span>
+                <span class="chip"><span class="ic" data-icon="plus"></span>Tambah</span>
+              </div>
+            </div>
+
+            <div class="body">
+              <div class="card center">
+                <span class="stat good" style="width:46px;height:46px">
+                  <span class="ic" data-icon="shield" style="width:22px;height:22px"></span>
+                </span>
+                <p class="ttl lg">Tidak ada kejadian darurat</p>
+                <p class="nt ctr">
+                  Kejadian terakhir 5 hari lalu dan sudah ditangani. Asisten akan mengirim notifikasi
+                  ke HP Anda begitu ada tanda bahaya.
+                </p>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Bagaimana alurnya</p></div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="box accent"><span class="ic" data-icon="siren"></span></span>
+                    <span class="main"><span class="t">1. Terdeteksi</span><span class="nt">Kata “tolong”, deteksi jatuh, atau pengingat penting diabaikan berulang.</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box accent"><span class="ic" data-icon="chat"></span></span>
+                    <span class="main"><span class="t">2. Dikonfirmasi dulu</span><span class="nt">Asisten bertanya ke lansia sebelum membangunkan keluarga — supaya tidak salah alarm.</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box accent"><span class="ic" data-icon="bell"></span></span>
+                    <span class="main"><span class="t">3. Notifikasi ke keluarga</span><span class="nt">Semua anggota keluarga yang terhubung menerima notifikasi prioritas tinggi.</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box accent"><span class="ic" data-icon="phone"></span></span>
+                    <span class="main"><span class="t">4. Panggilan dalam aplikasi</span><span class="nt">Kalau tidak direspons, panggilan suara langsung terbuka di dalam aplikasi.</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Riwayat kejadian</p></div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="box crit"><span class="ic" data-icon="siren"></span></span>
+                    <span class="main"><span class="t">Terdeteksi jatuh</span><span class="nt">Sel, 28 Jul 20.42</span></span>
+                    <span class="end"><span class="pill good"><span class="dot"></span>Selesai</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box crit"><span class="ic" data-icon="siren"></span></span>
+                    <span class="main"><span class="t">Kata bahaya terdeteksi</span><span class="nt">Min, 19 Jul 05.10</span></span>
+                    <span class="end"><span class="pill"><span class="dot"></span>Alarm palsu</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Kontak darurat</p></div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="av s32">RI</span>
+                    <span class="main"><span class="t">Rina Kusuma</span><span class="nt">Anak · +62 812-1100-4477</span></span>
+                    <span class="end"><span class="pill good"><span class="dot"></span>Dalam app</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="av s32">BA</span>
+                    <span class="main"><span class="t">Bagas Kusuma</span><span class="nt">Cucu · +62 856-2233-1908</span></span>
+                    <span class="end"><span class="pill good"><span class="dot"></span>Dalam app</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="av s32">DR</span>
+                    <span class="main"><span class="t">dr. Hendra Wijaya</span><span class="nt">Dokter keluarga · +62 22 730 1122</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <p class="nt ctr">
+                Panggilan berjalan lewat internet di dalam aplikasi, jadi tidak memakai pulsa dan
+                Bu Sri Wahyuni cukup menekan satu tombol untuk menjawab.
+              </p>
+            </div>
+
+            <nav class="tabbar">
+              <a><span class="badge">2</span><span class="ic" data-icon="home"></span>Beranda</a>
+              <a><span class="ic" data-icon="calendar"></span>Jadwal</a>
+              <a><span class="ic" data-icon="chart"></span>Riwayat</a>
+              <a class="on"><span class="ic" data-icon="siren"></span>Darurat</a>
+              <a><span class="ic" data-icon="user"></span>Profil</a>
+            </nav>
+          </div>
+        </div>
+        <figcaption>
+          Keadaan tenang — yang paling sering dilihat. Alur eskalasi tetap dijelaskan supaya
+          keluarga tahu apa yang akan terjadi sebelum benar-benar terjadi.
+        </figcaption>
+      </figure>
+
+      <!-- 07 profil -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">07</span> Profil</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.36</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar">
+              <div class="appbar-top">
+                <div>
+                  <h2>Profil</h2>
+                  <p class="sub">Data lansia dan akun Anda</p>
+                </div>
+                <span class="av s38">RI</span>
+              </div>
+              <div class="chiprow">
+                <span class="chip on">Bu Sri Wahyuni</span>
+                <span class="chip">Pak Suryadi</span>
+                <span class="chip"><span class="ic" data-icon="plus"></span>Tambah</span>
+              </div>
+            </div>
+
+            <div class="body">
+              <div class="card">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span class="av s46">SR</span>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+                    <p class="ttl lg">Ibu Sri Wahyuni</p>
+                    <p class="nt">Jl. Melati Raya No. 27, Bandung</p>
+                    <p class="nt">+62 813-4455-9021</p>
+                  </div>
+                </div>
+                <div class="rows">
+                  <div class="row"><span class="main"><span class="t">1953 (73 tahun)</span><span class="nt">Tahun lahir</span></span></div>
+                  <div class="row"><span class="main"><span class="t">Aktif — jadwal sholat</span><span class="nt">Pengingat ibadah</span></span></div>
+                  <div class="row">
+                    <span class="main"><span class="t">Terhubung sejak Rab, 29 Jul</span><span class="nt">Perangkat lansia</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Privasi &amp; izin</p>
+                  <span class="pill"><span class="ic" data-icon="lock"></span>Dikunci</span>
+                </div>
+                <p class="nt">
+                  Hanya Bu Sri Wahyuni yang bisa mengubah izin ini, dari perangkatnya sendiri. Anda
+                  bisa melihat, tapi tidak bisa menyalakan.
+                </p>
+                <div class="rows">
+                  <div class="row">
+                    <span class="main"><span class="t">Bagikan ringkasan harian</span><span class="nt">Diizinkan</span></span>
+                    <span class="end"><span class="sw on"><span></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Bagikan sinyal suasana hati</span><span class="nt">Diizinkan</span></span>
+                    <span class="end"><span class="sw on"><span></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Bagikan transkrip percakapan</span><span class="nt">Tidak diizinkan</span></span>
+                    <span class="end"><span class="sw"><span></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Deteksi jatuh</span><span class="nt">Diizinkan</span></span>
+                    <span class="end"><span class="sw on"><span></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Dengarkan terus (wake word)</span><span class="nt">Tidak diizinkan</span></span>
+                    <span class="end"><span class="sw"><span></span></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Akun Anda</p></div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="av s32">RI</span>
+                    <span class="main"><span class="t">Rina Kusuma</span><span class="nt">rina@contoh.id · keluarga</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="bell"></span></span>
+                    <span class="main"><span class="t">Notifikasi darurat</span><span class="nt">Aktif — HP ini akan berbunyi saat ada kejadian darurat</span></span>
+                    <span class="end"><span class="sw on"><span></span></span></span>
+                  </div>
+                  <div class="row">
+                    <span class="box"><span class="ic" data-icon="bell"></span></span>
+                    <span class="main"><span class="t">Kirim notifikasi uji</span><span class="nt">Membuktikan jalurnya sampai ke HP ini, tanpa memicu darurat palsu</span></span>
+                    <span class="end"><span class="ic" data-icon="chevron"></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn ghost">Keluar</div>
+              <p class="nt dim ctr">AI Caretaker · app keluarga v0.1<br>https://api.aicaretaker.id</p>
+            </div>
+
+            <nav class="tabbar">
+              <a><span class="badge">2</span><span class="ic" data-icon="home"></span>Beranda</a>
+              <a><span class="ic" data-icon="calendar"></span>Jadwal</a>
+              <a><span class="ic" data-icon="chart"></span>Riwayat</a>
+              <a><span class="ic" data-icon="siren"></span>Darurat</a>
+              <a class="on"><span class="ic" data-icon="user"></span>Profil</a>
+            </nav>
+          </div>
+        </div>
+        <figcaption>
+          Sakelar privasi ditampilkan tapi terkunci. Keluarga berhak tahu apa yang dibagikan; yang
+          berhak mengubahnya tetap lansia sendiri, dari HP-nya.
+        </figcaption>
+      </figure>
+
+      <!-- 08 transkrip ditahan -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">08</span> Percakapan · ditahan</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.38</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar" style="padding-bottom:14px">
+              <div class="appbar-top">
+                <span class="ic" data-icon="back" style="width:20px;height:20px"></span>
+                <div><h2 style="font-size:16px">Percakapan</h2></div>
+              </div>
+            </div>
+            <div class="body">
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Tanya kabar</p></div>
+                <p class="nt">Min, 2 Agu pukul 10.15 · dibuka otomatis oleh jadwal</p>
+              </div>
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Ringkasan</p></div>
+                <p class="bd">
+                  Bu Sri bercerita tentang cucunya yang mulai libur sekolah dan berencana menginap.
+                  Menyebut semalam susah tidur, tapi suaranya terdengar segar. Menilai suasana
+                  hatinya 3 dari 5.
+                </p>
+              </div>
+              <p class="sectitle">Isi percakapan</p>
+              <div class="card">
+                <div style="display:flex;gap:11px;align-items:flex-start">
+                  <span class="box"><span class="ic" data-icon="lock"></span></span>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                    <p class="ttl">Transkrip tidak dibagikan</p>
+                    <p class="nt">
+                      Bu Sri Wahyuni belum mengizinkan isi percakapan dibagikan ke keluarga. Anda
+                      tetap menerima ringkasannya.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Izin ditolak bukan ditampilkan sebagai galat. Ringkasan tetap sampai, isi percakapan
+          tidak — persis seperti yang disetujui lansia.
+        </figcaption>
+      </figure>
+
+      <!-- 09 transkrip diizinkan -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">09</span> Percakapan · diizinkan</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>14.40</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar" style="padding-bottom:14px">
+              <div class="appbar-top">
+                <span class="ic" data-icon="back" style="width:20px;height:20px"></span>
+                <div><h2 style="font-size:16px">Percakapan</h2></div>
+              </div>
+            </div>
+            <div class="body">
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Sapaan biasa</p></div>
+                <p class="nt">Sab, 1 Agu pukul 08.00 · dibuka oleh lansia (tombol)</p>
+              </div>
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Ringkasan</p></div>
+                <p class="bd">
+                  Pak Suryadi mengeluh pinggang pegal dan sulit tidur dua malam terakhir. Bersedia
+                  menceritakannya ke Rina. Tidak ada tanda bahaya.
+                </p>
+              </div>
+              <p class="sectitle">Isi percakapan</p>
+              <div class="bubbles">
+                <div class="bub them">Selamat pagi, Pak Suryadi. Sudah bangun dari tadi?<time>08.00</time></div>
+                <div class="bub elder">Sudah, dari subuh. Tapi badan pegal semua.<time>08.00</time></div>
+                <div class="bub them">Pegalnya di bagian mana, Pak?<time>08.01</time></div>
+                <div class="bub elder">Pinggang. Dua malam ini susah tidur.<time>08.01</time></div>
+                <div class="bub them">
+                  Kalau sore masih pegal, saya ingatkan untuk cerita ke Mbak Rina ya. Sekarang
+                  sarapan dulu, obatnya diminum sesudah makan.<time>08.02</time>
+                </div>
+                <div class="bub elder">Iya, sebentar lagi.<time>08.02</time></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Pak Suryadi mengizinkan transkrip dibagikan, jadi layar yang sama menampilkan isi
+          percakapannya utuh. Gelembung berwarna aksen adalah suara lansia.
+        </figcaption>
+      </figure>
+
+      <!-- 10 detail darurat -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">10</span> Detail kejadian</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>20.44</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar" style="padding-bottom:14px">
+              <div class="appbar-top">
+                <span class="ic" data-icon="back" style="width:20px;height:20px"></span>
+                <div><h2 style="font-size:16px">Kejadian darurat</h2></div>
+              </div>
+            </div>
+            <div class="body">
+              <div class="card">
+                <div class="cardhead">
+                  <p class="ttl">Terdeteksi jatuh</p>
+                  <span class="pill warn"><span class="dot"></span>Sedang ditangani</span>
+                </div>
+                <p class="bd">
+                  Guncangan kuat terdeteksi di kamar mandi. Asisten bertanya, dan Bu Sri menjawab
+                  bahwa beliau butuh bantuan untuk berdiri.
+                </p>
+              </div>
+
+              <div class="card">
+                <div class="cardhead"><p class="ttl">Kronologi</p></div>
+                <div class="rows">
+                  <div class="row">
+                    <span class="time">20.42</span>
+                    <span class="main"><span class="t">Terdeteksi</span><span class="nt">Sel, 28 Jul · asisten menangkap tanda bahaya</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Dikonfirmasi lansia</span><span class="nt">Membenarkan butuh bantuan — keluarga langsung diberi tahu</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Ruang panggilan disiapkan</span><span class="nt">Keluarga bisa masuk kapan saja</span></span>
+                  </div>
+                  <div class="row">
+                    <span class="main"><span class="t">Ditangani</span><span class="nt">Rina Kusuma</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn danger"><span class="ic" data-icon="phone"></span>Masuk panggilan</div>
+              <div class="btn ghost">Tandai sudah ditangani</div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Kejadian 28 Juli, ditangkap pada menit kedua — sebelum ditutup. Di layar Darurat, kejadian
+          yang sama sudah bertanda “Selesai”.
+        </figcaption>
+      </figure>
+
+      <!-- 11 panggilan -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">11</span> Panggilan</p>
+        <div class="device is-call">
+          <div class="screen">
+            <div class="call">
+              <span class="tagline">Panggilan dalam aplikasi</span>
+              <span class="av avatar">SR</span>
+              <p class="who">Ibu Sri Wahyuni</p>
+              <p class="timer">01.14</p>
+              <p class="hintline">Suara Anda terdengar di HP lansia.<br>Bicaralah pelan dan singkat.</p>
+              <div class="callbtns">
+                <span class="cbtn"><span class="ic" data-icon="mic"></span></span>
+                <span class="cbtn hang"><span class="ic" data-icon="phoneOff"></span></span>
+                <span class="cbtn on"><span class="ic" data-icon="speaker"></span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Panggilan tidak pernah keluar dari aplikasi, jadi tidak memakai pulsa. Penghitung durasi
+          baru berjalan setelah ada suara di kedua sisi — bukan saat tombol ditekan.
+        </figcaption>
+      </figure>
+
+      <!-- 12 hubungkan perangkat -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">12</span> Hubungkan perangkat</p>
+        <div class="device">
+          <div class="screen">
+            <div class="statusbar">
+              <span>09.12</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="sig"><i></i><i></i><i></i><i></i></span>
+                <span class="batt"><span></span></span>
+              </span>
+            </div>
+            <div class="appbar" style="padding-bottom:14px">
+              <div class="appbar-top">
+                <span class="ic" data-icon="back" style="width:20px;height:20px"></span>
+                <div><h2 style="font-size:16px">Hubungkan perangkat</h2></div>
+              </div>
+            </div>
+            <div class="body">
+              <div class="card center">
+                <div class="qrpad"><div id="qr"></div></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                  <p class="paircode">K7M2QD</p>
+                  <p class="nt">Berlaku 12:41 lagi</p>
+                </div>
+                <div class="btn ghost" style="align-self:stretch">
+                  <span class="ic" data-icon="sync"></span>Ganti kode
+                </div>
+              </div>
+
+              <div class="card">
+                <p class="ttl">Caranya</p>
+                <div class="rows">
+                  <div class="row"><span class="main"><span class="t">1. Buka aplikasi di HP beliau</span><span class="nt">Aplikasi langsung meminta kode saat pertama dibuka.</span></span></div>
+                  <div class="row"><span class="main"><span class="t">2. Arahkan ke kode ini</span><span class="nt">Atau ketik enam hurufnya kalau kameranya bermasalah.</span></span></div>
+                  <div class="row"><span class="main"><span class="t">3. Selesai</span><span class="nt">Setelah itu tidak ada lagi yang perlu diketuk. Aplikasi langsung berbicara sendiri.</span></span></div>
+                </div>
+              </div>
+
+              <p class="sectitle">Kenapa cepat kedaluwarsa</p>
+              <p class="nt" style="padding:0 2px">
+                Kode ini sekaligus jadi kunci masuk HP beliau, jadi sengaja hanya berlaku 15 menit
+                dan hangus setelah dipakai sekali. Tekan “ganti kode” kalau sudah telanjur lewat.
+              </p>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Satu kode, dua bentuk: QR untuk dipindai di tempat, enam huruf untuk didiktekan lewat
+          telepon. <em>QR pada mockup ini hanya pola contoh, tidak bisa dipindai.</em>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ================= app lansia ================= -->
+  <section class="section" id="lansia">
+    <div class="section-head">
+      <p class="eyebrow">Aplikasi 2 · untuk lansia</p>
+      <h2>Aplikasi yang hampir tidak punya layar</h2>
+      <p>
+        Membuka aplikasi sama dengan memulai percakapan. Tidak ada beranda, tidak ada menu, tidak
+        ada tombol “mulai bicara”. Yang tampil cuma lingkaran status dan caption besar — dan caption
+        itu ada bukan sebagai hiasan, melainkan sebagai satu-satunya bukti bagi lansia bahwa
+        aplikasinya benar-benar mendengar, sekaligus jalan pakai bagi yang pendengarannya berkurang.
+      </p>
+      <blockquote class="spoken">
+        <p class="who">Yang terdengar saat aplikasi dibuka</p>
+        <q>Bu Sri, tadi jam satu siang belum sempat minum Metformin ya? Kalau sudah, bilang saja
+          sudah. Kalau belum, saya temani sekarang.</q>
+      </blockquote>
+      <p>
+        Temanya dikunci terang, bukan karena malas mengikuti mode gelap sistem: latar gelap dengan
+        teks terang justru lebih sulit dibaca mata dengan katarak, dan tampilan yang berubah sendiri
+        membingungkan pengguna yang tidak pernah menyentuh pengaturan. Ukuran huruf terkecil di
+        aplikasi ini kira-kira sebesar judul di aplikasi biasa.
+      </p>
+    </div>
+
+    <div class="grid">
+
+      <!-- 01 pairing -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">01</span> Belum terhubung</p>
+        <div class="device is-elder">
+          <div class="screen">
+            <div class="elder" style="gap:20px;justify-content:flex-start;padding-top:32px">
+              <p style="font-size:30px;font-weight:700;line-height:1.25">Belum terhubung</p>
+              <p style="font-size:20px;line-height:30px;color:var(--c-ink2)">
+                Di aplikasi keluarga: pilih profil lansia, lalu “Hubungkan perangkat”.
+              </p>
+              <div class="scanbox">
+                <div id="qr-scan" style="width:100%;height:100%"></div>
+              </div>
+              <p style="font-size:20px;color:var(--c-ink2)">atau ketik enam hurufnya</p>
+              <div class="codebox">K7M2QD</div>
+              <div class="bigbtn">Hubungkan</div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Satu-satunya layar yang benar-benar disentuh manusia — dan yang menyentuhnya adalah anak
+          atau cucu, bukan lansianya. Aplikasi membuka dirinya dengan mengucapkan permintaan itu.
+        </figcaption>
+      </figure>
+
+      <!-- 02 mendengar -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">02</span> Sedang mendengar</p>
+        <div class="device is-elder">
+          <div class="screen">
+            <div class="elder">
+              <div class="orb listen"><i></i><b></b></div>
+              <p class="caption">Belum, tadi ketiduran habis Dzuhur.</p>
+              <p class="elderlabel">Silakan bicara</p>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Denyut cepat berarti mendengar. Gerakannya yang dibedakan, bukan cuma warnanya — pengguna
+          dengan buta warna tetap bisa membacanya.
+        </figcaption>
+      </figure>
+
+      <!-- 03 bicara -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">03</span> Sedang bicara</p>
+        <div class="device is-elder">
+          <div class="screen">
+            <div class="elder">
+              <div class="orb speak"><i></i><b></b></div>
+              <p class="caption sm">
+                Tidak apa-apa, Bu. Metforminnya diminum sekarang saja, sesudah makan sedikit. Saya
+                tunggu di sini.
+              </p>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Denyut pelan dan warna biru berarti aplikasi sedang berbicara. Kalimat panjang dikecilkan
+          sedikit, tapi tidak pernah di bawah 24 piksel.
+        </figcaption>
+      </figure>
+
+      <!-- 04 selesai -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">04</span> Sesi selesai · luring</p>
+        <div class="device is-elder">
+          <div class="screen">
+            <div class="elder">
+              <div class="orb idle"><i></i><b></b></div>
+              <p class="caption sm">Sudah saya catat ya, Bu. Nanti jam tujuh malam saya ingatkan lagi.</p>
+              <p class="elderlabel">Ketuk layar atau ucapkan “halo teman”</p>
+              <p class="elderlabel" style="padding:0 20px">
+                Sedang tidak ada internet — pengingat tetap jalan.
+              </p>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Sesi berakhir karena diam terlalu lama. Ketukan untuk mengulang adalah satu-satunya
+          sentuhan yang tersisa — jalan keluar dari jalan buntu, bukan menu.
+        </figcaption>
+      </figure>
+
+      <!-- 05 darurat -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">05</span> Mode darurat</p>
+        <div class="device is-elder">
+          <div class="screen">
+            <div class="elder alert">
+              <div class="orb panic"><i></i><b></b></div>
+              <p class="caption sm alert">
+                Saya sudah mengabari Mbak Rina. Tunggu sebentar ya, jangan buru-buru berdiri dulu.
+              </p>
+              <p class="elderlabel">Keluarga sudah dikabari</p>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Seluruh layar berubah, bukan cuma sebuah lencana kecil. Deteksi jatuh tetap berjalan
+          selama percakapan — orang bisa jatuh kapan saja.
+        </figcaption>
+      </figure>
+
+      <!-- 06 izin mikrofon -->
+      <figure class="frame">
+        <p class="frame-tag"><span class="num">06</span> Izin mikrofon</p>
+        <div class="device is-elder">
+          <div class="screen">
+            <div class="elder" style="gap:24px;padding:32px">
+              <p style="font-size:30px;font-weight:700;line-height:1.25">Izin mikrofon belum menyala</p>
+              <p style="font-size:20px;line-height:30px;color:var(--c-ink2)">
+                Aplikasi ini bekerja lewat suara, jadi tanpa mikrofon tidak ada yang bisa dilakukan.
+                Buka pengaturan, lalu nyalakan izin Mikrofon.
+              </p>
+              <div class="bigbtn" style="align-self:auto;padding:20px 36px">Buka pengaturan</div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          Satu-satunya layar di sisi lansia yang ditujukan ke keluarga: merekalah yang akan membuka
+          pengaturan Android.
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ================= catatan ================= -->
+  <section class="section" id="catatan">
+    <div class="section-head">
+      <p class="eyebrow">Catatan</p>
+      <h2>Apa yang nyata dan apa yang dikarang</h2>
+    </div>
+
+    <div class="notes">
+      <div>
+        <h4>Warna &amp; ukuran</h4>
+        <p>
+          Diambil apa adanya dari <code>family-app/src/theme/tokens.js</code> dan
+          <code>elder-app/src/theme.js</code>, termasuk kedua mode terang/gelap. Ikonnya adalah set
+          garis yang sama dengan <code>components/Icon.js</code>.
+        </p>
+      </div>
+      <div>
+        <h4>Data</h4>
+        <p>
+          Seluruhnya fiktif, tapi bentuk bidangnya mengikuti yang dikirim backend — termasuk aturan
+          bahwa pengingat lewat 30 menit ditandai belum dikonfirmasi, dan skor suasana hati dua ke
+          bawah dihitung sebagai hari rendah.
+        </p>
+      </div>
+      <div>
+        <h4>Aturan yang ikut terbawa</h4>
+        <p>
+          Warna tidak pernah berdiri sendiri sebagai penanda status: selalu berpasangan dengan ikon
+          dan teks. Grafik selalu punya versi tabel. Lingkaran status dibedakan oleh irama denyut,
+          bukan hanya rona.
+        </p>
+      </div>
+      <div>
+        <h4>Yang tidak berjalan di sini</h4>
+        <p>
+          QR hanyalah pola contoh dan tidak bisa dipindai; angka jam bersifat statis; dan tidak ada
+          satu pun permintaan jaringan. Mockup ini hanya menggambarkan tampilan.
+        </p>
+      </div>
+    </div>
+
+    <p class="colophon">AI Caretaker · mockup antarmuka · disusun 2 Agustus 2026</p>
+  </section>
+
+</div>
+
+<script>
+  /* ============================================================
+     Ikon — dipindahkan dari family-app/src/components/Icon.js.
+     Semua digambar di kanvas 24×24 dengan stroke 1.8.
+     ============================================================ */
+  const ICONS = {
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13.5"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    minus: '<line x1="6" y1="12" x2="18" y2="12"/>',
+    pill: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>',
+    walk: '<circle cx="13" cy="4" r="1.6"/><path d="m9 20 2.5-6-2-1.5V9l4-1.5 2.5 3 2.5 1"/><path d="M11.5 13 8 16.5"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+    bed: '<path d="M3 20V8m0 5h18v7"/><path d="M21 13a3 3 0 0 0-3-3h-7v3"/><circle cx="7" cy="11" r="2"/>',
+    bowl: '<path d="M3 11h18a9 9 0 0 1-18 0Z"/><path d="M12 7c0-1.5-1.5-1.5-1.5-3"/>',
+    stethoscope: '<path d="M5 3v5a4 4 0 0 0 8 0V3"/><path d="M9 12v3a5 5 0 0 0 10 0v-2"/><circle cx="19" cy="10" r="2"/>',
+    chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12Z"/>',
+    phone: '<path d="M6.6 3.5 9 3l2 4.5-2 1.5a12 12 0 0 0 6 6l1.5-2L21 15l-.5 2.4A2 2 0 0 1 18.4 19 15.5 15.5 0 0 1 5 5.6a2 2 0 0 1 1.6-2.1Z"/>',
+    phoneOff: '<path d="M6.6 3.5 9 3l2 4.5-2 1.5a12 12 0 0 0 6 6l1.5-2L21 15l-.5 2.4A2 2 0 0 1 18.4 19 15.5 15.5 0 0 1 5 5.6a2 2 0 0 1 1.6-2.1Z"/><line x1="3" y1="3" x2="21" y2="21"/>',
+    mic: '<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><line x1="12" y1="17.5" x2="12" y2="21"/>',
+    speaker: '<path d="M11 5 6.5 9H3v6h3.5L11 19Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
+    chevron: '<polyline points="9 5 16 12 9 19"/>',
+    back: '<polyline points="15 5 8 12 15 19"/>',
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    close: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+    home: '<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2.5"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="6.5"/><line x1="16" y1="3" x2="16" y2="6.5"/>',
+    chart: '<line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="11" width="3.4" height="6" rx="1"/><rect x="12" y="7" width="3.4" height="10" rx="1"/>',
+    siren: '<path d="M6 19v-6a6 6 0 0 1 12 0v6"/><rect x="3.5" y="19" width="17" height="3" rx="1.5"/><line x1="12" y1="3" x2="12" y2="5"/><line x1="5" y1="6" x2="6.4" y2="7.4"/><line x1="19" y1="6" x2="17.6" y2="7.4"/>',
+    user: '<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+    lock: '<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/>',
+    shield: '<path d="M12 3 5 6v5.5c0 4.3 2.9 8.2 7 9.5 4.1-1.3 7-5.2 7-9.5V6Z"/>',
+    bell: '<path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4 1.5 5.5 1.5 5.5H5S6.5 14 6.5 10Z"/><path d="M10 19a2.2 2.2 0 0 0 4 0"/>',
+    heart: '<path d="M12 20s-7.5-4.6-7.5-9.6A4.4 4.4 0 0 1 12 7.7a4.4 4.4 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20Z"/>',
+    sync: '<path d="M4 11a8 8 0 0 1 13.3-5.9L20 7.5"/><polyline points="20 3 20 8 15 8"/><path d="M20 13a8 8 0 0 1-13.3 5.9L4 16.5"/><polyline points="4 21 4 16 9 16"/>',
+    trash: '<path d="M5 7h14"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="M6.5 7 7.4 19a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5L17.5 7"/>',
+  };
+
+  const GOOGLE =
+    '<path fill="#4285F4" d="M21 12.2c0-.7-.06-1.2-.2-1.8H12v3.4h5.1a4.4 4.4 0 0 1-1.9 2.9v2.4h3.1c1.8-1.7 2.7-4.1 2.7-6.9Z"/>' +
+    '<path fill="#34A853" d="M12 21.5c2.4 0 4.5-.8 6-2.2l-3-2.3a5.6 5.6 0 0 1-8.4-3H3.5v2.4A9.5 9.5 0 0 0 12 21.5Z"/>' +
+    '<path fill="#FBBC05" d="M6.6 14a5.7 5.7 0 0 1 0-3.6V8H3.5a9.5 9.5 0 0 0 0 8.5Z"/>' +
+    '<path fill="#EA4335" d="M12 6.4c1.3 0 2.5.5 3.5 1.4l2.6-2.6A9.5 9.5 0 0 0 3.5 8l3.1 2.4A5.6 5.6 0 0 1 12 6.4Z"/>';
+
+  for (const el of document.querySelectorAll('[data-icon]')) {
+    const name = el.dataset.icon;
+    if (name === 'google') {
+      el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + GOOGLE + '</svg>';
+      continue;
+    }
+    const shape = ICONS[name];
+    if (!shape) continue;
+    el.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + shape + '</svg>';
+  }
+
+  /* ============================================================
+     Grafik — geometri mengikuti family-app/src/components/Charts.js
+     ============================================================ */
+
+  const W = 258; // lebar isi kartu pada layar 320px
+
+  /** Kepatuhan minum obat, 27 Jul – 2 Agu. */
+  const ADHERENCE = [
+    { d: 27, taken: 3, total: 3 },
+    { d: 28, taken: 3, total: 3 },
+    { d: 29, taken: 2, total: 3 },
+    { d: 30, taken: 3, total: 3 },
+    { d: 31, taken: 3, total: 3 },
+    { d: 1, taken: 2, total: 3 },
+    { d: 2, taken: 1, total: 3 },
+  ];
+
+  /** Rata-rata suasana hati per hari, skala 1–5. */
+  const MOOD = [
+    { label: '27 Jul', score: 4 },
+    { label: '28 Jul', score: 4 },
+    { label: '29 Jul', score: 3 },
+    { label: '30 Jul', score: 4 },
+    { label: '31 Jul', score: 3 },
+    { label: '1 Agu', score: 2 },
+    { label: '2 Agu', score: 3 },
+  ];
+
+  function svg(height, inner) {
+    return (
+      '<svg viewBox="0 0 ' + W + ' ' + height + '" width="100%" height="' + height + '" ' +
+      'role="img" aria-hidden="true" style="display:block">' + inner + '</svg>'
+    );
+  }
+
+  function drawAdherence() {
+    const H = 140, padL = 26, padR = 4, padT = 12, padB = 20;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const slot = plotW / ADHERENCE.length;
+    const barW = Math.min(20, slot - 5);
+    let out = '';
+
+    for (const v of [0, 50, 100]) {
+      const y = padT + plotH - (v / 100) * plotH;
+      out +=
+        '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y +
+        '" stroke="var(--c-grid)" stroke-width="1"/>' +
+        '<text x="' + (padL - 7) + '" y="' + (y + 3.5) + '" text-anchor="end" font-size="9" ' +
+        'fill="var(--c-ink3)">' + v + '</text>';
+    }
+
+    out +=
+      '<line x1="' + padL + '" y1="' + (padT + plotH) + '" x2="' + (W - padR) + '" y2="' +
+      (padT + plotH) + '" stroke="var(--c-axis)" stroke-width="1"/>';
+
+    ADHERENCE.forEach((p, i) => {
+      const pct = p.total ? (p.taken / p.total) * 100 : 0;
+      const h = Math.max(2, (pct / 100) * plotH);
+      const x = padL + i * slot + (slot - barW) / 2;
+      const y = padT + plotH - h;
+      const kurang = p.taken < p.total;
+      const r = Math.min(4, h);
+      const fill = kurang ? 'var(--c-critical)' : 'var(--c-series1)';
+
+      out +=
+        '<path d="M' + x + ' ' + (y + h) + ' L' + x + ' ' + (y + r) + ' Q' + x + ' ' + y + ' ' +
+        (x + r) + ' ' + y + ' L' + (x + barW - r) + ' ' + y + ' Q' + (x + barW) + ' ' + y + ' ' +
+        (x + barW) + ' ' + (y + r) + ' L' + (x + barW) + ' ' + (y + h) + ' Z" fill="' + fill + '"/>';
+
+      // Penanda bentuk untuk hari yang ada dosis terlewat — supaya tidak
+      // bergantung pada warna saja.
+      if (kurang) {
+        out += '<circle cx="' + (x + barW / 2) + '" cy="' + (y - 6) + '" r="2.6" fill="' + fill + '"/>';
+      }
+
+      out +=
+        '<text x="' + (padL + i * slot + slot / 2) + '" y="' + (H - 5) + '" text-anchor="middle" ' +
+        'font-size="9" fill="var(--c-ink3)">' + p.d + '</text>';
+    });
+
+    return svg(H, out);
+  }
+
+  function drawMood() {
+    const H = 136, padL = 26, padR = 8, padT = 14, padB = 20;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const n = MOOD.length;
+    const x = (i) => padL + (i / (n - 1)) * plotW;
+    const y = (v) => padT + plotH - ((v - 1) / 4) * plotH;
+    let out = '';
+
+    for (const v of [1, 3, 5]) {
+      out +=
+        '<line x1="' + padL + '" y1="' + y(v) + '" x2="' + (W - padR) + '" y2="' + y(v) +
+        '" stroke="var(--c-grid)" stroke-width="1"/>' +
+        '<text x="' + (padL - 7) + '" y="' + (y(v) + 3.5) + '" text-anchor="end" font-size="9" ' +
+        'fill="var(--c-ink3)">' + v + '</text>';
+    }
+
+    const line = MOOD.map((p, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.score).toFixed(1)).join(' ');
+    const area =
+      'M' + x(0) + ' ' + (padT + plotH) + ' ' +
+      MOOD.map((p, i) => 'L' + x(i).toFixed(1) + ' ' + y(p.score).toFixed(1)).join(' ') +
+      ' L' + x(n - 1) + ' ' + (padT + plotH) + ' Z';
+
+    out += '<path d="' + area + '" fill="var(--c-series1)" fill-opacity="0.08"/>';
+    out +=
+      '<path d="' + line + '" fill="none" stroke="var(--c-series1)" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/>';
+
+    MOOD.forEach((p, i) => {
+      const rendah = p.score <= 2;
+      out +=
+        '<circle cx="' + x(i) + '" cy="' + y(p.score) + '" r="' + (rendah ? 4.5 : 3.4) + '" fill="' +
+        (rendah ? 'var(--c-warning)' : 'var(--c-series1)') +
+        '" stroke="var(--c-surface)" stroke-width="2"/>';
+      if (i === 0 || i === n - 1) {
+        out +=
+          '<text x="' + x(i) + '" y="' + (H - 5) + '" text-anchor="' + (i === 0 ? 'start' : 'end') +
+          '" font-size="9" fill="var(--c-ink3)">' + p.label + '</text>';
+      }
+    });
+
+    return svg(H, out);
+  }
+
+  document.getElementById('chart-adherence').innerHTML = drawAdherence();
+  document.getElementById('chart-mood').innerHTML = drawMood();
+
+  /* ============================================================
+     QR contoh. Bukan kode yang sah — hanya pola bergaya QR supaya
+     tata letak layar pemasangan terbaca apa adanya.
+     ============================================================ */
+  function fauxQR(modules, dark, light) {
+    const n = 25;
+    let seed = 20260802;
+    const rand = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+
+    const grid = Array.from({ length: n }, () => Array(n).fill(0));
+
+    // Tiga penanda sudut.
+    const finder = (r, c) => {
+      for (let i = -1; i <= 7; i++) {
+        for (let j = -1; j <= 7; j++) {
+          const rr = r + i, cc = c + j;
+          if (rr < 0 || cc < 0 || rr >= n || cc >= n) continue;
+          const edge = i === 0 || i === 6 || j === 0 || j === 6;
+          const core = i >= 2 && i <= 4 && j >= 2 && j <= 4;
+          grid[rr][cc] = (i >= 0 && i <= 6 && j >= 0 && j <= 6 && (edge || core)) ? 1 : 0;
+        }
+      }
+    };
+
+    const reserved = (r, c) =>
+      (r < 8 && c < 8) || (r < 8 && c >= n - 8) || (r >= n - 8 && c < 8);
+
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (reserved(r, c)) continue;
+        grid[r][c] = rand() > 0.52 ? 1 : 0;
+      }
+    }
+
+    // Garis pewaktu.
+    for (let i = 8; i < n - 8; i++) {
+      grid[6][i] = i % 2 === 0 ? 1 : 0;
+      grid[i][6] = i % 2 === 0 ? 1 : 0;
+    }
+
+    finder(0, 0);
+    finder(0, n - 7);
+    finder(n - 7, 0);
+
+    let rects = '';
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (grid[r][c]) rects += '<rect x="' + c + '" y="' + r + '" width="1" height="1"/>';
+      }
+    }
+
+    return (
+      '<svg viewBox="0 0 ' + n + ' ' + n + '" width="100%" height="100%" role="img" ' +
+      'aria-label="Kode QR contoh, tidak dapat dipindai" style="display:block;background:' +
+      light + '"><g fill="' + dark + '" shape-rendering="crispEdges">' + rects + '</g></svg>'
+    );
+  }
+
+  document.getElementById('qr').innerHTML =
+    '<div style="width:180px;height:180px">' + fauxQR(25, '#12181b', '#ffffff') + '</div>';
+  document.getElementById('qr-scan').innerHTML = fauxQR(25, '#12181b', '#d9ece8');
+</script>
