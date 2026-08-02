@@ -14,12 +14,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { clearToken, loadToken, saveToken } from '../api/client.js';
 import { devLogin, fetchMe, guestLogin } from '../api/caretaker.js';
+import { batalkanPush, daftarkanPush } from '../notifications/push.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [restoring, setRestoring] = useState(true);
+  /** @type {[null | {ok: boolean, alasan?: string, token?: string}, Function]} */
+  const [push, setPush] = useState(null);
 
   // Cek token tersimpan sekali saat app dibuka, supaya tidak perlu login ulang.
   useEffect(() => {
@@ -60,13 +63,46 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Urutannya penting: mencabut pendaftaran push butuh token yang masih sah.
+    // Kalau dibalik, HP ini tetap menerima kabar darurat lansia milik akun yang
+    // sudah ditinggalkan.
+    await batalkanPush();
     await clearToken();
     setUser(null);
+    setPush(null);
   }, []);
 
+  /**
+   * Daftarkan push begitu ada sesi — termasuk sesi yang dipulihkan saat app
+   * dibuka, karena token FCM bisa dirotasi Android kapan saja dan yang
+   * tersimpan di server jadi basi tanpa ada kejadian apa pun yang menandainya.
+   *
+   * Sengaja tidak memblokir apa pun: gagal mendaftarkan push tidak boleh
+   * membuat app tidak bisa dipakai. Hasilnya ditampilkan di layar Profil.
+   */
+  const refreshPush = useCallback(async () => {
+    const hasil = await daftarkanPush();
+    setPush(hasil);
+    return hasil;
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    refreshPush().catch((err) => setPush({ ok: false, alasan: err.message }));
+  }, [user, refreshPush]);
+
   const value = useMemo(
-    () => ({ user, restoring, isGuest: user?.guest === true, signInAsGuest, signInAsDemo, signOut }),
-    [user, restoring, signInAsGuest, signInAsDemo, signOut],
+    () => ({
+      user,
+      restoring,
+      isGuest: user?.guest === true,
+      push,
+      refreshPush,
+      signInAsGuest,
+      signInAsDemo,
+      signOut,
+    }),
+    [user, restoring, push, refreshPush, signInAsGuest, signInAsDemo, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

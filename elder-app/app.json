@@ -9,7 +9,20 @@
     "backgroundColor": "#f4f7f6",
     "android": {
       "package": "com.eldercare.elder",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE"
+      ]
     },
     "plugins": [
       "expo-sqlite",
@@ -26,13 +39,24 @@
         {
           "microphonePermission": "Mikrofon dipakai supaya Anda bisa berbicara dengan asisten.",
           "speechRecognitionPermission": "Digunakan untuk memahami ucapan Anda.",
-          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
         }
       ],
       [
         "expo-notifications",
         {
           "color": "#0e7c6b"
+        }
+      ],
+      "@livekit/react-native-expo-plugin",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
         }
       ]
     ]

@@ -9,12 +9,18 @@ import { pool } from './db/pool.js';
 import { startScheduler } from './services/scheduler.js';
 import { isGroqConfigured } from './services/groq.js';
 import { isLivekitConfigured } from './services/livekit.js';
+import { isPushConfigured } from './services/push.js';
 
 const app = express();
 
 app.set('trust proxy', 1); // Back4app menaruh container di belakang proxy
 app.use(helmet());
 app.use(cors({ origin: true, credentials: false }));
+
+// Batas khusus untuk audio (fallback STT). HARUS didaftarkan sebelum parser
+// umum di bawahnya: body-parser melewati request yang body-nya sudah terbaca,
+// jadi urutan ini yang membuat 1mb tidak ikut membatasi /api/stt.
+app.use('/api/stt', express.json({ limit: '6mb' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
@@ -29,6 +35,9 @@ app.get('/health', async (req, res) => {
         groq: isGroqConfigured() ? 'ok' : 'belum dikonfigurasi',
         livekit: isLivekitConfigured() ? 'ok' : 'belum dikonfigurasi',
         google: env.googleWebClientId ? 'ok' : 'belum dikonfigurasi',
+        // Ditampilkan supaya "notifikasi darurat tidak sampai" bisa dibedakan
+        // dari "service account belum dipasang di Back4app" tanpa membaca log.
+        push: isPushConfigured() ? 'ok' : 'belum dikonfigurasi',
       },
     });
   } catch (err) {

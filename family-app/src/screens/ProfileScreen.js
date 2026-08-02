@@ -7,8 +7,8 @@
  * ditampilkan supaya keluarga paham apa yang sedang dibagikan dan apa yang
  * tidak — privasi sebagai fitur yang terlihat, bukan checkbox tersembunyi.
  */
-import { useCallback } from 'react';
-import { Alert, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Alert, Linking, View } from 'react-native';
 import { ScreenShell } from '../components/ScreenShell.js';
 import {
   Avatar,
@@ -29,16 +29,17 @@ import { useColors } from '../theme/theme.js';
 import { useAuth } from '../context/AuthContext.js';
 import { useElders } from '../context/ElderContext.js';
 import { useApi } from '../lib/useApi.js';
-import { fetchElder } from '../api/caretaker.js';
+import { fetchElder, testPush } from '../api/caretaker.js';
 import { shortName, tanggal, umur } from '../lib/format.js';
 import { CONSENT_LABELS } from '../lib/constants.js';
 import { API_URL } from '../api/client.js';
 
 export function ProfileScreen({ navigation }) {
   const c = useColors();
-  const { user, signOut } = useAuth();
+  const { user, signOut, push, refreshPush } = useAuth();
   const { elder } = useElders();
   const elderId = elder?.id;
+  const [ujiSedangJalan, setUjiSedangJalan] = useState(false);
 
   const run = useCallback(() => fetchElder(elderId), [elderId]);
   const { data, error, loading, refreshing, refresh } = useApi(run, { enabled: !!elderId });
@@ -50,6 +51,49 @@ export function ProfileScreen({ navigation }) {
       { text: 'Batal', style: 'cancel' },
       { text: 'Keluar', style: 'destructive', onPress: signOut },
     ]);
+  }
+
+  /**
+   * Sakelar notifikasi tidak bisa "dimatikan" dari dalam app: izin notifikasi
+   * milik sistem Android, dan mematikannya dari sini hanya akan membuat
+   * keadaan di app berbeda dari keadaan sebenarnya. Jadi menyalakan = minta
+   * izin + daftarkan token, mematikan = antar ke Pengaturan.
+   */
+  async function ubahNotifikasi() {
+    if (push?.ok) {
+      Alert.alert(
+        'Matikan notifikasi darurat?',
+        'Izin notifikasi diatur Android, bukan di dalam app ini. Buka Pengaturan untuk mematikannya — tapi ingat, kabar darurat dari ' +
+          `${shortName(elder.name)} tidak akan sampai selama izinnya mati.`,
+        [
+          { text: 'Batal', style: 'cancel' },
+          { text: 'Buka Pengaturan', onPress: () => Linking.openSettings() },
+        ],
+      );
+      return;
+    }
+
+    const hasil = await refreshPush();
+    if (!hasil.ok) Alert.alert('Notifikasi belum aktif', hasil.alasan);
+  }
+
+  async function kirimUji() {
+    setUjiSedangJalan(true);
+    try {
+      const hasil = await testPush();
+      Alert.alert(
+        hasil.sent > 0 ? 'Terkirim' : 'Tidak terkirim',
+        hasil.sent > 0
+          ? `Notifikasi uji dikirim ke ${hasil.sent} perangkat. Kalau tidak muncul dalam beberapa detik, periksa pengaturan notifikasi Android.`
+          : hasil.pushConfigured
+            ? `Server tidak menemukan perangkat aktif (terdaftar: ${hasil.devices}).`
+            : 'Server belum punya kredensial Firebase, jadi tidak ada yang bisa dikirim.',
+      );
+    } catch (err) {
+      Alert.alert('Gagal', err.message);
+    } finally {
+      setUjiSedangJalan(false);
+    }
   }
 
   return (
@@ -154,9 +198,29 @@ export function ProfileScreen({ navigation }) {
               <Row
                 icon="bell"
                 title="Notifikasi darurat"
-                sub="Menyusul — perlu Firebase FCM V1 dipasang di development build"
-                end={<Switch on={false} disabled onPress={() => {}} />}
+                sub={
+                  push === null
+                    ? 'Mendaftarkan perangkat…'
+                    : push.ok
+                      ? 'Aktif — HP ini akan berbunyi saat ada kejadian darurat'
+                      : push.alasan
+                }
+                onPress={ubahNotifikasi}
+                end={<Switch on={push?.ok === true} onPress={ubahNotifikasi} />}
               />
+              {push?.ok ? (
+                <Row
+                  icon="bell"
+                  title="Kirim notifikasi uji"
+                  sub={
+                    ujiSedangJalan
+                      ? 'Mengirim…'
+                      : 'Membuktikan jalurnya sampai ke HP ini, tanpa memicu darurat palsu'
+                  }
+                  onPress={ujiSedangJalan ? undefined : kirimUji}
+                  end={<Icon name="chevron" size={16} color={c.ink3} />}
+                />
+              ) : null}
             </Rows>
           </Card>
 

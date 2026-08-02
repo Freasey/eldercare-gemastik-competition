@@ -20,6 +20,8 @@ import { colors, type } from '../theme.js';
 import { useDevice } from '../context/DeviceContext.js';
 import { useVoiceSession } from '../voice/useVoiceSession.js';
 import { requestMicPermission } from '../voice/stt.js';
+import { pantauKataBangun } from '../voice/wakeWord.js';
+import { pantauJatuh, sensorTersedia } from '../sensors/fallDetection.js';
 import { say } from '../voice/tts.js';
 import { notifikasiPembuka, saatNotifikasiDiketuk, siapkanNotifikasi } from '../notifications/local.js';
 import { sinkronkan } from '../lib/sync.js';
@@ -30,10 +32,16 @@ const LABEL = {
   mendengar: 'Silakan bicara',
   berpikir: 'Sebentar ya…',
   bicara: '',
-  selesai: 'Ketuk layar untuk bicara lagi',
+  selesai: 'Ketuk layar atau ucapkan "halo teman"',
   darurat: 'Keluarga sudah dikabari',
   gagal: 'Ketuk layar untuk mencoba lagi',
   siap: '',
+};
+
+/** Label panggilan darurat menimpa LABEL di atas selama panggilan hidup. */
+const LABEL_PANGGILAN = {
+  menunggu: 'Menunggu keluarga menjawab…',
+  tersambung: 'Sedang bicara dengan keluarga',
 };
 
 /** Fase saat ketukan layar boleh memulai sesi baru. */
@@ -47,7 +55,7 @@ export function SessionScreen() {
   const { elder, putuskan } = useDevice();
   const [izinMik, setIzinMik] = useState('memeriksa'); // memeriksa | ada | ditolak
 
-  const { fase, caption, offline, mulai } = useVoiceSession({
+  const { fase, caption, offline, panggilan, mulai, picuDaruratJatuh } = useVoiceSession({
     elderId: elder.id,
     onRevoked: putuskan,
     // Sinkron dikerjakan setelah sesi selesai, bukan sebelum: jangan menunda
@@ -63,6 +71,12 @@ export function SessionScreen() {
   // bawah tidak perlu dipasang ulang setiap kali indikator berubah.
   const faseRef = useRef(fase);
   faseRef.current = fase;
+
+  // Sama alasannya: pendeteksi jatuh dipasang sekali dan tidak boleh dipasang
+  // ulang setiap kali keadaan panggilan berubah — memasang ulang berarti
+  // kehilangan riwayat tahap yang sedang diamatinya.
+  const panggilanRef = useRef(panggilan);
+  panggilanRef.current = panggilan;
 
   useEffect(() => {
     if (sudahMulai.current) return;
@@ -112,23 +126,61 @@ export function SessionScreen() {
     return () => langganan.remove();
   }, [elder.id]);
 
+  const sesiMenganggur = BOLEH_DIULANG.includes(fase) && panggilan === 'tidak';
+
+  // Wake word hanya hidup saat tidak ada yang memakai mikrofon. Pengenal suara
+  // Android tidak bisa dipakai dua-duanya sekaligus: menyalakannya selagi sesi
+  // berjalan bukan membuat wake word tetap siap, melainkan membuat sesi yang
+  // sedang berlangsung berhenti mendengar.
+  useEffect(() => {
+    if (izinMik !== 'ada' || !sesiMenganggur) return undefined;
+    return pantauKataBangun(() => mulai('wake_word'));
+  }, [izinMik, sesiMenganggur, mulai]);
+
+  // Deteksi jatuh jalan terus, termasuk di tengah percakapan — orang bisa jatuh
+  // kapan saja, dan percakapan yang terpotong lebih murah daripada jatuh yang
+  // terlewat. Satu-satunya yang menahannya adalah panggilan darurat yang sedang
+  // berjalan: keluarganya sudah di ujung sana, tidak perlu dipanggil lagi.
+  useEffect(() => {
+    let lepas = null;
+    let batal = false;
+
+    (async () => {
+      if (!(await sensorTersedia()) || batal) return;
+      lepas = pantauJatuh((detail) => {
+        if (panggilanRef.current !== 'tidak') return;
+        picuDaruratJatuh(detail);
+      });
+    })();
+
+    return () => {
+      batal = true;
+      lepas?.();
+    };
+  }, [picuDaruratJatuh]);
+
   if (izinMik === 'ditolak') return <IzinDitolak />;
 
-  const bolehDiulang = BOLEH_DIULANG.includes(fase);
+  const bolehDiulang = sesiMenganggur;
+  const label = LABEL_PANGGILAN[panggilan] ?? LABEL[fase];
 
   return (
     <Pressable
       onPress={() => bolehDiulang && mulai('button')}
-      style={{ flex: 1, backgroundColor: fase === 'darurat' ? colors.criticalSoft : colors.backdrop }}
+      style={{
+        flex: 1,
+        backgroundColor:
+          fase === 'darurat' || panggilan !== 'tidak' ? colors.criticalSoft : colors.backdrop,
+      }}
     >
       <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 28 }}>
         <StatusOrb fase={fase} />
 
         <Caption text={caption} tone={fase === 'darurat' ? 'critical' : 'ink'} />
 
-        {LABEL[fase] ? (
+        {label ? (
           <Text style={{ fontSize: type.status, color: colors.ink2, textAlign: 'center' }}>
-            {LABEL[fase]}
+            {label}
           </Text>
         ) : null}
 

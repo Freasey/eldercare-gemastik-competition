@@ -112,9 +112,12 @@ diimplementasi 2026-08-01:
   karena "tidak boleh" mengandung kata "boleh" dan "tidak apa-apa" justru
   berarti setuju.
 
-`always_listening` sengaja belum ikut ditanyakan: wake-word-nya sendiri belum
-ada, dan meminta izin untuk fitur yang belum jalan sama saja menjanjikan
-sesuatu yang tidak ada.
+`always_listening` sengaja **tetap** belum ikut ditanyakan, walau wake word
+sudah ada sejak 2026-08-02. Alasannya bergeser tapi kesimpulannya sama:
+wake word yang ada hanya hidup selagi app terbuka di layar dan berhenti seketika
+saat percakapan mulai, jadi menanyakan izin bernama "selalu mendengarkan"
+berarti menjanjikan sesuatu yang lebih luas dari yang benar-benar terjadi.
+Izin itu baru relevan kalau wake word pindah ke foreground service.
 
 ### 2.6 App Lansia — Tanpa UI (keputusan 2026-08-01)
 
@@ -257,7 +260,7 @@ jadwal + antrean offline).
 
 ---
 
-## 5. Status Kredensial (update 2026-07-29)
+## 5. Status Kredensial (update 2026-08-02)
 
 Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 
@@ -271,9 +274,9 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 | JWT secret | ✅ Digenerate otomatis |
 | Expo project ID | ✅ Diterima |
 | Firebase `google-services.json` | ✅ Ada di root (`project_id: competition-project-f87e2`, package `com.eldercare.app`) — dikonfirmasi user ini memang project untuk AI Caretaker |
-| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`) |
+| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`). Untuk deploy, isinya dikirim sebagai `FIREBASE_SERVICE_ACCOUNT_B64` — container Back4app tidak punya file yang bisa ditunjuk |
 | LiveKit (URL, API key, secret) | ✅ Diterima |
-| Back4app (App ID, API key, Master key) | ✅ Terisi di `.env`, tapi **backend belum benar-benar di-deploy** — masih dijalankan lokal (lihat §6) |
+| Back4app | ✅ **Backend sudah di-deploy**: `https://gemastikproject-i48g9adu.b4a.run` (`/health` → database, groq, livekit, google semuanya ok). Kedua app sudah menunjuk ke sana secara default |
 
 ---
 
@@ -304,32 +307,87 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 - [x] Batalkan sesi percakapan kosong saat `/end` — selesai 2026-08-01. Sesi
       tanpa satu pun jawaban lansia dihapus, bukan disembunyikan; reminder yang
       sempat dibacakan tetap `spoken` sehingga sweep tetap menandainya terlewat.
+- [x] Deploy backend ke Back4app — selesai 2026-08-02:
+      `https://gemastikproject-i48g9adu.b4a.run`. `NODE_ENV=production` membuat
+      `allowDevLogin` mati sendiri di `config/env.js`, jadi jalur masuk app
+      keluarga sekarang login tamu.
+- [x] Push notification darurat sampai ke HP keluarga — selesai 2026-08-02.
+      FCM V1 langsung lewat `firebase-admin`, bukan Expo Push Service; app
+      mendaftarkan token FCM mentah. Alasannya di `backend/README.md`.
+- [x] Audio panggilan darurat di kedua sisi — selesai 2026-08-02
+      (`@livekit/react-native`). Sisi lansia masuk room otomatis tanpa layar
+      panggilan, sesuai §2.6.
+- [x] Deteksi jatuh (`triggerType: 'fall_detection'`) — selesai 2026-08-02,
+      accelerometer tiga tahap di `elder-app/src/sensors/fallDetection.js`.
+      Ambangnya masih perlu ditera di HP target.
+- [x] Wake word — selesai 2026-08-02, **terbatas pada app yang sedang terbuka**.
+      Lihat `elder-app/README.md`; ini juga yang menahan izin `always_listening`
+      (§2.5).
+- [x] Fallback Groq Whisper saat STT device gagal — selesai 2026-08-02 lewat
+      `POST /api/stt`. Memakai rekaman yang sama dengan pengenal bawaan
+      (`recordingOptions.persist`), jadi lansia tidak perlu mengulang.
 - [ ] Buat Google OAuth client ID Android (butuh SHA-1, ambil dari
       `eas credentials` atau debug keystore setelah project RN dibuat).
-- [ ] Deploy backend ke Back4app (`ALLOW_DEV_LOGIN` wajib dimatikan dulu).
+      **Tidak lagi memblokir apa pun** — login tamu jadi jalur resmi sementara.
+- [ ] Tera ulang ambang deteksi jatuh di HP target, dan uji seluruh fitur
+      perangkat (TTS, STT, wake word, jatuh, audio panggilan) di HP sungguhan.
 - [ ] Putuskan: LiveKit Cloud (free tier) vs self-host — saat ini asumsi
       LiveKit Cloud (URL yang diberikan mengarah ke `*.livekit.cloud`).
 
-**Keputusan dev-environment (2026-07-29):**
+**Keputusan dev-environment (2026-07-29, diperbarui 2026-08-02):**
 - Platform scope fase ini: **Android-only** (sesuai filter budget/HP
   low-mid-range di §4). iOS ditunda, client ID iOS tidak dikejar dulu.
-- Backend selama development RN: tetap **lokal** (`npm run dev` + koneksi
-  LAN/tunnel dari device), belum deploy ke Back4app. Base URL app akan
-  dibuat configurable supaya gampang pindah ke URL Back4app nanti.
-- Auth di RN app: mulai dari `dev-login` (sudah didukung backend) supaya
-  tidak diblok Google Android client ID; ganti ke Google Sign-In asli
-  begitu SHA-1/client ID Android tersedia.
+- ~~Backend tetap lokal selama development~~ → **sudah di-deploy** (2026-08-02).
+  Kedua app menunjuk ke URL Back4app lewat `.env`; untuk kerja lokal, buat
+  `.env.local` yang menang atas `.env`.
+- Auth di RN app: `dev-login` mati di production, jadi jalur masuknya
+  **login tamu** (`POST /api/auth/guest`) sampai Google Sign-In siap.
+- **Kedua app tidak lagi bisa lewat Expo Go.** Semuanya memakai modul native
+  (WebRTC, notifikasi, sensor, pengenal suara) — `npx expo run:android`.
+- Alamat `http://` cuma jalan di build debug; build release memblokir cleartext
+  HTTP. APK yang dibagikan wajib menunjuk ke `https://`.
 
 ---
 
-## 7. Progres Implementasi (2026-07-29)
+## 7. Progres Implementasi (update 2026-08-02)
 
 | Bagian | Status |
 |---|---|
-| [`backend/`](./backend) — Express API | ✅ Jalan, skema & data contoh sudah masuk NeonDB |
+| [`backend/`](./backend) — Express API | ✅ **Di-deploy** ke `https://gemastikproject-i48g9adu.b4a.run` |
 | [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
-| [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti selesai & terhubung ke backend |
-| [`elder-app/`](./elder-app) — React Native (Expo) app lansia | ✅ Alur pairing + loop suara + pengingat offline selesai; belum diuji di perangkat |
+| [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti + push notif + audio panggilan; belum diuji di perangkat |
+| [`elder-app/`](./elder-app) — React Native (Expo) app lansia | ✅ Pairing, loop suara, pengingat offline, wake word, deteksi jatuh, fallback Whisper, audio darurat; belum diuji di perangkat |
+
+### Update 2026-08-02 — menutup semua yang tersisa kecuali Google Sign-In
+
+Backend di-deploy, lalu enam hal yang selama ini "sudah disiapkan jalurnya tapi
+belum jalan" dikerjakan sampai tuntas:
+
+| Yang dikerjakan | Di mana |
+|---|---|
+| Push notif darurat lewat FCM V1 langsung | `backend/src/services/push.js`, `family-app/src/notifications/` |
+| Audio panggilan darurat, kedua sisi | `family-app/src/screens/CallScreen.js`, `elder-app/src/voice/emergencyCall.js` |
+| Deteksi jatuh (accelerometer 3 tahap) | `elder-app/src/sensors/fallDetection.js` |
+| Wake word (terbatas: app harus terbuka) | `elder-app/src/voice/wakeWord.js` |
+| Fallback STT Groq Whisper | `backend/src/routes/stt.routes.js`, `elder-app/src/voice/stt.js` |
+| Kedua app menunjuk backend production | `.env` masing-masing app |
+
+Dua keputusan yang layak dicatat karena bisa dipertanyakan lagi nanti:
+
+1. **Push lewat FCM V1 langsung, bukan Expo Push Service.** Jalur Expo butuh
+   service account diunggah ke project Expo lewat `eas credentials` — langkah
+   interaktif yang mudah terlupa dan gagalnya senyap. Backend menerima kedua
+   bentuk token, jadi keputusan ini bisa dibalik tanpa mengubah server.
+2. **Fallback Whisper memakai rekaman yang sama**, bukan merekam ulang
+   (`recordingOptions.persist`). Meminta lansia mengulang berarti menghukumnya
+   atas kesalahan yang bukan miliknya. Gerbangnya event `speechstart`: ada suara
+   tapi tidak ada teks = pengenal gagal; tidak ada suara sama sekali = lansia
+   memang diam, dan itu tidak dikirim ke mana pun.
+
+Verifikasi: bundle Android kedua app berhasil (family 1486 modul, elder 1003
+modul, tanpa error); jalur Whisper diuji ke Groq sungguhan; kredensial FCM
+diuji sampai Google menjawab. **Belum ada yang diuji di HP sungguhan** —
+semua fitur perangkat butuh development build.
 
 **Update 2026-08-01** — backend & app keluarga disiapkan untuk app lansia
 tanpa UI (§2.6): endpoint pairing device lansia, consent lewat suara, dan
@@ -367,9 +425,10 @@ Verifikasi yang sudah dilakukan: bundle Android berhasil (975 modul, tanpa
 error), dan seluruh field yang dibaca tiap layar dicek ada di response backend
 lewat pemanggilan endpoint sungguhan dengan akun demo.
 
-Belum jalan karena butuh development build (bukan Expo Go): suara pada panggilan
-LiveKit, push notification, dan Google Sign-In. Ketiganya sudah disiapkan
-jalurnya di sisi backend maupun app.
+~~Belum jalan karena butuh development build: suara panggilan LiveKit, push
+notification, dan Google Sign-In.~~ Dua yang pertama selesai 2026-08-02 (lihat
+update di atas). Yang tersisa hanya **Google Sign-In**, dan itu tidak lagi
+memblokir apa pun — jalur masuknya login tamu.
 
 **Backend** sudah mengimplementasi: auth (Google ID token → JWT + dev-login),
 CRUD lansia/jadwal/kontak, materialisasi reminder + sweep missed, context

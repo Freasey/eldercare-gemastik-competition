@@ -24,6 +24,7 @@ import { Loading } from '../components/ui.js';
 import { useColors, useIsDark } from '../theme/theme.js';
 import { useAuth } from '../context/AuthContext.js';
 import { ElderProvider, useElders } from '../context/ElderContext.js';
+import { useNotificationRouting } from '../notifications/useNotificationRouting.js';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -76,6 +77,11 @@ function Tabs() {
  */
 function TabsOrEmpty(props) {
   const { elders, loading } = useElders();
+
+  // Dipasang di sini, bukan di App.js: ini komponen paling luar yang sudah ada
+  // di dalam ElderProvider SEKALIGUS di dalam navigator, dan keduanya
+  // dibutuhkan untuk melompat ke kejadian darurat milik lansia yang benar.
+  useNotificationRouting();
 
   if (loading) return <Loading label="Memuat data lansia…" />;
   if (elders.length === 0) return <NoElderScreen {...props} />;

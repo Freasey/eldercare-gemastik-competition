@@ -1,19 +1,29 @@
 /**
- * Panggilan suara dalam aplikasi.
+ * Panggilan suara dalam aplikasi (PLAN §2.4 — darurat tidak pernah keluar app).
  *
- * Yang sudah nyata di sini: layar ini meminta token room ke backend
- * (`POST .../emergencies/:id/join`), yang menandai kejadian jadi
- * `acknowledged` dan mengembalikan kredensial LiveKit asli.
+ * Urutannya: minta izin mikrofon → `POST .../emergencies/:id/join` (menandai
+ * kejadian jadi `acknowledged` dan menerbitkan token LiveKit) → sambung ke room
+ * → publikasikan mikrofon.
  *
- * Yang BELUM: transport audionya. `@livekit/react-native` butuh WebRTC native,
- * yang tidak jalan di Expo Go — jadi baru bisa dipasang setelah ada development
- * build. Sampai itu ada, layar ini menampilkan status koneksi apa adanya dan
- * tidak berpura-pura sedang mengalirkan suara.
+ * Yang ditampilkan ke keluarga adalah keadaan sebenarnya, bukan animasi
+ * menenangkan: selama lansia belum masuk room, layar ini berkata "menunggu",
+ * dan penghitung durasi baru berjalan setelah ada suara di dua sisi. Pada
+ * panggilan darurat, mengira sudah tersambung padahal belum adalah kegagalan
+ * yang paling mahal.
  */
-import { useCallback, useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { PermissionsAndroid, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import {
+  AndroidAudioTypePresets,
+  AudioSession,
+  LiveKitRoom,
+  useConnectionState,
+  useLocalParticipant,
+  useRemoteParticipants,
+} from '@livekit/react-native';
+import { ConnectionState } from 'livekit-client';
 import { Avatar, Note } from '../components/ui.js';
 import { Icon } from '../components/Icon.js';
 import { useColors } from '../theme/theme.js';
@@ -27,46 +37,207 @@ export function CallScreen() {
   const { elders } = useElders();
   const elder = elders.find((e) => e.id === elderId);
 
-  const [status, setStatus] = useState('connecting'); // connecting | ready | failed
-  const [pesan, setPesan] = useState('Menghubungkan…');
-  const [detik, setDetik] = useState(0);
-  const [muted, setMuted] = useState(false);
-  const [speaker, setSpeaker] = useState(true);
+  /** @type {['menyiapkan'|'siap'|'gagal', Function]} */
+  const [fase, setFase] = useState('menyiapkan');
+  const [pesan, setPesan] = useState('Menyiapkan panggilan…');
+  const [kredensial, setKredensial] = useState(null);
 
   useEffect(() => {
     let alive = true;
+
     (async () => {
+      // Izin mikrofon diminta SEBELUM token: kalau ditolak, tidak ada gunanya
+      // menandai kejadian ini "sedang ditangani" — keluarga belum bisa bicara.
+      if (Platform.OS === 'android') {
+        const izin = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Izinkan mikrofon',
+            message: 'Mikrofon dipakai untuk berbicara langsung dengan lansia Anda.',
+            buttonPositive: 'Izinkan',
+          },
+        );
+        if (izin !== PermissionsAndroid.RESULTS.GRANTED) {
+          if (alive) {
+            setFase('gagal');
+            setPesan('Izin mikrofon ditolak. Panggilan butuh mikrofon untuk bisa bicara.');
+          }
+          return;
+        }
+      }
+
+      // Speaker didahulukan, bukan earpiece: HP kemungkinan besar tidak sedang
+      // ditempel di telinga saat notifikasi darurat diketuk.
+      try {
+        await AudioSession.configureAudio({
+          android: {
+            preferredOutputList: ['speaker'],
+            audioTypeOptions: AndroidAudioTypePresets.communication,
+          },
+          ios: { defaultOutput: 'speaker' },
+        });
+        await AudioSession.startAudioSession();
+      } catch (err) {
+        if (alive) {
+          setFase('gagal');
+          setPesan(`Audio perangkat tidak bisa disiapkan: ${err.message}`);
+        }
+        return;
+      }
+
       try {
         const { call } = await joinEmergency(elderId, eventId);
         if (!alive) return;
-        if (call?.token) {
-          setStatus('ready');
-          setPesan('Ruang siap');
-        } else {
-          setStatus('failed');
-          setPesan('LiveKit belum dikonfigurasi di server');
+        if (!call?.token || !call?.url) {
+          setFase('gagal');
+          setPesan('Server tidak mengirim kredensial panggilan.');
+          return;
         }
+        setKredensial(call);
+        setFase('siap');
       } catch (err) {
         if (alive) {
-          setStatus('failed');
+          setFase('gagal');
           setPesan(err.message);
         }
       }
     })();
+
     return () => {
       alive = false;
+      AudioSession.stopAudioSession().catch(() => {});
     };
   }, [elderId, eventId]);
 
+  const tutup = useCallback(() => nav.goBack(), [nav]);
+
+  if (fase !== 'siap') {
+    return (
+      <Bingkai elder={elder} c={c}>
+        <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.72)', textAlign: 'center' }}>
+          {pesan}
+        </Text>
+        <Note style={{ color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 8 }}>
+          {fase === 'gagal'
+            ? 'Panggilan belum bisa dibuka. Coba hubungi lewat kontak darurat di layar Darurat.'
+            : 'Sebentar…'}
+        </Note>
+        <BarisTombol c={c} onTutup={tutup} hanyaTutup />
+      </Bingkai>
+    );
+  }
+
+  return (
+    <LiveKitRoom
+      serverUrl={kredensial.url}
+      token={kredensial.token}
+      connect
+      audio
+      video={false}
+      onError={(err) => {
+        setFase('gagal');
+        setPesan(err.message);
+      }}
+    >
+      <RuangPanggilan elder={elder} onTutup={tutup} />
+    </LiveKitRoom>
+  );
+}
+
+/**
+ * Isi panggilan. Dipisah karena hook LiveKit hanya hidup di dalam
+ * `<LiveKitRoom>` — di komponen induk semuanya masih kosong.
+ */
+function RuangPanggilan({ elder, onTutup }) {
+  const c = useColors();
+  const status = useConnectionState();
+  const lawanBicara = useRemoteParticipants();
+  const { localParticipant } = useLocalParticipant();
+
+  const [muted, setMuted] = useState(false);
+  const [speaker, setSpeaker] = useState(true);
+  const [detik, setDetik] = useState(0);
+
+  const tersambungPenuh = status === ConnectionState.Connected && lawanBicara.length > 0;
+
+  // Penghitung baru jalan setelah ada orang di seberang, dan sengaja tidak
+  // di-reset kalau sambungannya sempat putus-nyambung — yang ingin diketahui
+  // keluarga adalah "sudah berapa lama saya menemani", bukan uptime WebRTC.
+  const mulai = useRef(null);
   useEffect(() => {
-    if (status !== 'ready') return undefined;
-    const t = setInterval(() => setDetik((d) => d + 1), 1000);
+    if (!tersambungPenuh) return undefined;
+    if (mulai.current === null) mulai.current = Date.now();
+    const t = setInterval(() => setDetik(Math.floor((Date.now() - mulai.current) / 1000)), 500);
     return () => clearInterval(t);
-  }, [status]);
+  }, [tersambungPenuh]);
+
+  async function ubahMic() {
+    const baru = !muted;
+    setMuted(baru);
+    try {
+      await localParticipant.setMicrophoneEnabled(!baru);
+    } catch {
+      setMuted(!baru); // gagal → kembalikan tampilan supaya tidak berbohong
+    }
+  }
+
+  async function ubahSpeaker() {
+    const baru = !speaker;
+    try {
+      const keluaran = await AudioSession.getAudioOutputs();
+      const tujuan = baru ? 'speaker' : 'earpiece';
+      if (!keluaran.includes(tujuan)) return; // mis. headset tercolok
+      await AudioSession.selectAudioOutput(tujuan);
+      setSpeaker(baru);
+    } catch {
+      // Biarkan rute audio apa adanya. Mengubah label tanpa rutenya benar-benar
+      // pindah lebih membingungkan daripada tombol yang tidak bereaksi.
+    }
+  }
 
   const mm = String(Math.floor(detik / 60)).padStart(2, '0');
   const ss = String(detik % 60).padStart(2, '0');
 
+  return (
+    <Bingkai elder={elder} c={c}>
+      <Text
+        style={{
+          fontSize: 15,
+          color: 'rgba(255,255,255,0.72)',
+          fontVariant: ['tabular-nums'],
+        }}
+      >
+        {tersambungPenuh ? `${mm}.${ss}` : keteranganStatus(status, elder)}
+      </Text>
+
+      <Note style={{ color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 8 }}>
+        {tersambungPenuh
+          ? 'Suara Anda terdengar di HP lansia. Bicaralah pelan dan singkat.'
+          : status === ConnectionState.Connected
+            ? 'Anda sudah masuk ruang panggilan. HP lansia berdering di sisi sana.'
+            : 'Menghubungkan ke ruang panggilan…'}
+      </Note>
+
+      <BarisTombol
+        c={c}
+        muted={muted}
+        speaker={speaker}
+        onMic={ubahMic}
+        onSpeaker={ubahSpeaker}
+        onTutup={onTutup}
+      />
+    </Bingkai>
+  );
+}
+
+function keteranganStatus(status, elder) {
+  if (status === ConnectionState.Connecting) return 'Menghubungkan…';
+  if (status === ConnectionState.Reconnecting) return 'Sambungan terputus, mencoba lagi…';
+  if (status === ConnectionState.Disconnected) return 'Terputus';
+  return `Menunggu ${elder?.name || 'lansia'} bergabung…`;
+}
+
+function Bingkai({ elder, c, children }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.ink }}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 14 }}>
@@ -89,40 +260,33 @@ export function CallScreen() {
           {elder?.name || 'Lansia'}
         </Text>
 
-        <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.72)', fontVariant: ['tabular-nums'] }}>
-          {status === 'ready' ? `${mm}.${ss}` : pesan}
-        </Text>
-
-        <Note style={{ color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 8 }}>
-          {status === 'ready'
-            ? 'Ruang panggilan sudah dibuat di server dan kejadian ditandai sedang ditangani. Suara akan mengalir begitu modul LiveKit dipasang di development build.'
-            : status === 'failed'
-              ? 'Panggilan belum bisa dibuka. Coba hubungi lewat kontak darurat di layar Darurat.'
-              : 'Menyiapkan ruang panggilan…'}
-        </Note>
-
-        <View style={{ flexDirection: 'row', gap: 22, marginTop: 26 }}>
-          <TombolPanggilan
-            icon={muted ? 'micOff' : 'mic'}
-            active={muted}
-            label="Bisukan mikrofon"
-            onPress={() => setMuted((v) => !v)}
-          />
-          <TombolPanggilan
-            icon="phoneOff"
-            danger
-            label="Akhiri panggilan"
-            onPress={() => nav.goBack()}
-          />
-          <TombolPanggilan
-            icon="speaker"
-            active={speaker}
-            label="Pengeras suara"
-            onPress={() => setSpeaker((v) => !v)}
-          />
-        </View>
+        {children}
       </View>
     </SafeAreaView>
+  );
+}
+
+function BarisTombol({ c, muted, speaker, onMic, onSpeaker, onTutup, hanyaTutup }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 22, marginTop: 26 }}>
+      {hanyaTutup ? null : (
+        <TombolPanggilan
+          icon={muted ? 'micOff' : 'mic'}
+          active={muted}
+          label="Bisukan mikrofon"
+          onPress={onMic}
+        />
+      )}
+      <TombolPanggilan icon="phoneOff" danger label="Akhiri panggilan" onPress={onTutup} />
+      {hanyaTutup ? null : (
+        <TombolPanggilan
+          icon="speaker"
+          active={speaker}
+          label="Pengeras suara"
+          onPress={onSpeaker}
+        />
+      )}
+    </View>
   );
 }
 

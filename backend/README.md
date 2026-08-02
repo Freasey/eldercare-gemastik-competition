@@ -42,8 +42,9 @@ src/
     reminders.js         respons reminder + aturan penundaan (dipakai 2 jalur)
     scheduler.js         schedules -> reminder_events, sweep missed, ringkasan
     groq.js              LLM untuk percakapan bebas + ringkasan
+    stt.js               fallback speech-to-text (Groq Whisper)
     livekit.js           token room untuk voice call darurat
-    push.js              Expo Push ke device keluarga
+    push.js              FCM V1 langsung + Expo Push ke device keluarga
     summary.js           hitung ringkasan harian/mingguan
   routes/                *.routes.js per domain
 ```
@@ -179,7 +180,44 @@ tidak perlu menyimpan state percakapan sendiri.
 | POST | `.../emergencies/:eid/confirm` | konfirmasi lansia → batal atau eskalasi |
 | POST | `.../emergencies/:eid/join` | keluarga masuk room LiveKit |
 | POST | `.../emergencies/:eid/resolve` | tutup kejadian |
-| POST/DELETE | `/api/devices` | daftar/hapus Expo push token |
+| POST/DELETE | `/api/devices` | daftar/hapus push token |
+| POST | `/api/devices/test` | notifikasi uji ke device sendiri (maks 5/menit) |
+| POST | `/api/stt` | transkripsi audio base64, fallback STT app lansia |
+
+`POST .../confirm` dengan `confirmed: true` mengembalikan `notifiedDevices`
+(berapa HP keluarga yang benar-benar dikirimi) dan `call` (kredensial LiveKit
+untuk sisi lansia). App lansia memakai keduanya: yang pertama menentukan
+kalimat apa yang diucapkan, yang kedua untuk langsung masuk room.
+
+### Push notification
+
+Dua transport, dibedakan dari **bentuk token**, bukan dari kolom database:
+
+| Bentuk token | Dikirim lewat |
+|---|---|
+| `ExponentPushToken[...]` | Expo Push Service (`expo-server-sdk`) |
+| selain itu | FCM V1 langsung (`firebase-admin`) |
+
+App keluarga mendaftarkan token FCM mentah, jadi jalur utamanya yang kedua —
+ini menghindari langkah `eas credentials` yang interaktif dan mudah terlupa.
+Token yang ditolak permanen (`registration-token-not-registered`) dihapus dari
+tabel `devices`, supaya angka `sent` tidak menyesatkan.
+
+Kredensialnya dibaca dari `FIREBASE_SERVICE_ACCOUNT_B64` (deploy) atau
+`FIREBASE_FCM_SERVICE_ACCOUNT_JSON_PATH` (lokal). Tanpa keduanya server tetap
+jalan — hanya notifikasinya yang tidak terkirim, dan `/health` menulis
+`push: "belum dikonfigurasi"`.
+
+### Fallback STT
+
+`POST /api/stt` menerima `{ audioBase64, mimeType, filename, language, prompt }`
+dan meneruskannya ke Groq Whisper. Batas body untuk rute ini 6 MB (rute lain
+tetap 1 MB), audio maksimal 4 MB, dan lajunya dibatasi 20 permintaan/menit per
+user karena tiap panggilan memakai kuota Groq.
+
+Ini **bukan** jalur normal — app lansia memakai pengenal suara bawaan Android
+dan hanya jatuh ke sini saat pengenal itu gagal. API key Groq tidak pernah
+sampai ke app, karena itu audionya yang naik ke server.
 
 ## Scheduler
 

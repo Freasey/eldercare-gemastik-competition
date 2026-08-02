@@ -46,6 +46,21 @@ export const env = {
 
   groqApiKey: process.env.GROQ_API_KEY || '',
   groqModel: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+  // Dipakai jalur fallback STT (services/stt.js) saat pengenal suara bawaan HP
+  // lansia gagal menangkap ucapan. Turbo dipilih karena yang dikirim cuma
+  // potongan 10-20 detik dan latensi lebih penting daripada akurasi terakhir.
+  groqSttModel: process.env.GROQ_STT_MODEL || 'whisper-large-v3-turbo',
+
+  /**
+   * Service account Firebase untuk FCM V1 (services/push.js).
+   *
+   * Dua bentuk, sengaja: di laptop file JSON-nya ada di disk, sedangkan di
+   * container Back4app tidak ada file apa pun yang bisa ditunjuk — di sana
+   * isinya dititipkan sebagai env var base64 (base64 supaya newline di
+   * private key tidak rusak saat ditempel ke dashboard).
+   */
+  firebaseServiceAccountB64: process.env.FIREBASE_SERVICE_ACCOUNT_B64 || '',
+  firebaseServiceAccountPath: process.env.FIREBASE_FCM_SERVICE_ACCOUNT_JSON_PATH || '',
 
   livekitUrl: process.env.LIVEKIT_URL || '',
   livekitApiKey: process.env.LIVEKIT_API_KEY || '',

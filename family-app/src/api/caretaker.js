@@ -93,5 +93,15 @@ export const resolveEmergency = (elderId, id, note) =>
 
 /* ---------------- device (push) ---------------- */
 
+/**
+ * Nama field-nya `expoPushToken` karena begitulah kolom di backend dinamai,
+ * tapi isinya sekarang token FCM mentah — lihat `notifications/push.js`.
+ */
 export const registerDevice = (expoPushToken, platform) =>
   api('/api/devices', { method: 'POST', body: { expoPushToken, platform } });
+
+export const deleteDevice = (token) =>
+  api(`/api/devices/${encodeURIComponent(token)}`, { method: 'DELETE' });
+
+/** Kirim notifikasi uji ke HP ini sendiri — dipakai tombol di layar Profil. */
+export const testPush = () => api('/api/devices/test', { method: 'POST' });

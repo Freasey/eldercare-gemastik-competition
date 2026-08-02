@@ -8,11 +8,13 @@ import { summariesRouter, timelineRouter } from './summaries.routes.js';
 import { assistantRouter } from './assistant.routes.js';
 import { emergencyRouter } from './emergency.routes.js';
 import { devicesRouter } from './devices.routes.js';
+import { sttRouter } from './stt.routes.js';
 
 export const apiRouter = Router();
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/devices', devicesRouter);
+apiRouter.use('/stt', sttRouter);
 
 // Semua yang nested di bawah seorang lansia. `mergeParams` di tiap router
 // membuat :elderId tetap terbaca oleh requireElderAccess.

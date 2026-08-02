@@ -18,6 +18,7 @@ import { say, stopSpeaking } from './tts.js';
 import { listenOnce, stopListening } from './stt.js';
 import { adalahPenutup, bacaanDarurat, bacaYaTidak } from './interpret.js';
 import { DeviceRevokedError, mulaiSesi } from './session.js';
+import { akhiriPanggilanDarurat, mulaiPanggilanDarurat } from './emergencyCall.js';
 
 /**
  * Fase yang ditampilkan layar. Hanya ini yang dilihat lansia — tidak ada teks
@@ -32,6 +33,12 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
   const [fase, setFase] = useState('siap');
   const [caption, setCaption] = useState('');
   const [offline, setOffline] = useState(false);
+  /**
+   * Keadaan panggilan darurat, terpisah dari `fase` karena umurnya berbeda:
+   * sesi percakapan sudah ditutup sementara panggilannya baru mulai.
+   * @type {['tidak'|'menunggu'|'tersambung', Function]}
+   */
+  const [panggilan, setPanggilan] = useState('tidak');
 
   /**
    * Penanda generasi. Setiap sesi baru menaikkannya, dan loop lama berhenti
@@ -44,31 +51,44 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
     generasiRef.current += 1;
     stopSpeaking();
     stopListening();
+    akhiriPanggilanDarurat('sesi dihentikan');
+    setPanggilan('tidak');
   }, []);
 
-  // Jangan tinggalkan mikrofon menyala saat app ditutup.
+  // Jangan tinggalkan mikrofon menyala saat app ditutup — baik mikrofon STT
+  // maupun mikrofon panggilan darurat.
   useEffect(() => hentikan, [hentikan]);
+
+  /**
+   * Pasangan bicara/dengar yang terikat pada satu generasi sesi. Dipakai loop
+   * percakapan maupun alur jatuh, supaya keduanya memakai aturan yang persis
+   * sama soal "jangan menyalakan mikrofon selagi speaker bunyi".
+   */
+  const buatAlat = useCallback(
+    (hidup) => ({
+      /** Ucapkan + tampilkan captionnya. Mikrofon menyala hanya setelah ini. */
+      ucap: async (teks) => {
+        if (!hidup()) return;
+        setFase('bicara');
+        setCaption(teks);
+        await say(teks);
+      },
+      dengar: async () => {
+        if (!hidup()) return { text: null };
+        setFase('mendengar');
+        setCaption('');
+        return listenOnce({ onPartial: (t) => hidup() && setCaption(t) });
+      },
+    }),
+    [],
+  );
 
   const mulai = useCallback(
     /** @param {'button'|'scheduled'|'wake_word'|'emergency'} trigger */
     async (trigger = 'button') => {
       const generasi = (generasiRef.current += 1);
       const hidup = () => generasiRef.current === generasi;
-
-      /** Ucapkan + tampilkan captionnya. Mikrofon menyala hanya setelah ini. */
-      const ucap = async (teks) => {
-        if (!hidup()) return;
-        setFase('bicara');
-        setCaption(teks);
-        await say(teks);
-      };
-
-      const dengar = async () => {
-        if (!hidup()) return { text: null };
-        setFase('mendengar');
-        setCaption('');
-        return listenOnce({ onPartial: (t) => hidup() && setCaption(t) });
-      };
+      const { ucap, dengar } = buatAlat(hidup);
 
       setFase('membuka');
       setCaption('');
@@ -122,7 +142,14 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
           // Diperiksa paling awal, sebelum teksnya dikirim ke mana pun:
           // permintaan tolong tidak boleh menunggu satu putaran jaringan.
           if (bacaanDarurat(text)) {
-            daruratTerkirim = await jalankanDarurat({ elderId, text, ucap, dengar, hidup });
+            daruratTerkirim = await jalankanDarurat({
+              elderId,
+              text,
+              ucap,
+              dengar,
+              hidup,
+              setPanggilan,
+            });
             if (daruratTerkirim) {
               alasanTutup = 'emergency';
               break;
@@ -175,10 +202,46 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
         }
       }
     },
-    [elderId, onRevoked, onSelesai],
+    [elderId, onRevoked, onSelesai, buatAlat],
   );
 
-  return { fase, caption, offline, mulai, hentikan };
+  /**
+   * Jalur darurat yang TIDAK berangkat dari percakapan — sekarang cuma dipakai
+   * deteksi jatuh (`sensors/fallDetection.js`).
+   *
+   * Tidak membuka sesi percakapan sama sekali: yang dibutuhkan orang yang baru
+   * saja jatuh adalah satu pertanyaan pendek, bukan basa-basi pembuka. Backend
+   * sudah menyiapkan kalimat konfirmasi khusus untuk `fall_detection`.
+   *
+   * @param {string} detail keterangan teknis untuk keluarga
+   */
+  const picuDaruratJatuh = useCallback(
+    async (detail) => {
+      const generasi = (generasiRef.current += 1);
+      const hidup = () => generasiRef.current === generasi;
+      const { ucap, dengar } = buatAlat(hidup);
+
+      setFase('membuka');
+      setCaption('');
+
+      const terkirim = await jalankanDarurat({
+        elderId,
+        text: detail,
+        ucap,
+        dengar,
+        hidup,
+        setPanggilan,
+        triggerType: 'fall_detection',
+      });
+
+      stopListening();
+      if (hidup()) setFase(terkirim ? 'darurat' : 'selesai');
+      return terkirim;
+    },
+    [elderId, buatAlat],
+  );
+
+  return { fase, caption, offline, panggilan, mulai, hentikan, picuDaruratJatuh };
 }
 
 /**
@@ -186,13 +249,13 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
  *
  * @returns {Promise<boolean>} true kalau keluarga jadi dihubungi.
  */
-async function jalankanDarurat({ elderId, text, ucap, dengar, hidup }) {
+async function jalankanDarurat({ elderId, text, ucap, dengar, hidup, setPanggilan, triggerType = 'keyword' }) {
   let event;
   let confirmSpeech;
 
   try {
     const hasil = await triggerEmergency(elderId, {
-      triggerType: 'keyword',
+      triggerType,
       detail: text.slice(0, 500),
     });
     event = hasil.event;
@@ -217,8 +280,9 @@ async function jalankanDarurat({ elderId, text, ucap, dengar, hidup }) {
   // memanggil keluarga jauh lebih murah daripada terlambat memanggilnya.
   const jadi = bacaYaTidak(jawaban ?? '') !== 'tidak';
 
+  let hasilKonfirmasi;
   try {
-    await confirmEmergency(elderId, event.id, jadi);
+    hasilKonfirmasi = await confirmEmergency(elderId, event.id, jadi);
   } catch {
     await ucap('Maaf, sambungannya terputus saat menghubungi keluarga. Coba panggil orang di sekitar ya.');
     return false;
@@ -229,12 +293,40 @@ async function jalankanDarurat({ elderId, text, ucap, dengar, hidup }) {
     return false;
   }
 
-  // Jujur soal apa yang benar-benar terjadi: keluarga menerima notifikasi di
-  // app mereka. Panggilan suaranya belum hidup (lihat README), jadi jangan
-  // menjanjikan "sebentar lagi ditelepon".
-  await ucap(
-    'Sudah saya kabari keluarga lewat aplikasi mereka sekarang. ' +
-      'Tetap tenang ya, jangan matikan HP-nya.',
-  );
+  // Jujur soal apa yang benar-benar terjadi, termasuk saat kabarnya TIDAK
+  // sampai: `notifiedDevices` 0 berarti tidak ada HP keluarga yang terdaftar,
+  // dan berkata "sudah saya kabari" dalam keadaan itu akan membuat lansia
+  // berhenti mencari pertolongan lain — kegagalan paling mahal di alur ini.
+  if (hasilKonfirmasi?.notifiedDevices > 0) {
+    await ucap(
+      'Sudah saya kabari keluarga lewat aplikasi mereka sekarang. ' +
+        'Tetap di tempat ya, sebentar lagi mereka bicara lewat HP ini.',
+    );
+  } else {
+    await ucap(
+      'Saya sudah mencatat keadaan ini, tapi belum ada HP keluarga yang terhubung untuk menerima kabarnya. ' +
+        'Kalau bisa, coba panggil orang di sekitar ya.',
+    );
+  }
+
+  // Masuk room tanpa menunggu apa pun dari lansia: pada keadaan darurat, orang
+  // yang butuh bantuan belum tentu sanggup mengangkat panggilan. Sengaja tidak
+  // di-`await` — loop percakapan harus segera ditutup supaya mikrofonnya bebas
+  // dipakai panggilan.
+  if (hasilKonfirmasi?.call) {
+    setPanggilan?.('menunggu');
+    mulaiPanggilanDarurat(hasilKonfirmasi.call, {
+      onKeluargaMasuk: () => {
+        setPanggilan?.('tersambung');
+        say('Keluarga sudah tersambung. Silakan bicara.');
+      },
+      onSelesai: () => setPanggilan?.('tidak'),
+    })
+      .then((jadi) => {
+        if (!jadi) setPanggilan?.('tidak');
+      })
+      .catch(() => setPanggilan?.('tidak'));
+  }
+
   return true;
 }

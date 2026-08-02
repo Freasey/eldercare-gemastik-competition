@@ -12,28 +12,31 @@ App sisi lansia (voice-first, tanpa UI) ada di project terpisah:
 
 Butuh **Node ≥ 20.19.4** (React Native 0.86 menolak versi di bawahnya).
 
+> **Tidak lagi bisa lewat Expo Go.** Notifikasi push dan audio panggilan
+> (`expo-notifications`, `@livekit/react-native-webrtc`) butuh modul native.
+
 ```bash
 cd family-app
 npm install
-cp .env.example .env      # lalu sesuaikan EXPO_PUBLIC_API_URL
-npm start                 # tekan `a` untuk Android
+npx expo run:android      # build + pasang ke HP (butuh Android SDK)
 ```
 
-Backend harus jalan lebih dulu:
-
-```bash
-cd ../backend && npm run dev
-```
+`.env` sudah menunjuk ke backend production, jadi tidak ada yang perlu diisi
+untuk menjalankannya. Setelah terpasang sekali, `npm start` cukup.
 
 ### Mengarahkan app ke backend
 
-Isi `EXPO_PUBLIC_API_URL` di `family-app/.env`:
+Default `.env`: `https://gemastikproject-i48g9adu.b4a.run`. Untuk backend lokal,
+buat `.env.local` (menang atas `.env`) lalu jalankan `cd ../backend && npm run dev`.
 
 | Cara menjalankan | Alamat |
 |---|---|
+| Backend production | `https://gemastikproject-i48g9adu.b4a.run` |
 | Emulator Android | `http://10.0.2.2:4000` |
-| HP fisik + Expo Go | `http://<IP-LAN-laptop>:4000` |
-| Setelah deploy | `https://<nama-app>.back4app.io` |
+| HP fisik satu Wi-Fi | `http://<IP-LAN-laptop>:4000` |
+
+Alamat `http://` **hanya jalan di development build** (varian debug). Build
+release memblokir cleartext HTTP, jadi APK yang dibagikan wajib `https://`.
 
 `10.0.2.2` adalah alamat khusus emulator Android untuk `localhost` mesin host —
 `localhost` saja akan menunjuk ke emulator itu sendiri. Untuk HP fisik, cari IP
@@ -78,6 +81,9 @@ src/
     Charts.js              grafik kepatuhan & suasana hati (react-native-svg)
     Sheet.js               panel dari bawah + isian form
     ScreenShell.js         app bar + chip ganti lansia + tarik untuk muat ulang
+  notifications/
+    push.js                izin + token FCM + dua kanal Android
+    useNotificationRouting.js  ketukan notifikasi -> layar kejadian
   navigation/
     RootNavigator.js       5 tab + layar bertumpuk
   screens/                 satu file per layar
@@ -114,20 +120,47 @@ Sama seperti di mockup — ini pembeda produk, jadi dibuat kelihatan:
    asisten menanyakannya sekali sehari selama masih mati (lihat
    `backend/README.md` bagian "Consent lewat suara").
 3. **Darurat tetap di dalam app.** Notifikasi → panggilan suara in-app, tanpa
-   SMS/telepon pulsa.
+   SMS/telepon pulsa. Rantainya utuh sekarang: lansia bicara "tolong" → backend
+   mengirim FCM ke HP keluarga → ketukan membuka kejadiannya → layar Panggilan
+   menyambung ke room LiveKit dan mikrofon kedua sisi menyala. Sisi lansia masuk
+   room otomatis, tanpa perlu mengangkat apa pun.
+
+## Notifikasi darurat
+
+Yang didaftarkan ke backend adalah **token FCM mentah**
+(`getDevicePushTokenAsync`), bukan `ExponentPushToken[...]`. Bedanya penting:
+token Expo baru sampai ke Android setelah service account FCM diunggah ke
+project Expo lewat `eas credentials` — satu langkah interaktif lagi yang harus
+diingat orang. Token FCM dilayani `firebase-admin` di backend memakai service
+account yang sudah ada, jadi rantainya lebih pendek. Backend menerima kedua
+bentuk (`backend/src/services/push.js`), jadi keputusan ini bisa dibalik tanpa
+mengubah server.
+
+Konsekuensinya: `google-services.json` **wajib** ada di root project ini
+(ditunjuk `android.googleServicesFile`). File itu di-gitignore, jadi salin dari
+root repo saat menyiapkan mesin baru — tanpanya token tidak pernah terbit dan
+notifikasi diam-diam tidak akan pernah datang.
+
+Dua kanal Android, bukan satu: `emergency` (MAX importance, menembus mode
+senyap) dan `default`. Kalau kabar harian dan panggilan darurat berbagi satu
+kanal, keluarga hanya punya dua pilihan — diganggu terus-menerus atau
+membisukan keduanya — dan yang kedua itulah yang biasanya terjadi.
+
+Pendaftaran terjadi otomatis setiap kali ada sesi (termasuk sesi yang dipulihkan
+saat app dibuka), karena token FCM bisa dirotasi Android kapan saja. Di layar
+Profil ada tombol **"Kirim notifikasi uji"** — membuktikan jalurnya sampai ke HP
+tanpa perlu memicu kejadian darurat palsu.
+
+Mengetuk notifikasi darurat membuka langsung layar kejadiannya, termasuk saat
+app sedang mati sama sekali (`getLastNotificationResponseAsync`) — justru itu
+kasus yang paling penting: HP di saku, app tertutup.
 
 ## Yang belum jalan
 
-Semua butuh **development build** (tidak bisa lewat Expo Go), jadi ditunda
-sampai build pertama dibuat:
-
-- **Suara pada panggilan darurat.** Layar Panggilan sudah meminta token room
-  LiveKit asli ke backend dan menandai kejadian jadi `acknowledged`, tapi
-  transport audionya belum ada — `@livekit/react-native` butuh WebRTC native.
-  Layar itu menyatakan keadaannya apa adanya, tidak berpura-pura.
-- **Notifikasi push.** `expo-notifications` + FCM V1 belum dipasang; sakelar di
-  Profil masih mati. Endpoint `POST /api/devices` di backend sudah siap.
-- **Google Sign-In.** Lihat bagian Masuk di atas.
+- **Google Sign-In.** Lihat bagian Masuk di atas. Sampai itu ada, masuk lewat
+  login tamu.
+- **iOS.** Di luar scope fase ini (PLAN §6, Android-only). `Info.plist` untuk
+  mikrofon dan `@config-plugins/react-native-webrtc` belum disiapkan.
 
 ## Catatan porting dari mockup
 

@@ -44,6 +44,20 @@ export const endSession = (elderId, conversationId, reason) =>
     body: { reason },
   });
 
+/* ---------------- transkripsi ---------------- */
+
+/**
+ * Fallback speech-to-text saat pengenal bawaan HP gagal (lihat voice/stt.js).
+ *
+ * API key Groq hanya hidup di server, jadi audionya yang naik ke backend —
+ * bukan app yang memanggil Groq langsung. Batas waktunya lebih longgar dari
+ * permintaan biasa: unggah audio di jaringan rumah bisa lambat, dan menyerah
+ * kepagian berarti kembali ke keadaan "app tidak mendengar apa-apa" yang justru
+ * ingin diperbaiki fitur ini.
+ */
+export const transcribeAudio = (body) =>
+  api('/api/stt', { method: 'POST', body, timeoutMs: 45000 });
+
 /* ---------------- reminder ---------------- */
 
 /**
