@@ -8,9 +8,9 @@ GoogleService-Info.plist
 # Build APK lokal (build-apk.ps1)
 build.env.ps1
 dist/
-# Keystore: kehilangannya berarti app tidak bisa di-update lagi, jadi simpan di
-# luar repo. Pola ini cuma jaring pengaman kalau ada yang terlanjur menaruhnya
-# di sini.
+# APK ditandatangani debug key bawaan Expo, jadi tidak ada keystore yang perlu
+# dijaga. Pola ini tetap dipertahankan sebagai jaring pengaman kalau suatu saat
+# ada yang membuat keystore sungguhan dan lupa menaruhnya di luar repo.
 *.jks
 *.keystore
 

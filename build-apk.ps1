@@ -8,17 +8,21 @@
 
     Kenapa hanya release, tidak ada pilihan debug: APK debug memuat JS dari
     Metro, jadi mati begitu laptop yang membuildnya dimatikan. Yang bisa
-    dibagikan ke orang lain hanya release, dan itu wajib ditandatangani.
+    dibagikan ke orang lain hanya release.
 
-    Kredensial keystore dibaca dari build.env.ps1 (di-gitignore). Kalau file itu
-    tidak ada, script menanyakannya dan tidak menyimpannya ke mana pun.
+    TANDA TANGAN: memakai debug keystore bawaan template Expo. App ini tidak
+    diunggah ke Play Store, jadi tidak ada gunanya mengurus keystore sendiri —
+    template Expo SDK 57 sudah menulis `signingConfig signingConfigs.debug` pada
+    buildType release, dan `expo prebuild` menyediakan `debug.keystore`-nya.
+    APK-nya tetap sah dipasang di HP mana pun.
+
+    Konsekuensi yang harus disadari kalau suatu hari berubah pikiran: APK
+    ber-debug-key TIDAK bisa diunggah ke Play Store, dan begitu nanti diganti
+    keystore sungguhan, APK lama harus di-uninstall dulu sebelum yang baru bisa
+    dipasang — Android menolak update yang kuncinya berbeda.
 
 .PARAMETER App
     'semua' (bawaan), 'family', atau 'elder'.
-
-.PARAMETER BuatKeystore
-    Bikin keystore baru kalau belum ada. Sengaja harus diminta eksplisit —
-    keystore yang hilang berarti app tidak bisa di-update lagi selamanya.
 
 .PARAMETER LewatiPrebuild
     Pakai folder android\ yang sudah ada. Jauh lebih cepat, tapi TIDAK boleh
@@ -27,14 +31,12 @@
 .EXAMPLE
     .\build-apk.ps1
     .\build-apk.ps1 -App elder -LewatiPrebuild
-    .\build-apk.ps1 -BuatKeystore
 #>
 #Requires -Version 5.1
 [CmdletBinding()]
 param(
     [ValidateSet('semua', 'family', 'elder')]
     [string]$App = 'semua',
-    [switch]$BuatKeystore,
     [switch]$LewatiPrebuild
 )
 
@@ -189,7 +191,7 @@ Pasang JDK 17 tanpa mengganggu Java yang sudah ada:
 Lalu buka PowerShell baru dan jalankan script ini lagi — ia akan menemukannya
 sendiri, JAVA_HOME tidak perlu diset manual.
 
-Kalau JDK-nya ada di tempat tidak lazim, isi `JdkPath` di build.env.ps1.
+Kalau JDK-nya ada di tempat tidak lazim, isi JdkPath di build.env.ps1.
 "@
 }
 
@@ -232,17 +234,28 @@ function Uji-Prasyarat {
     }
 
     if (-not $nodeRaw) {
-        Berhenti @"
-Node tidak menjawab `node -v`.
+        # Here-string SINGLE-quote, bukan double: di dalam @"..."@ backtick adalah
+        # karakter escape, sehingga menulis `node (dengan backtick, seperti di
+        # markdown) berubah jadi newline + "ode" dan pesannya patah di tengah.
+        Berhenti @'
+Node ada di PATH tapi tidak menjawab "node -v".
 
-Kalau `node` sendiri ada di PATH, penyebab tersering adalah pengelola versi yang
-belum menunjuk versi mana pun:
+Penyebab tersering di Windows: nvm-windows sudah mencatat sebuah versi sebagai
+aktif, tapi symlink-nya tidak pernah benar-benar dibuat — pembuatannya butuh hak
+Administrator, dan tanpa itu nvm gagal diam-diam.
 
-  nvm use 20.19.4        (nvm-windows)
-  volta install node@20  (Volta)
+Perbaikannya, di PowerShell yang dibuka SEBAGAI ADMINISTRATOR:
 
-Cek dengan: Get-Command node ; node -v
-"@
+  nvm use 22.22.3
+
+lalu buka PowerShell biasa lagi dan cek "node -v" sebelum menjalankan script ini.
+
+Untuk memastikan sumber masalahnya:
+
+  nvm list
+  Get-Command node -All | Select-Object Source
+  where.exe node
+'@
     }
 
     $nodeRaw = $nodeRaw.ToString().Trim().TrimStart('v')
@@ -260,76 +273,6 @@ Cek dengan: Get-Command node ; node -v
     } elseif ($node) {
         Tulis-Ok "Node $nodeRaw"
     }
-}
-
-# ------------------------------------------------------------------ kredensial --
-
-function Ambil-Kredensial {
-    Tulis-Tahap 'Kredensial keystore'
-
-    if ($script:AdaKonfigurasi) {
-        Tulis-Ok 'Dibaca dari build.env.ps1'
-    } else {
-        Tulis-Ingat 'build.env.ps1 tidak ada — password ditanyakan sekarang, tidak disimpan.'
-        Tulis-Ingat 'Salin build.env.example.ps1 jadi build.env.ps1 kalau mau sekali isi saja.'
-    }
-
-    if (-not $KeystorePath) {
-        $KeystorePath = Join-Path $env:USERPROFILE '.caretaker-keys\caretaker.jks'
-    }
-    if (-not $KeyAlias) { $KeyAlias = 'caretaker' }
-
-    if (-not $KeystorePassword) { $KeystorePassword = Baca-Rahasia 'Password keystore' }
-    if (-not $KeyPassword) { $KeyPassword = $KeystorePassword }
-
-    return @{
-        Path      = $KeystorePath
-        Password  = $KeystorePassword
-        Alias     = $KeyAlias
-        KeyPass   = $KeyPassword
-    }
-}
-
-function Baca-Rahasia($label) {
-    $aman = Read-Host -Prompt $label -AsSecureString
-    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($aman)
-    try {
-        return [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-    } finally {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
-    }
-}
-
-function Siapkan-Keystore($kred) {
-    if (Test-Path $kred.Path) {
-        Tulis-Ok "Keystore: $($kred.Path)"
-        return
-    }
-
-    if (-not $BuatKeystore) {
-        Berhenti @"
-Keystore tidak ada di: $($kred.Path)
-
-Jalankan sekali dengan -BuatKeystore untuk membuatnya, ATAU arahkan
-KeystorePath di build.env.ps1 ke keystore yang sudah kamu punya.
-
-Kalau app ini pernah dibagikan dengan keystore lain, JANGAN bikin baru —
-Android menolak update yang ditandatangani kunci berbeda.
-"@
-    }
-
-    $folder = Split-Path $kred.Path -Parent
-    if (-not (Test-Path $folder)) { New-Item -ItemType Directory -Force -Path $folder | Out-Null }
-
-    Tulis-Ingat 'Membuat keystore baru. SIMPAN baik-baik + catat passwordnya.'
-    & keytool -genkeypair -v -storetype PKCS12 `
-        -keystore $kred.Path -alias $kred.Alias `
-        -keyalg RSA -keysize 2048 -validity 10000 `
-        -storepass $kred.Password -keypass $kred.KeyPass `
-        -dname 'CN=AI Caretaker, OU=GEMASTIK, O=AI Caretaker, L=Surabaya, C=ID'
-    if ($LASTEXITCODE -ne 0) { Berhenti 'keytool gagal membuat keystore.' }
-
-    Tulis-Ok "Keystore dibuat: $($kred.Path)"
 }
 
 # ------------------------------------------------------------ berkas gitignore --
@@ -373,7 +316,7 @@ server di HP mana pun. Ubah EXPO_PUBLIC_API_URL di $envPath jadi alamat https.
 
 # ------------------------------------------------------------------- build --
 
-function Build-App($nama, $folder, $butuhGoogleServices, $kred) {
+function Build-App($nama, $folder, $butuhGoogleServices) {
     Tulis-Tahap "Build $nama"
     $appDir = Join-Path $root $folder
 
@@ -399,15 +342,13 @@ function Build-App($nama, $folder, $butuhGoogleServices, $kred) {
         Write-Host '  ->  gradlew assembleRelease (bisa 20-40 menit pada build pertama)'
         Push-Location (Join-Path $appDir 'android')
         try {
-            # Signing lewat properti injeksi AGP, BUKAN lewat build.gradle:
-            # `expo prebuild --clean` menghapus seluruh folder android\, jadi
-            # konfigurasi apa pun yang ditulis di dalamnya akan hilang tiap kali
-            # app.json berubah.
-            & .\gradlew.bat assembleRelease --console=plain `
-                "-Pandroid.injected.signing.store.file=$($kred.Path -replace '\\', '/')" `
-                "-Pandroid.injected.signing.store.password=$($kred.Password)" `
-                "-Pandroid.injected.signing.key.alias=$($kred.Alias)" `
-                "-Pandroid.injected.signing.key.password=$($kred.KeyPass)"
+            # Tidak ada konfigurasi signing di sini, dan itu disengaja: template
+            # Expo SDK 57 sudah menulis `signingConfig signingConfigs.debug` pada
+            # buildType release, dan `expo prebuild` ikut menaruh debug.keystore
+            # di android\app\. Hasilnya APK yang sah dipasang tanpa satu pun
+            # kredensial yang perlu diurus — cukup untuk app yang tidak diunggah
+            # ke Play Store.
+            & .\gradlew.bat assembleRelease --console=plain
             if ($LASTEXITCODE -ne 0) {
                 Berhenti @"
 Gradle gagal di $folder.
@@ -443,16 +384,14 @@ salah konfigurasi kamu.
 # -------------------------------------------------------------------- main --
 
 Uji-Prasyarat
-$kred = Ambil-Kredensial
-Siapkan-Keystore $kred
 
 $hasil = @()
 if ($App -eq 'semua' -or $App -eq 'family') {
-    $hasil += Build-App 'family-app' 'family-app' $true $kred
+    $hasil += Build-App 'family-app' 'family-app' $true
 }
 if ($App -eq 'semua' -or $App -eq 'elder') {
     # elder-app tidak memakai push notification, jadi tidak butuh Firebase.
-    $hasil += Build-App 'elder-app' 'elder-app' $false $kred
+    $hasil += Build-App 'elder-app' 'elder-app' $false
 }
 
 Tulis-Tahap 'Selesai'
@@ -462,6 +401,10 @@ Write-Host "`nPasang ke HP yang tersambung:" -ForegroundColor Cyan
 foreach ($h in $hasil) { Write-Host "  adb install -r `"$h`"" }
 
 Write-Host @"
+
+APK ini ditandatangani dengan debug key bawaan Expo — cukup untuk dipasang dan
+dibagikan, tapi TIDAK bisa diunggah ke Play Store. Saat memasang lewat berkas
+(bukan adb), Play Protect mungkin menahannya sekali dan perlu diizinkan manual.
 
 Yang masih harus diuji di HP sungguhan (tidak ada yang bisa membuktikannya dari
 laptop): TTS, STT, wake word, deteksi jatuh, notifikasi darurat, dan audio
