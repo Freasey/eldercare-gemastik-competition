@@ -41,6 +41,21 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 
+<#
+    Penangkap error tak terduga.
+
+    Tanpa ini, kesalahan apa pun yang tidak diantisipasi muncul sebagai
+    "At line:1 char:1 + .\build-apk.ps1" — yang menunjuk ke pemanggilan script,
+    bukan ke baris yang benar-benar bermasalah, dan praktis tidak bisa
+    didiagnosis dari jarak jauh.
+#>
+trap {
+    Write-Host "`nGAGAL (tidak terduga): $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "  baris $($_.InvocationInfo.ScriptLineNumber): $($_.InvocationInfo.Line.Trim())" -ForegroundColor DarkGray
+    if ($root) { Set-Location $root }
+    exit 1
+}
+
 function Tulis-Tahap($teks) { Write-Host "`n=== $teks ===" -ForegroundColor Cyan }
 function Tulis-Ok($teks) { Write-Host "  OK  $teks" -ForegroundColor Green }
 function Tulis-Ingat($teks) { Write-Host "  !   $teks" -ForegroundColor Yellow }
@@ -202,13 +217,47 @@ function Uji-Prasyarat {
     if (-not (Test-Path $sdk)) { Berhenti "ANDROID_HOME menunjuk ke folder yang tidak ada: $sdk" }
     Tulis-Ok "Android SDK: $sdk"
 
-    $nodeRaw = (node -v).TrimStart('v')
-    $node = [version]($nodeRaw -replace '-.*$', '')
-    if ($node -lt [version]'20.19.4') {
+    # Sengaja bertele-tele: `node -v` bisa mengembalikan NULL walau `node` ada di
+    # PATH — mis. shim nvm/volta yang belum menunjuk versi mana pun, atau stub
+    # App Execution Alias bawaan Windows. Versi pertama script ini langsung
+    # memanggil .TrimStart() pada hasilnya dan meledak dengan pesan yang tidak
+    # menyebut Node sama sekali.
+    $nodeRaw = $null
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+        try {
+            $nodeRaw = & node -v 2>$null | Select-Object -First 1
+        } catch {
+            $nodeRaw = $null
+        }
+    }
+
+    if (-not $nodeRaw) {
+        Berhenti @"
+Node tidak menjawab `node -v`.
+
+Kalau `node` sendiri ada di PATH, penyebab tersering adalah pengelola versi yang
+belum menunjuk versi mana pun:
+
+  nvm use 20.19.4        (nvm-windows)
+  volta install node@20  (Volta)
+
+Cek dengan: Get-Command node ; node -v
+"@
+    }
+
+    $nodeRaw = $nodeRaw.ToString().Trim().TrimStart('v')
+    $node = $null
+    try {
+        $node = [version]($nodeRaw -replace '-.*$', '')
+    } catch {
+        Tulis-Ingat "Versi Node tidak terbaca ('$nodeRaw') — dilewati, bukan penghenti."
+    }
+
+    if ($node -and $node -lt [version]'20.19.4') {
         # Peringatan, bukan penghenti: bundling tetap jalan di versi ini, yang
         # belum tentu jalan adalah tahap native-nya.
         Tulis-Ingat "Node $nodeRaw di bawah 20.19.4 yang diminta React Native 0.86. Kalau Gradle gagal di tahap aneh, ini tersangka pertama."
-    } else {
+    } elseif ($node) {
         Tulis-Ok "Node $nodeRaw"
     }
 }
