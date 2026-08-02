@@ -1,5 +1,5 @@
 /**
- * LiveKit — voice call + messaging in-app untuk jalur darurat (PLAN §2.4).
+ * LiveKit voice call + messaging in-app untuk jalur darurat (PLAN §2.4).
  * API key/secret hanya hidup di server; app cuma menerima access token
  * berumur pendek.
  */

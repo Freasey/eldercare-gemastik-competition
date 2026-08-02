@@ -4,7 +4,7 @@
  * Dipakai bersama oleh dua jalur: trigger manual (lansia menekan tombol) dan
  * reminder otomatis (app-initiated). Satu sistem, bukan dua.
  *
- * PENTING: seluruh logika di file ini murni rule-based — TIDAK memanggil LLM.
+ * PENTING: seluruh logika di file ini murni rule-based TIDAK memanggil LLM.
  * Groq hanya dipakai untuk memahami percakapan bebas (lihat services/groq.js).
  * Alasannya: hemat kuota free tier + behavior reminder obat harus predictable.
  */
@@ -36,7 +36,7 @@ function minutesBetween(a, b) {
 
 /**
  * Kumpulkan kondisi terkini lansia: reminder aktif, mood terakhir, red flag.
- * Tidak mengubah data apa pun — aman dipanggil setiap kali tombol ditekan.
+ * Tidak mengubah data apa pun aman dipanggil setiap kali tombol ditekan.
  */
 /**
  * @param {number|string} elderId
@@ -115,7 +115,7 @@ export async function buildContext(elderId, now = new Date(), opts = {}) {
 }
 
 /**
- * Sinyal yang perlu perhatian keluarga. Bukan diagnosis — hanya pola kasar
+ * Sinyal yang perlu perhatian keluarga. Bukan diagnosis hanya pola kasar
  * yang layak ditampilkan di dashboard dan dipakai untuk menaikkan prioritas.
  */
 function detectRedFlags({ missedStats, recentMoods }) {
@@ -258,7 +258,7 @@ function lower(text) {
 /**
  * Judul jadwal ditulis keluarga dengan bebas, jadi banyak yang sudah memuat
  * awalan sendiri ("Waktunya sholat Maghrib"). Template di bawah menempelkan
- * "waktunya" lagi — kalau tidak dibuang, TTS membacakan "waktunya waktunya
+ * "waktunya" lagi kalau tidak dibuang, TTS membacakan "waktunya waktunya
  * sholat maghrib". Dibersihkan di sini, bukan dengan melarang penamaan
  * tertentu di app keluarga.
  */

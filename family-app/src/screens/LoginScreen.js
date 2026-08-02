@@ -3,7 +3,7 @@
  *
  * Tombol Google masih dimatikan: Android OAuth client ID belum ada karena
  * butuh SHA-1 dari keystore, dan keystore baru terbit setelah build pertama
- * (PLAN §5). Sampai itu selesai, masuk lewat login tamu — satu-satunya jalur
+ * (PLAN §5). Sampai itu selesai, masuk lewat login tamu satu-satunya jalur
  * yang jalan di backend lokal maupun production.
  */
 import { useState } from 'react';
@@ -54,7 +54,7 @@ export function LoginScreen() {
             Tetap dekat{'\n'}dengan orang tua
           </Text>
           <Body style={{ color: c.ink2 }}>
-            Atur pengingat obat, lihat kabar harian, dan terima peringatan darurat — tanpa harus
+            Atur pengingat obat, lihat kabar harian, dan terima peringatan darurat tanpa harus
             terus menelepon.
           </Body>
         </View>
@@ -77,7 +77,7 @@ export function LoginScreen() {
 
         <View style={{ gap: 6, marginTop: 6 }}>
           <Note>
-            Mode tamu membuat akun sementara berisi data contoh — bebas kamu ubah. Akunnya
+            Mode tamu membuat akun sementara berisi data contoh bebas kamu ubah. Akunnya
             terhapus kalau tidak dipakai 7 hari; masuk dengan Google untuk menyimpannya.
           </Note>
           <Note>Data kesehatan hanya dibagikan sesuai izin yang diberikan lansia.</Note>

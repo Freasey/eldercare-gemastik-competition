@@ -3,12 +3,12 @@
  *
  * Jalur normalnya BUKAN ini: pengenal suara bawaan Android gratis, jalan tanpa
  * internet, dan tidak menghabiskan kuota. Yang ditangani di sini adalah kasus
- * yang di lapangan justru sering — HP tanpa layanan Google, bahasa Indonesia
+ * yang di lapangan justru sering HP tanpa layanan Google, bahasa Indonesia
  * belum terpasang, atau suara lansia terlalu pelan untuk pengenal bawaan.
  * Tanpa fallback, semua kasus itu berakhir sama: app diam dan lansia mengira
  * dirinya tidak didengar.
  *
- * API key Groq tidak pernah dikirim ke app — makanya audionya yang naik ke
+ * API key Groq tidak pernah dikirim ke app makanya audionya yang naik ke
  * server, bukan app yang memanggil Groq langsung.
  */
 import { env } from '../config/env.js';
@@ -22,7 +22,7 @@ const GROQ_STT_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
  *
  * Angkanya ditentukan batas body Vercel (4.5 MB), bukan kemampuan Whisper:
  * audio dikirim sebagai base64, yang menggembungkan ukuran ~33%, jadi 3 MB
- * mentah ≈ 4 MB terkirim — masih di bawah batas dengan sisa ruang.
+ * mentah ≈ 4 MB terkirim masih di bawah batas dengan sisa ruang.
  *
  * Ini pagar, bukan ukuran nyata. Rekaman sungguhan dibatasi lebih dulu oleh
  * `BATAS_DENGAR_MS` 20 detik di sisi app lansia, yang untuk WAV 16 kHz mono
@@ -51,7 +51,7 @@ export async function transcribe(audio, opts = {}) {
   form.append('language', language);
   form.append('response_format', 'json');
   // Temperature 0: yang diminta transkrip apa adanya, bukan tebakan yang enak
-  // dibaca. Salah dengar yang "masuk akal" lebih berbahaya di sini — jawaban
+  // dibaca. Salah dengar yang "masuk akal" lebih berbahaya di sini jawaban
   // soal obat ditafsirkan dari teks ini.
   form.append('temperature', '0');
   if (prompt) form.append('prompt', prompt);

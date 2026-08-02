@@ -6,7 +6,7 @@
 #
 # Interval 15 menit, bukan 5, karena dua alasan:
 #   1. Yang benar-benar bergantung pada tick cuma `sweepMissedReminders()`, dan
-#      itu sendiri sudah punya ambang 90 menit — jadi 15 menit hanya menambah
+#      itu sendiri sudah punya ambang 90 menit jadi 15 menit hanya menambah
 #      delay maksimum jadi 105 menit. Reminder ke lansia sendiri tidak ikut
 #      terpengaruh: HP lansia menjadwalkannya secara lokal.
 #   2. `*/5` menghabiskan ~1440 dari 2000 menit Actions gratis per bulan kalau
@@ -23,7 +23,7 @@ on:
   # Supaya bisa dipicu manual dari tab Actions saat menguji.
   workflow_dispatch:
 
-# Tick yang menumpuk tidak berguna — semuanya idempoten dan mengerjakan hal
+# Tick yang menumpuk tidak berguna semuanya idempoten dan mengerjakan hal
 # yang sama. Kalau ada yang masih jalan, biarkan selesai dan lewati yang baru.
 concurrency:
   group: scheduler-tick

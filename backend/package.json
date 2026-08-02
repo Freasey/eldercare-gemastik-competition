@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Express backend untuk AI Caretaker (GEMASTIK) — auth, jadwal/reminder, context engine, ringkasan caregiver, emergency.",
+  "description": "Express backend untuk AI Caretaker (GEMASTIK) auth, jadwal/reminder, context engine, ringkasan caregiver, emergency.",
   "main": "src/server.js",
   "engines": {
     "node": ">=20"

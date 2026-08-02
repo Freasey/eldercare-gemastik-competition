@@ -1,5 +1,5 @@
 /**
- * Darurat — status terkini, penjelasan alur eskalasi, riwayat kejadian,
+ * Darurat status terkini, penjelasan alur eskalasi, riwayat kejadian,
  * dan kontak darurat.
  *
  * Alur yang ditampilkan mengikuti PLAN §2.4: terdeteksi → dikonfirmasi ke
@@ -34,7 +34,7 @@ import { EMERGENCY_STATUS, EMERGENCY_TITLES } from '../lib/constants.js';
 
 const LANGKAH = [
   ['siren', 'Terdeteksi', 'Kata "tolong", deteksi jatuh, atau pengingat penting diabaikan berulang.'],
-  ['chat', 'Dikonfirmasi dulu', 'Asisten bertanya ke lansia sebelum membangunkan keluarga — supaya tidak salah alarm.'],
+  ['chat', 'Dikonfirmasi dulu', 'Asisten bertanya ke lansia sebelum membangunkan keluarga supaya tidak salah alarm.'],
   ['bell', 'Notifikasi ke keluarga', 'Semua anggota keluarga yang terhubung menerima notifikasi prioritas tinggi.'],
   ['phone', 'Panggilan dalam aplikasi', 'Kalau tidak direspons, panggilan suara langsung terbuka di dalam aplikasi.'],
 ];

@@ -1,5 +1,5 @@
 /**
- * Loop percakapan — inti app lansia.
+ * Loop percakapan inti app lansia.
  *
  * Bentuknya sengaja satu alur `async` lurus (bicara → dengar → kirim → bicara)
  * dan bukan kumpulan callback: percakapan memang berurutan, dan versi
@@ -8,7 +8,7 @@
  *
  * Yang TIDAK dikerjakan di sini, dan memang tidak boleh: memilih kalimat
  * pembuka, menafsirkan jawaban obat, menghitung skor mood, dan memutuskan
- * kapan izin privasi ditanyakan. Semua itu milik backend — app cuma
+ * kapan izin privasi ditanyakan. Semua itu milik backend app cuma
  * mengembalikan `expects`, `reminderId`, dan `consentKey` apa adanya.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -21,7 +21,7 @@ import { DeviceRevokedError, mulaiSesi } from './session.js';
 import { akhiriPanggilanDarurat, mulaiPanggilanDarurat } from './emergencyCall.js';
 
 /**
- * Fase yang ditampilkan layar. Hanya ini yang dilihat lansia — tidak ada teks
+ * Fase yang ditampilkan layar. Hanya ini yang dilihat lansia tidak ada teks
  * status teknis, hanya indikator + caption.
  * @typedef {'siap'|'membuka'|'bicara'|'mendengar'|'berpikir'|'selesai'|'darurat'|'gagal'} Fase
  */
@@ -55,7 +55,7 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
     setPanggilan('tidak');
   }, []);
 
-  // Jangan tinggalkan mikrofon menyala saat app ditutup — baik mikrofon STT
+  // Jangan tinggalkan mikrofon menyala saat app ditutup baik mikrofon STT
   // maupun mikrofon panggilan darurat.
   useEffect(() => hentikan, [hentikan]);
 
@@ -158,7 +158,7 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
           }
 
           // Penutup hanya berlaku di percakapan bebas. Pada giliran jawaban
-          // obat, "sudah" berarti sudah diminum — bukan tanda mau berhenti.
+          // obat, "sudah" berarti sudah diminum bukan tanda mau berhenti.
           if (expects === 'free' && adalahPenutup(text)) {
             alasanTutup = 'closing_phrase';
             await ucap('Baik, terima kasih. Sampai nanti ya.');
@@ -195,7 +195,7 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
         await sesi.end(alasanTutup === 'emergency' ? 'button' : alasanTutup);
         if (hidup()) {
           // Caption sengaja tidak dikosongkan: kalimat terakhir tetap terbaca
-          // setelah suaranya berhenti — penting bagi yang pendengarannya
+          // setelah suaranya berhenti penting bagi yang pendengarannya
           // berkurang dan baru sempat membacanya belakangan.
           setFase(daruratTerkirim ? 'darurat' : 'selesai');
           onSelesai?.();
@@ -206,7 +206,7 @@ export function useVoiceSession({ elderId, onRevoked, onSelesai }) {
   );
 
   /**
-   * Jalur darurat yang TIDAK berangkat dari percakapan — sekarang cuma dipakai
+   * Jalur darurat yang TIDAK berangkat dari percakapan sekarang cuma dipakai
    * deteksi jatuh (`sensors/fallDetection.js`).
    *
    * Tidak membuka sesi percakapan sama sekali: yang dibutuhkan orang yang baru
@@ -262,7 +262,7 @@ async function jalankanDarurat({ elderId, text, ucap, dengar, hidup, setPanggila
     confirmSpeech = hasil.confirmSpeech;
   } catch {
     // Tanpa sambungan, tidak ada yang bisa dihubungi lewat app. Jangan
-    // berpura-pura sudah mengabari keluarga — itu justru membuat lansia
+    // berpura-pura sudah mengabari keluarga itu justru membuat lansia
     // berhenti mencari pertolongan lain.
     await ucap(
       'Maaf, sekarang saya tidak bisa menghubungi keluarga karena tidak ada sambungan internet. ' +
@@ -296,7 +296,7 @@ async function jalankanDarurat({ elderId, text, ucap, dengar, hidup, setPanggila
   // Jujur soal apa yang benar-benar terjadi, termasuk saat kabarnya TIDAK
   // sampai: `notifiedDevices` 0 berarti tidak ada HP keluarga yang terdaftar,
   // dan berkata "sudah saya kabari" dalam keadaan itu akan membuat lansia
-  // berhenti mencari pertolongan lain — kegagalan paling mahal di alur ini.
+  // berhenti mencari pertolongan lain kegagalan paling mahal di alur ini.
   if (hasilKonfirmasi?.notifiedDevices > 0) {
     await ucap(
       'Sudah saya kabari keluarga lewat aplikasi mereka sekarang. ' +
@@ -311,7 +311,7 @@ async function jalankanDarurat({ elderId, text, ucap, dengar, hidup, setPanggila
 
   // Masuk room tanpa menunggu apa pun dari lansia: pada keadaan darurat, orang
   // yang butuh bantuan belum tentu sanggup mengangkat panggilan. Sengaja tidak
-  // di-`await` — loop percakapan harus segera ditutup supaya mikrofonnya bebas
+  // di-`await` loop percakapan harus segera ditutup supaya mikrofonnya bebas
   // dipakai panggilan.
   if (hasilKonfirmasi?.call) {
     setPanggilan?.('menunggu');

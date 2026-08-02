@@ -2,7 +2,7 @@
  * Satu-satunya "UI" di layar sesi: lingkaran yang menunjukkan app sedang
  * mendengar, berpikir, atau bicara.
  *
- * Gerakannya dibedakan, bukan cuma warnanya — pengguna dengan buta warna atau
+ * Gerakannya dibedakan, bukan cuma warnanya pengguna dengan buta warna atau
  * katarak tetap bisa membedakan denyut cepat (mendengar) dari denyut pelan
  * (bicara). Aturan yang sama dipakai app keluarga: warna tidak pernah berdiri
  * sendiri sebagai penanda status.
@@ -55,7 +55,7 @@ export function StatusOrb({ fase, size = 200 }) {
 
   return (
     <View style={{ width: size * 1.3, height: size * 1.3, alignItems: 'center', justifyContent: 'center' }}>
-      {/* Lingkaran luar yang memudar — memberi kesan "napas" tanpa perlu
+      {/* Lingkaran luar yang memudar memberi kesan "napas" tanpa perlu
           animasi warna, yang tidak bisa dijalankan native driver. */}
       <Animated.View
         style={{

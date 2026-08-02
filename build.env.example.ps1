@@ -1,6 +1,6 @@
 # Salin file ini jadi `build.env.ps1` lalu isi. File itu di-gitignore.
 #
-# Seluruh isinya OPSIONAL — build-apk.ps1 jalan tanpa file ini sama sekali.
+# Seluruh isinya OPSIONAL build-apk.ps1 jalan tanpa file ini sama sekali.
 # Tidak ada kredensial di sini: APK ditandatangani dengan debug key bawaan
 # template Expo, karena app ini tidak diunggah ke Play Store.
 

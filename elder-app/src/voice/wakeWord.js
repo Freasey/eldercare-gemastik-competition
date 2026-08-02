@@ -1,5 +1,5 @@
 /**
- * Wake word — memulai percakapan tanpa menyentuh apa pun (PLAN §2.5, §2.6).
+ * Wake word memulai percakapan tanpa menyentuh apa pun (PLAN §2.5, §2.6).
  *
  * **Batas yang harus jujur disebut: ini hanya bekerja selagi app terbuka di
  * layar.** Wake word yang benar-benar selalu siap butuh model kata-kunci yang
@@ -14,7 +14,7 @@
  *
  * Karena itu pula izin `always_listening` TETAP belum ditanyakan sebagai
  * consent: mikrofonnya hanya hidup selama layar sesi terbuka dan berhenti
- * seketika saat percakapan mulai — bukan "selalu mendengarkan" dalam arti yang
+ * seketika saat percakapan mulai bukan "selalu mendengarkan" dalam arti yang
  * dijanjikan nama izin itu.
  */
 import { ExpoSpeechRecognitionModule } from 'expo-speech-recognition';
@@ -55,7 +55,7 @@ export function adalahKataBangun(teks) {
  * Dengarkan kata pembangun sampai dihentikan.
  *
  * @param {() => void} onBangun dipanggil sekali; pemanggil bertanggung jawab
- *   menghentikan pemantauan sebelum memulai sesi — mikrofon tidak bisa dipakai
+ *   menghentikan pemantauan sebelum memulai sesi mikrofon tidak bisa dipakai
  *   dua-duanya sekaligus.
  * @returns {() => void} penghenti
  */
@@ -87,7 +87,7 @@ export function pantauKataBangun(onBangun) {
         // Mengirim aliran mikrofon terus-menerus ke server hanya untuk menunggu
         // satu kata adalah pemborosan kuota sekaligus masalah privasi. Kalau
         // model on-device belum ada, pengenal akan menolak start dan wake word
-        // mati — itu hasil yang benar, bukan yang harus diakali.
+        // mati itu hasil yang benar, bukan yang harus diakali.
         requiresOnDeviceRecognition: true,
         addsPunctuation: false,
         contextualStrings: KONTEKS,

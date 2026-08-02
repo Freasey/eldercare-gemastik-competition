@@ -2,7 +2,7 @@ node_modules
 npm-debug.log
 *.log
 
-# Kredensial — jangan pernah masuk image
+# Kredensial jangan pernah masuk image
 .env
 .env.local
 *firebase-adminsdk*.json

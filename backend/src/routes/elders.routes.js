@@ -66,7 +66,7 @@ eldersRouter.post(
   asyncHandler(async (req, res) => {
     if (req.isGuest && (await countElders(req.user.id)) >= GUEST_MAX_ELDERS) {
       throw ApiError.forbidden(
-        `Akun tamu hanya bisa memantau ${GUEST_MAX_ELDERS} lansia. Masuk dengan Google untuk menambah lagi — data yang sudah ada ikut terbawa.`,
+        `Akun tamu hanya bisa memantau ${GUEST_MAX_ELDERS} lansia. Masuk dengan Google untuk menambah lagi data yang sudah ada ikut terbawa.`,
         'GUEST_ELDER_LIMIT',
       );
     }
@@ -110,7 +110,7 @@ eldersRouter.post(
       );
 
       // Default consent: hanya ringkasan & sinyal mood yang dibagikan.
-      // Transkrip percakapan dan always-listening default MATI —
+      // Transkrip percakapan dan always-listening default MATI 
       // lansia yang harus menyalakannya sendiri (PLAN §2.5).
       for (const [key, granted] of [
         ['share_daily_summary', true],
@@ -202,7 +202,7 @@ eldersRouter.patch(
  * Keluarga menekan "Hubungkan perangkat" → kode baru berumur pendek, untuk
  * ditampilkan sebagai QR + teks dan dipindai HP lansia (PLAN §2.6).
  *
- * Penukarannya sendiri ada di `POST /api/auth/pair` — tanpa auth, karena HP
+ * Penukarannya sendiri ada di `POST /api/auth/pair` tanpa auth, karena HP
  * lansia belum punya akun saat itu.
  */
 eldersRouter.post(
@@ -228,7 +228,7 @@ eldersRouter.post(
 
 /**
  * POST /api/elders/:elderId/unpair
- * Melepas perangkat lansia — dipakai saat HP-nya diganti atau hilang.
+ * Melepas perangkat lansia dipakai saat HP-nya diganti atau hilang.
  */
 eldersRouter.post(
   '/:elderId/unpair',
@@ -238,7 +238,7 @@ eldersRouter.post(
   }),
 );
 
-/** GET /api/elders/:elderId/contacts — kontak darurat */
+/** GET /api/elders/:elderId/contacts kontak darurat */
 eldersRouter.get(
   '/:elderId/contacts',
   requireElderAccess,
@@ -278,7 +278,7 @@ eldersRouter.post(
 
 /**
  * PATCH /api/elders/:elderId/consents
- * Consent hanya boleh diubah dari device lansia sendiri — keluarga bisa
+ * Consent hanya boleh diubah dari device lansia sendiri keluarga bisa
  * melihat, tidak bisa menyalakan (PLAN §2.5).
  */
 eldersRouter.patch(

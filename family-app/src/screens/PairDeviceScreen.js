@@ -1,7 +1,7 @@
 /**
  * Hubungkan perangkat lansia (PLAN §2.6).
  *
- * App lansia tidak punya layar login — kode di sini yang jadi kredensial
+ * App lansia tidak punya layar login kode di sini yang jadi kredensial
  * masuknya. Karena itu kode diminta saat layar dibuka (bukan disimpan), hanya
  * berlaku 15 menit, dan hangus begitu dipakai satu perangkat.
  *
@@ -76,7 +76,7 @@ export function PairDeviceScreen({ route, navigation }) {
 
   useEffect(() => {
     if (elder?.paired_at) {
-      // Sudah terhubung — tidak perlu kode baru.
+      // Sudah terhubung tidak perlu kode baru.
       setMemuat(false);
       return;
     }
@@ -180,7 +180,7 @@ export function PairDeviceScreen({ route, navigation }) {
                       opacity: kedaluwarsa ? 0.25 : 1,
                     }}
                   >
-                    {/* Latar QR selalu putih, bahkan di tema gelap — pemindai
+                    {/* Latar QR selalu putih, bahkan di tema gelap pemindai
                         butuh kontras terang/gelap yang benar. */}
                     <QRCode value={qrPayload(kode.pairingCode)} size={196} backgroundColor="#ffffff" />
                   </View>

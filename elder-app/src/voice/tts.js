@@ -1,5 +1,5 @@
 /**
- * Sisi "bicara" — TTS bawaan OS lewat expo-speech (PLAN §4).
+ * Sisi "bicara" TTS bawaan OS lewat expo-speech (PLAN §4).
  *
  * Dipakai native, bukan layanan cloud: gratis, jalan offline, dan suaranya
  * sudah terpasang di hampir semua HP Android Indonesia.
@@ -19,7 +19,7 @@ const OPSI = {
  *
  * Loop percakapan bergantung penuh pada janji ini: kalau resolve kepagian,
  * mikrofon menyala saat speaker masih bunyi dan app mendengar suaranya
- * sendiri. Karena itu ada pengaman waktu — di sebagian HP callback `onDone`
+ * sendiri. Karena itu ada pengaman waktu di sebagian HP callback `onDone`
  * tidak pernah datang, dan tanpa pengaman app akan diam selamanya.
  *
  * @param {string} text

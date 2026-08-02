@@ -3,7 +3,7 @@
  * ditampilkan. Idempoten: menghapus data lama milik email demo lalu menulis
  * ulang. Jalankan dengan `npm run db:seed`.
  *
- * Lansia utama (Ibu Sumarni) dibangun oleh `demoData.js` — modul yang sama
+ * Lansia utama (Ibu Sumarni) dibangun oleh `demoData.js` modul yang sama
  * dipakai endpoint login tamu, jadi apa yang dilihat tamu identik dengan
  * apa yang kamu lihat saat development.
  */
@@ -18,6 +18,18 @@ async function main() {
     await c.query(
       `DELETE FROM users WHERE email IN ($1, 'sumarni.demo@caretaker.id', 'hartono.demo@caretaker.id')`,
       [DEMO_CAREGIVER_EMAIL],
+    );
+    // Akun device yang lahir dari pairing sungguhan ke lansia demo (email
+    // @device.invalid, bukan yang dibuat file ini). `elders.user_id` itu
+    // ON DELETE SET NULL, jadi menghapus eldernya saja meninggalkan baris
+    // users yatim yang menumpuk satu per satu tiap seed dijalankan ulang.
+    await c.query(
+      `DELETE FROM users u
+        WHERE u.role = 'lansia'
+          AND EXISTS (
+                SELECT 1 FROM elders e
+                 WHERE e.user_id = u.id AND e.pairing_code IN ('DEMO-01', 'DEMO-02')
+              )`,
     );
     await c.query(`DELETE FROM elders WHERE pairing_code IN ('DEMO-01', 'DEMO-02')`);
 
@@ -45,11 +57,18 @@ async function main() {
 
     // --- lansia kedua: sengaja tipis, cuma untuk menguji daftar >1 lansia.
     // Tamu tidak mendapat yang ini supaya jumlah baris per tamu tetap kecil.
+    const { rows: [hartonoUser] } = await c.query(
+      `INSERT INTO users (google_id, email, name, role)
+       VALUES ('demo-google-hartono', 'hartono.demo@caretaker.id', 'Bapak Hartono', 'lansia')
+       RETURNING *`,
+    );
+
     const { rows: [hartono] } = await c.query(
       `INSERT INTO elders (user_id, name, birth_year, phone, address, religion, prayer_reminder, pairing_code, paired_at)
-       VALUES (NULL, 'Bapak Hartono', 1948, '0813-2222-1010', 'Jl. Magelang KM 8, Sleman',
+       VALUES ($1, 'Bapak Hartono', 1948, '0813-2222-1010', 'Jl. Magelang KM 8, Sleman',
                'Islam', false, 'DEMO-02', now() - interval '12 days')
        RETURNING *`,
+      [hartonoUser.id],
     );
 
     await c.query(
@@ -94,6 +113,9 @@ async function main() {
 
     console.log('[seed] selesai.');
     console.log(`[seed] caregiver demo: ${DEMO_CAREGIVER_EMAIL}`);
+    console.log('[seed] device lansia: Ibu Sumarni (DEMO-01), Bapak Hartono (DEMO-02)');
+    console.log('[seed] keduanya sudah ter-pair. Untuk mencoba app lansia: putuskan');
+    console.log('[seed] perangkat dari app keluarga dulu, baru minta kode baru.');
   });
 
   await pool.end();

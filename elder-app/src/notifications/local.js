@@ -21,7 +21,7 @@ const SNOOZE_MENIT = 15;
 
 /**
  * Notifikasi tetap berbunyi walau app sedang terbuka. Pada app biasa ini
- * mengganggu; di sini justru diperlukan — layar app tidak menampilkan daftar
+ * mengganggu; di sini justru diperlukan layar app tidak menampilkan daftar
  * apa pun, jadi notifikasi adalah satu-satunya penanda visual bahwa ada
  * jadwal yang jatuh tempo.
  */
@@ -71,7 +71,7 @@ export async function sinkronPengingat(elderId) {
   return jadwalkanUlang(reminders.map(sederhanakan));
 }
 
-/** Jadwalkan ulang dari cache — dipakai saat app dibuka tanpa sambungan. */
+/** Jadwalkan ulang dari cache dipakai saat app dibuka tanpa sambungan. */
 export async function jadwalkanUlangDariCache() {
   return jadwalkanUlang(await loadReminders());
 }
@@ -139,7 +139,7 @@ export function saatNotifikasiDiketuk(callback) {
 
 /**
  * Notifikasi yang membuka app dari keadaan mati. Listener di atas tidak
- * menangkapnya — kejadiannya sudah lewat sebelum React sempat memasang
+ * menangkapnya kejadiannya sudah lewat sebelum React sempat memasang
  * langganan.
  */
 export async function notifikasiPembuka() {

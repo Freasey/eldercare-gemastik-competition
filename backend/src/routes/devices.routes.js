@@ -15,7 +15,7 @@ devicesRouter.use(requireAuth);
  *
  * Isinya boleh token FCM mentah maupun `ExponentPushToken[...]`; `services/
  * push.js` yang memilih transport dari bentuknya. Nama kolomnya tetap
- * `expo_push_token` karena tabelnya sudah dipakai — bentuk isinya yang melebar,
+ * `expo_push_token` karena tabelnya sudah dipakai bentuk isinya yang melebar,
  * bukan artinya.
  */
 devicesRouter.post(
@@ -39,7 +39,7 @@ devicesRouter.post(
   }),
 );
 
-/** DELETE /api/devices/:token — dipanggil saat logout */
+/** DELETE /api/devices/:token dipanggil saat logout */
 devicesRouter.delete(
   '/:token',
   asyncHandler(async (req, res) => {
@@ -52,13 +52,13 @@ devicesRouter.delete(
 );
 
 /**
- * POST /api/devices/test — kirim notifikasi uji ke device milik sendiri.
+ * POST /api/devices/test kirim notifikasi uji ke device milik sendiri.
  *
  * Sengaja hidup juga di production, tidak seperti sebelumnya: notifikasi darurat
  * baru terbukti sampai setelah dicoba di HP sungguhan lewat backend sungguhan,
  * dan tanpa endpoint ini satu-satunya cara mengujinya adalah memicu kejadian
- * darurat palsu. Tidak bisa disalahgunakan untuk mengganggu orang lain — yang
- * dikirimi hanya device milik pemanggil sendiri — dan tetap dibatasi lajunya.
+ * darurat palsu. Tidak bisa disalahgunakan untuk mengganggu orang lain yang
+ * dikirimi hanya device milik pemanggil sendiri dan tetap dibatasi lajunya.
  */
 devicesRouter.post(
   '/test',

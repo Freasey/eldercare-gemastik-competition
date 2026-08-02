@@ -1,5 +1,5 @@
 /**
- * Push notification ke HP keluarga (PLAN §2.4 — langkah terakhir jalur darurat).
+ * Push notification ke HP keluarga (PLAN §2.4 langkah terakhir jalur darurat).
  *
  * Ada DUA transport, dan itu disengaja:
  *
@@ -10,13 +10,13 @@
  *
  * Kenapa jalur Expo saja tidak cukup: Expo Push Service baru mau meneruskan ke
  * Android setelah service account FCM V1 diunggah ke project Expo lewat
- * `eas credentials` — langkah interaktif yang butuh akun Expo. Token FCM mentah
+ * `eas credentials` langkah interaktif yang butuh akun Expo. Token FCM mentah
  * bisa diambil app tanpa akun Expo sama sekali (`getDevicePushTokenAsync`),
  * jadi jalur itu yang dijadikan default di
  * `family-app/src/notifications/push.js`. Jalur Expo tetap dipertahankan supaya
  * build yang terlanjur mendaftar dengan token Expo tidak ikut mati.
  *
- * Token dibedakan dari BENTUKNYA, bukan dari kolom database — makanya tabel
+ * Token dibedakan dari BENTUKNYA, bukan dari kolom database makanya tabel
  * `devices` tidak perlu migrasi.
  */
 import fs from 'node:fs';
@@ -46,7 +46,7 @@ function readServiceAccount() {
 /**
  * Inisialisasi sekali, malas (lazy). Kegagalan di sini TIDAK boleh menjatuhkan
  * server: kalau kredensial belum dipasang, alur darurat tetap harus jalan
- * sampai ke database dan LiveKit — cuma notifikasinya yang tidak terkirim.
+ * sampai ke database dan LiveKit cuma notifikasinya yang tidak terkirim.
  */
 function firebase() {
   if (firebaseApp || firebaseError) return firebaseApp;
@@ -90,7 +90,7 @@ export async function caregiverPushTokens(elderId) {
  * Token yang ditolak permanen dihapus, bukan dibiarkan.
  *
  * Kalau tidak, setiap kejadian darurat berikutnya ikut menyeret token mati itu
- * dan angka `sent` jadi menyesatkan — kelihatan seperti ada perangkat yang
+ * dan angka `sent` jadi menyesatkan kelihatan seperti ada perangkat yang
  * dihubungi padahal tidak ada.
  */
 async function buangTokenMati(tokens) {
@@ -107,7 +107,7 @@ async function buangTokenMati(tokens) {
 export async function sendPush(tokens, { title, body, data = {}, critical = false }) {
   const unik = [...new Set(tokens.filter(Boolean))];
   if (unik.length === 0) {
-    console.warn('[push] tidak ada device terdaftar — notifikasi dilewati:', title);
+    console.warn('[push] tidak ada device terdaftar notifikasi dilewati:', title);
     return { sent: 0, failed: 0 };
   }
 

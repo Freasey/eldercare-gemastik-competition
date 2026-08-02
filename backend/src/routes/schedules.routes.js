@@ -146,7 +146,7 @@ schedulesRouter.patch(
   }),
 );
 
-/** DELETE /api/elders/:elderId/schedules/:scheduleId — soft delete */
+/** DELETE /api/elders/:elderId/schedules/:scheduleId soft delete */
 schedulesRouter.delete(
   '/:scheduleId',
   requireElderAccess,

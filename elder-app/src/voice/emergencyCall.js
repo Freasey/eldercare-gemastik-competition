@@ -3,8 +3,8 @@
  *
  * **Tidak ada layar dan tidak ada tombol untuk ini.** Backend sudah menerbitkan
  * token LiveKit di respons `confirm`, jadi app tinggal masuk ke room itu dan
- * menyalakan mikrofon. Lansia tidak perlu — dan pada keadaan darurat sering
- * tidak sanggup — mengangkat panggilan. Yang terdengar olehnya cuma suara
+ * menyalakan mikrofon. Lansia tidak perlu dan pada keadaan darurat sering
+ * tidak sanggup mengangkat panggilan. Yang terdengar olehnya cuma suara
  * keluarga keluar dari speaker.
  *
  * Sengaja memakai `Room` dari livekit-client secara imperatif, bukan komponen
@@ -54,7 +54,7 @@ export async function mulaiPanggilanDarurat(kredensial, kait = {}) {
     await AudioSession.configureAudio({
       android: {
         // Speaker, bukan earpiece: HP-nya kemungkinan besar tergeletak, bukan
-        // menempel di telinga — itu justru keadaan yang memicu darurat.
+        // menempel di telinga itu justru keadaan yang memicu darurat.
         preferredOutputList: ['speaker'],
         audioTypeOptions: AndroidAudioTypePresets.communication,
       },

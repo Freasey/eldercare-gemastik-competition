@@ -11,7 +11,7 @@
     dibagikan ke orang lain hanya release.
 
     TANDA TANGAN: memakai debug keystore bawaan template Expo. App ini tidak
-    diunggah ke Play Store, jadi tidak ada gunanya mengurus keystore sendiri —
+    diunggah ke Play Store, jadi tidak ada gunanya mengurus keystore sendiri 
     template Expo SDK 57 sudah menulis `signingConfig signingConfigs.debug` pada
     buildType release, dan `expo prebuild` menyediakan `debug.keystore`-nya.
     APK-nya tetap sah dipasang di HP mana pun.
@@ -19,7 +19,7 @@
     Konsekuensi yang harus disadari kalau suatu hari berubah pikiran: APK
     ber-debug-key TIDAK bisa diunggah ke Play Store, dan begitu nanti diganti
     keystore sungguhan, APK lama harus di-uninstall dulu sebelum yang baru bisa
-    dipasang — Android menolak update yang kuncinya berbeda.
+    dipasang Android menolak update yang kuncinya berbeda.
 
 .PARAMETER App
     'semua' (bawaan), 'family', atau 'elder'.
@@ -47,7 +47,7 @@ $root = $PSScriptRoot
     Penangkap error tak terduga.
 
     Tanpa ini, kesalahan apa pun yang tidak diantisipasi muncul sebagai
-    "At line:1 char:1 + .\build-apk.ps1" — yang menunjuk ke pemanggilan script,
+    "At line:1 char:1 + .\build-apk.ps1" yang menunjuk ke pemanggilan script,
     bukan ke baris yang benar-benar bermasalah, dan praktis tidak bisa
     didiagnosis dari jarak jauh.
 #>
@@ -88,7 +88,7 @@ if ($script:AdaKonfigurasi) { . $script:PathKonfigurasi }
 
     17 adalah yang disebut dokumen Expo SDK 57. 21 tetap diterima karena
     Android Gradle Plugin 8.x mendukungnya dan Android Studio versi baru
-    membundel JBR 21 — memblokirnya berarti menyuruh orang memasang JDK kedua
+    membundel JBR 21 memblokirnya berarti menyuruh orang memasang JDK kedua
     padahal yang ada kemungkinan besar sudah jalan. Kalau 21 yang terpilih,
     script memberi tahu supaya 17 jadi tersangka pertama saat Gradle rewel.
 #>
@@ -123,7 +123,7 @@ function Cari-SemuaJdk {
 
     if ($env:JAVA_HOME) { $folder.Add($env:JAVA_HOME) }
 
-    # Android Studio membundel JetBrains Runtime — sering satu-satunya JDK yang
+    # Android Studio membundel JetBrains Runtime sering satu-satunya JDK yang
     # dipunya orang yang tidak pernah sengaja memasang Java.
     foreach ($studio in @(
             "$env:ProgramFiles\Android\Android Studio\jbr",
@@ -180,7 +180,7 @@ Tidak ada JDK 17 (atau 21) di komputer ini.
 Yang ketemu:
 $daftar
 
-JDK 25 TIDAK bisa dipakai — Gradle untuk React Native belum mendukungnya, dan
+JDK 25 TIDAK bisa dipakai Gradle untuk React Native belum mendukungnya, dan
 errornya akan muncul jauh di dalam build sebagai pesan yang tidak menyebut Java
 sama sekali.
 
@@ -188,7 +188,7 @@ Pasang JDK 17 tanpa mengganggu Java yang sudah ada:
 
   winget install --id Microsoft.OpenJDK.17
 
-Lalu buka PowerShell baru dan jalankan script ini lagi — ia akan menemukannya
+Lalu buka PowerShell baru dan jalankan script ini lagi ia akan menemukannya
 sendiri, JAVA_HOME tidak perlu diset manual.
 
 Kalau JDK-nya ada di tempat tidak lazim, isi JdkPath di build.env.ps1.
@@ -220,7 +220,7 @@ function Uji-Prasyarat {
     Tulis-Ok "Android SDK: $sdk"
 
     # Sengaja bertele-tele: `node -v` bisa mengembalikan NULL walau `node` ada di
-    # PATH — mis. shim nvm/volta yang belum menunjuk versi mana pun, atau stub
+    # PATH mis. shim nvm/volta yang belum menunjuk versi mana pun, atau stub
     # App Execution Alias bawaan Windows. Versi pertama script ini langsung
     # memanggil .TrimStart() pada hasilnya dan meledak dengan pesan yang tidak
     # menyebut Node sama sekali.
@@ -241,7 +241,7 @@ function Uji-Prasyarat {
 Node ada di PATH tapi tidak menjawab "node -v".
 
 Penyebab tersering di Windows: nvm-windows sudah mencatat sebuah versi sebagai
-aktif, tapi symlink-nya tidak pernah benar-benar dibuat — pembuatannya butuh hak
+aktif, tapi symlink-nya tidak pernah benar-benar dibuat pembuatannya butuh hak
 Administrator, dan tanpa itu nvm gagal diam-diam.
 
 Perbaikannya, di PowerShell yang dibuka SEBAGAI ADMINISTRATOR:
@@ -263,7 +263,7 @@ Untuk memastikan sumber masalahnya:
     try {
         $node = [version]($nodeRaw -replace '-.*$', '')
     } catch {
-        Tulis-Ingat "Versi Node tidak terbaca ('$nodeRaw') — dilewati, bukan penghenti."
+        Tulis-Ingat "Versi Node tidak terbaca ('$nodeRaw') dilewati, bukan penghenti."
     }
 
     if ($node -and $node -lt [version]'20.19.4') {
@@ -408,7 +408,7 @@ function Build-App($nama, $folder, $butuhGoogleServices) {
             # Expo SDK 57 sudah menulis `signingConfig signingConfigs.debug` pada
             # buildType release, dan `expo prebuild` ikut menaruh debug.keystore
             # di android\app\. Hasilnya APK yang sah dipasang tanpa satu pun
-            # kredensial yang perlu diurus — cukup untuk app yang tidak diunggah
+            # kredensial yang perlu diurus cukup untuk app yang tidak diunggah
             # ke Play Store.
             & .\gradlew.bat assembleRelease --console=plain 2>&1 | Out-Host
             $ErrorActionPreference = 'Stop'
@@ -465,7 +465,7 @@ foreach ($h in $hasil) { Write-Host "  adb install -r `"$h`"" }
 
 Write-Host @"
 
-APK ini ditandatangani dengan debug key bawaan Expo — cukup untuk dipasang dan
+APK ini ditandatangani dengan debug key bawaan Expo cukup untuk dipasang dan
 dibagikan, tapi TIDAK bisa diunggah ke Play Store. Saat memasang lewat berkas
 (bukan adb), Play Protect mungkin menahannya sekali dan perlu diizinkan manual.
 

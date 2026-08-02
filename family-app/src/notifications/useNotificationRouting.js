@@ -29,7 +29,7 @@ export function useNotificationRouting() {
     function buka(data) {
       if (!data || data.type !== 'emergency') return;
       // Nilai dari FCM selalu string, dan id dari Postgres juga sampai sebagai
-      // string ("7"). Jadi keduanya sudah sebentuk — jangan diubah ke number,
+      // string ("7"). Jadi keduanya sudah sebentuk jangan diubah ke number,
       // pembanding `===` di layar lain memakai bentuk string.
       const { elderId, emergencyId } = data;
       if (!elderId || !emergencyId) return;

@@ -10,7 +10,7 @@ export const loginWithGoogle = (idToken) =>
   api('/api/auth/google', { method: 'POST', auth: false, body: { idToken, role: 'keluarga' } });
 
 /**
- * Login tamu — tanpa input, selalu masuk ke akun demo. Jalan di backend lokal
+ * Login tamu tanpa input, selalu masuk ke akun demo. Jalan di backend lokal
  * maupun production, jadi ini jalur masuk yang dipakai app sampai Google
  * Sign-In siap.
  */
@@ -74,7 +74,7 @@ export const fetchConversation = (elderId, conversationId) =>
 /* ---------------- assistant (intip prioritas) ---------------- */
 
 /**
- * Kalimat yang akan diucapkan asisten ke lansia berikutnya. Read-only —
+ * Kalimat yang akan diucapkan asisten ke lansia berikutnya. Read-only 
  * memanggil ini tidak membuka sesi percakapan.
  */
 export const fetchAssistantContext = (elderId) => api(`/api/elders/${elderId}/assistant/context`);
@@ -91,7 +91,7 @@ export const resolveEmergency = (elderId, id, note) =>
 
 /**
  * Nama field-nya `expoPushToken` karena begitulah kolom di backend dinamai,
- * tapi isinya sekarang token FCM mentah — lihat `notifications/push.js`.
+ * tapi isinya sekarang token FCM mentah lihat `notifications/push.js`.
  */
 export const registerDevice = (expoPushToken, platform) =>
   api('/api/devices', { method: 'POST', body: { expoPushToken, platform } });
@@ -99,5 +99,5 @@ export const registerDevice = (expoPushToken, platform) =>
 export const deleteDevice = (token) =>
   api(`/api/devices/${encodeURIComponent(token)}`, { method: 'DELETE' });
 
-/** Kirim notifikasi uji ke HP ini sendiri — dipakai tombol di layar Profil. */
+/** Kirim notifikasi uji ke HP ini sendiri dipakai tombol di layar Profil. */
 export const testPush = () => api('/api/devices/test', { method: 'POST' });

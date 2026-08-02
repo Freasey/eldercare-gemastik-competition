@@ -1,5 +1,5 @@
 /**
- * Perakitan aplikasi Express — tanpa `listen()`.
+ * Perakitan aplikasi Express tanpa `listen()`.
  *
  * Dipisah dari server.js supaya bentuk yang sama bisa dipakai dua runtime yang
  * berbeda: sebagai proses yang mendengarkan port (server.js, dipakai lokal) dan
@@ -22,7 +22,7 @@ export const app = express();
 
 // Baik Back4app maupun Vercel menaruh app di belakang satu proxy yang mengisi
 // `x-forwarded-for` dengan IP asli client. Angka 1 itu jumlah hop yang
-// dipercaya — penting untuk rate limit, yang kuncinya IP.
+// dipercaya penting untuk rate limit, yang kuncinya IP.
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: true, credentials: false }));
@@ -40,7 +40,7 @@ app.use(morgan(env.isProd ? 'combined' : 'dev'));
 /**
  * Identitas layanan.
  *
- * Backend ini tidak punya halaman depan — semua yang berguna ada di bawah
+ * Backend ini tidak punya halaman depan semua yang berguna ada di bawah
  * `/api`. Tapi URL-nya pasti akan dibuka orang di browser (juri, anggota tim,
  * siapa pun yang menerima tautannya), dan yang mereka temukan seharusnya bukan
  * pesan error. Ini menjawab "apa ini dan apakah hidup?" tanpa membocorkan

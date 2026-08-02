@@ -31,7 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
-# .env berisi alamat backend yang berbeda tiap mesin (IP LAN) — jangan di-commit.
+# .env berisi alamat backend yang berbeda tiap mesin (IP LAN) jangan di-commit.
 .env
 .env*.local
 

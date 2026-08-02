@@ -6,7 +6,7 @@ const client = new OAuth2Client(env.googleWebClientId);
 
 /**
  * Verifikasi Google ID token server-side (cek signature, `aud`, `iss`, expiry).
- * ID token dari Google TIDAK dipakai sebagai session — hanya untuk identifikasi
+ * ID token dari Google TIDAK dipakai sebagai session hanya untuk identifikasi
  * awal, lalu backend menerbitkan JWT sendiri.
  */
 export async function verifyGoogleIdToken(idToken) {

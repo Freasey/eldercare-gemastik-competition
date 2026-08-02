@@ -42,7 +42,7 @@ export function formatDays(days) {
   return DAY_ORDER.filter((d) => days.includes(d)).map((d) => DAY_LABEL[d]).join(', ');
 }
 
-/** "19.00" — titik sebagai pemisah jam, konvensi Indonesia. */
+/** "19.00" titik sebagai pemisah jam, konvensi Indonesia. */
 export function jam(input) {
   const d = new Date(input);
   return `${String(d.getHours()).padStart(2, '0')}.${String(d.getMinutes()).padStart(2, '0')}`;
@@ -69,7 +69,7 @@ export function isToday(input) {
 
 /**
  * Postgres `DATE` datang sebagai "2026-07-29". `new Date()` membacanya sebagai
- * UTC tengah malam, yang bisa mundur sehari di zona WIB — jadi tanggal polos
+ * UTC tengah malam, yang bisa mundur sehari di zona WIB jadi tanggal polos
  * dirakit manual sebagai waktu lokal.
  */
 export function toDate(input) {
@@ -109,7 +109,7 @@ export function initials(name) {
 
 /**
  * "Ibu Sumarni" -> "Bu Sumarni". Cerminan `shortName()` di
- * `backend/src/services/contextEngine.js` — dipakai untuk menyapa lansia.
+ * `backend/src/services/contextEngine.js` dipakai untuk menyapa lansia.
  */
 export function shortName(fullName) {
   const parts = String(fullName || '').trim().split(/\s+/);

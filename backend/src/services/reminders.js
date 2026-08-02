@@ -17,7 +17,7 @@ const MAX_SNOOZE_ATTEMPTS = 3;
  *
  * Penundaan menggeser `due_at` baris yang sama, bukan membuat baris baru.
  * Kalau baris baru yang dibuat, baris lamanya tertinggal berstatus `snoozed`
- * dengan waktu yang sudah lewat — dan `sweepMissedReminders` akan menandainya
+ * dengan waktu yang sudah lewat dan `sweepMissedReminders` akan menandainya
  * `missed` pada tick berikutnya, jadi menunda obat kritis justru langsung
  * memicu notifikasi "terlewat" ke keluarga sekaligus merusak angka kepatuhan.
  * Satu kewajiban = satu baris; berapa kali ditunda terbaca dari `attempts`.
@@ -25,7 +25,7 @@ const MAX_SNOOZE_ATTEMPTS = 3;
  * @param {{reminderId: number|string, elderId: number|string,
  *          status: 'confirmed'|'snoozed'|'skipped', note?: string|null}} args
  * @returns {Promise<{reminder: object|null, snoozedUntil: Date|null}>}
- *   `snoozedUntil` null saat jatah penundaan habis — pemanggil memakainya
+ *   `snoozedUntil` null saat jatah penundaan habis pemanggil memakainya
  *   untuk memilih kalimat balasan supaya tidak menjanjikan yang tidak terjadi.
  */
 export async function respondToReminder({ reminderId, elderId, status, note = null }) {

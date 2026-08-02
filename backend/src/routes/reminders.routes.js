@@ -84,12 +84,12 @@ remindersRouter.post(
   }),
 );
 
-/** GET /api/elders/:elderId/reminders/adherence — data untuk grafik 14 hari */
+/** GET /api/elders/:elderId/reminders/adherence data untuk grafik 14 hari */
 remindersRouter.get(
   '/adherence',
   requireElderAccess,
   asyncHandler(async (req, res) => {
-    // Pengelompokan per hari mengikuti tanggal di tempat lansia — kalau tidak,
+    // Pengelompokan per hari mengikuti tanggal di tempat lansia kalau tidak,
     // obat jam 9 malam WIB tercatat di hari berikutnya saat server UTC.
     const rows = await many(
       `SELECT (due_at AT TIME ZONE $2)::date AS date,

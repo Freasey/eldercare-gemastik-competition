@@ -1,5 +1,5 @@
 -- ============================================================
--- AI Caretaker — skema database (Postgres / NeonDB)
+-- AI Caretaker skema database (Postgres / NeonDB)
 -- Dijalankan oleh `npm run db:migrate`.
 -- ============================================================
 
@@ -25,7 +25,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ NOT NULL DEF
 CREATE INDEX IF NOT EXISTS idx_users_guest_last_seen ON users (last_seen_at) WHERE is_guest;
 
 -- Profil lansia. `user_id` boleh NULL: lansia belum tentu punya akun Google
--- sendiri — device-nya bisa di-pair pakai pairing_code oleh keluarga.
+-- sendiri device-nya bisa di-pair pakai pairing_code oleh keluarga.
 CREATE TABLE IF NOT EXISTS elders (
   id                BIGSERIAL PRIMARY KEY,
   user_id           BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -240,7 +240,7 @@ CREATE TABLE IF NOT EXISTS app_state (
 --
 -- Dulu hitungannya di memori proses, yang akurat selama cuma ada satu
 -- container. Di serverless tiap instance punya Map sendiri, jadi batas
--- efektifnya terkalikan jumlah instance — dan yang paling berbahaya dari itu
+-- efektifnya terkalikan jumlah instance dan yang paling berbahaya dari itu
 -- adalah `POST /api/auth/pair`, yang kode pairing-nya sendiri berperan sebagai
 -- kredensial.
 -- ---------------------------------------------------------------------------

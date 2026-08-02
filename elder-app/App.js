@@ -1,9 +1,9 @@
 /**
- * AI Caretaker — app lansia.
+ * AI Caretaker app lansia.
  * Sisi voice-first dari ekosistem dua sisi di ../PLAN.md.
  *
  * Tidak ada router di sini, dan memang tidak boleh ada: app hanya punya dua
- * keadaan — belum terhubung ke seorang lansia, atau sudah (PLAN §2.6).
+ * keadaan belum terhubung ke seorang lansia, atau sudah (PLAN §2.6).
  */
 import { ActivityIndicator, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

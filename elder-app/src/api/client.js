@@ -7,7 +7,7 @@
  * 1. Sesi di sini berumur sangat panjang (10 tahun, lihat PLAN §2.6) karena
  *    tidak ada siapa pun di HP lansia yang bisa login ulang. Token karenanya
  *    disimpan permanen di SecureStore, tidak pernah dihapus otomatis.
- * 2. Kegagalan jaringan tidak boleh berakhir jadi layar error — app harus
+ * 2. Kegagalan jaringan tidak boleh berakhir jadi layar error app harus
  *    tetap bisa bicara secara offline. Karena itu error jaringan diberi kode
  *    `NETWORK` supaya pemanggil bisa membedakannya dari penolakan backend.
  */
@@ -50,7 +50,7 @@ export class ApiError extends Error {
 export const isOffline = (err) => err instanceof ApiError && err.code === 'NETWORK';
 
 /**
- * Benar kalau backend menyatakan perangkat ini sudah tidak berhak — token
+ * Benar kalau backend menyatakan perangkat ini sudah tidak berhak token
  * dicabut, atau keluarga menekan "putuskan perangkat" (`requireElderAccess`
  * menolak begitu `elders.user_id` dikosongkan).
  */
@@ -71,7 +71,7 @@ export async function api(path, opts = {}) {
   }
 
   // Tanpa batas waktu, jaringan yang menggantung membuat app diam berkepanjangan
-  // — pada app tanpa layar, diam tidak bisa dibedakan dari rusak.
+  // pada app tanpa layar, diam tidak bisa dibedakan dari rusak.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 

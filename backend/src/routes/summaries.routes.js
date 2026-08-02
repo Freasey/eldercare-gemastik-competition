@@ -48,7 +48,7 @@ timelineRouter.use(requireAuth);
 
 /**
  * GET /api/elders/:elderId/timeline
- * Gabungan reminder, check-in, percakapan, dan kejadian darurat — inilah
+ * Gabungan reminder, check-in, percakapan, dan kejadian darurat inilah
  * yang dirender jadi feed di app keluarga.
  */
 timelineRouter.get(
@@ -92,7 +92,7 @@ timelineRouter.get(
   }),
 );
 
-/** GET /api/elders/:elderId/conversations/:conversationId — transkrip penuh */
+/** GET /api/elders/:elderId/conversations/:conversationId transkrip penuh */
 timelineRouter.get(
   '/conversations/:conversationId',
   requireElderAccess,

@@ -1,5 +1,5 @@
 /**
- * Tambah lansia — profil dibuat keluarga, bukan lansia (PLAN §2.1).
+ * Tambah lansia profil dibuat keluarga, bukan lansia (PLAN §2.1).
  *
  * Sesudah tersimpan, langsung diarahkan ke layar Hubungkan perangkat: profil
  * tanpa perangkat yang ter-pair belum berguna, dan kode pairing-nya cuma
@@ -34,7 +34,7 @@ export function NoElderScreen({ navigation }) {
             jadwal obat, menerima kabar harian, dan dihubungi saat darurat.
           </Note>
           <Note>
-            Beliau tidak perlu melakukan apa pun — seluruh penyiapan dikerjakan dari HP Anda.
+            Beliau tidak perlu melakukan apa pun seluruh penyiapan dikerjakan dari HP Anda.
           </Note>
           <Button
             label="Tambah lansia"

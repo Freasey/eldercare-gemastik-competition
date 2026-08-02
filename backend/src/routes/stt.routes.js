@@ -1,5 +1,5 @@
 /**
- * POST /api/stt — transkripsi audio, dipakai app lansia sebagai FALLBACK saat
+ * POST /api/stt transkripsi audio, dipakai app lansia sebagai FALLBACK saat
  * pengenal suara bawaan HP gagal (lihat services/stt.js).
  *
  * Audionya dikirim base64 di dalam JSON, bukan multipart. Alasannya praktis:

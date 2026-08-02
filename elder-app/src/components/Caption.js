@@ -1,5 +1,5 @@
 /**
- * Live caption — teks dari apa yang sedang diucapkan app, dan dari apa yang
+ * Live caption teks dari apa yang sedang diucapkan app, dan dari apa yang
  * sedang didengarnya.
  *
  * Ini bukan sekadar hiasan: tanpa layar dan tanpa tombol, caption adalah

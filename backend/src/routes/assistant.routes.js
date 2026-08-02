@@ -1,6 +1,6 @@
 /**
  * Endpoint sisi lansia: one-button assistant (PLAN §2.2).
- * App RN memakai STT/TTS bawaan OS — jadi yang lewat sini teks, bukan audio.
+ * App RN memakai STT/TTS bawaan OS jadi yang lewat sini teks, bukan audio.
  */
 import { Router } from 'express';
 import { z } from 'zod';
@@ -28,7 +28,7 @@ assistantRouter.use(requireAuth);
 
 /**
  * Apakah pemanggilnya device lansia sendiri, bukan HP keluarga. Dipakai untuk
- * memagari pertanyaan izin privasi — keluarga boleh membuka sesi assistant
+ * memagari pertanyaan izin privasi keluarga boleh membuka sesi assistant
  * (mis. untuk mencoba), tapi tidak boleh menjawab izin atas nama lansia.
  */
 function isElderDevice(req) {
@@ -37,7 +37,7 @@ function isElderDevice(req) {
 
 /**
  * Pagar kuota Groq. Dipasang hanya di jalur yang benar-benar memanggil LLM
- * (percakapan bebas dan peringkasan akhir sesi) — bukan di seluruh router,
+ * (percakapan bebas dan peringkasan akhir sesi) bukan di seluruh router,
  * supaya membaca konteks dan menjawab reminder tetap bebas.
  */
 const llmLimiter = rateLimit({
@@ -113,7 +113,7 @@ assistantRouter.post(
       );
     }
 
-    // Dicatat begitu diucapkan, bukan begitu dijawab — lansia yang diam tetap
+    // Dicatat begitu diucapkan, bukan begitu dijawab lansia yang diam tetap
     // dihitung sudah ditanya hari ini.
     if (opening.consentKey) await markConsentAsked(req.elder.id, opening.consentKey);
 
@@ -164,7 +164,7 @@ assistantRouter.post(
     let handledBy = 'llm';
     // Jalur yang balasannya sudah berisi pertanyaan sendiri. Dipakai supaya
     // pertanyaan izin tidak ditempel di belakangnya jadi dua pertanyaan
-    // sekaligus — lansia hanya akan menjawab salah satunya.
+    // sekaligus lansia hanya akan menjawab salah satunya.
     let replyAsksSomething = false;
 
     // --- jalur 1: jawaban atas reminder (rule-based, tanpa LLM) ---
@@ -182,7 +182,7 @@ assistantRouter.post(
           status: 'snoozed',
           note: text,
         });
-        // Jatah penundaan bisa habis — jangan menjanjikan tagihan yang tidak
+        // Jatah penundaan bisa habis jangan menjanjikan tagihan yang tidak
         // akan datang.
         reply = snoozedUntil
           ? `Baik, nanti saya ingatkan lagi ${SNOOZE_MINUTES} menit lagi.`
@@ -260,7 +260,7 @@ assistantRouter.post(
       }
     }
 
-    // Pertanyaan izin menyusul sebagai pertanyaan KEDUA di sesi ini — jatah
+    // Pertanyaan izin menyusul sebagai pertanyaan KEDUA di sesi ini jatah
     // proaktif per sesi memang 1-2 (PLAN §2.2). Sengaja hanya menempel di
     // jalur rule-based yang sudah tuntas: percakapan bebas dibiarkan
     // mengalir, dan kalau lansia sendiri yang mengajak ngobrol dia tidak
@@ -311,7 +311,7 @@ assistantRouter.post(
 
     // Sesi tanpa satu pun jawaban lansia dibuang, bukan disimpan. App lansia
     // memulai percakapan begitu dibuka (PLAN §2.6), jadi HP yang tersenggol di
-    // saku menghasilkan sesi berisi kalimat pembuka saja — dan tanpa ini,
+    // saku menghasilkan sesi berisi kalimat pembuka saja dan tanpa ini,
     // timeline keluarga penuh "percakapan" yang tidak pernah terjadi.
     // Reminder yang sempat dibacakan tetap berstatus `spoken` dan tetap akan
     // ditandai `missed` oleh sweep, jadi tidak ada kabar yang ikut hilang.
@@ -327,7 +327,7 @@ assistantRouter.post(
 
     let summary = null;
     if (messages.length >= 2 && isGroqConfigured()) {
-      // Ringkasan dibuat sekali di akhir sesi, bukan tiap turn — hemat kuota.
+      // Ringkasan dibuat sekali di akhir sesi, bukan tiap turn hemat kuota.
       try {
         summary = await summarizeConversation(messages);
       } catch (err) {

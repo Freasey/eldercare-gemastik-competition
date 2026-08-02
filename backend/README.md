@@ -1,4 +1,4 @@
-# AI Caretaker — Backend (Express)
+# AI Caretaker Backend (Express)
 
 Backend untuk AI Caretaker (GEMASTIK). Semua logic ditulis manual, tanpa BaaS
 auto-CRUD. Acuan desain: [`../PLAN.md`](../PLAN.md).
@@ -16,7 +16,7 @@ npm run dev            # http://localhost:4000
 Env dibaca dari `backend/.env`; kalau tidak ada, otomatis jatuh ke `.env` di
 root project. Lihat [`.env.example`](./.env.example).
 
-Cek cepat: `GET http://localhost:4000/health` — menampilkan status DB, Groq,
+Cek cepat: `GET http://localhost:4000/health` menampilkan status DB, Groq,
 LiveKit, Google OAuth, push, dan cron.
 
 ## Struktur
@@ -65,7 +65,7 @@ Ini keputusan inti dari PLAN §4. Jangan dibalik:
 | Ringkasan percakapan untuk keluarga | **LLM (Groq)**, sekali di akhir sesi |
 
 Alasannya: kuota free tier hemat, dan behavior reminder obat harus predictable.
-Khusus izin privasi ada alasan tambahan — keputusan sepenting itu tidak boleh
+Khusus izin privasi ada alasan tambahan keputusan sepenting itu tidak boleh
 bergantung pada kuota Groq atau pada model yang bisa salah tafsir.
 
 ## Consent lewat suara
@@ -75,7 +75,7 @@ App lansia tidak punya UI (PLAN §2.6), jadi izin diberikan lewat percakapan:
 - Izin yang masih **mati** ditanyakan **sekali sehari** (hari menurut jam
   lansia). Izin yang sudah **menyala** tidak pernah diungkit lagi.
 - Ditanyakan sebagai pembuka kalau harinya sepi, atau menyusul sebagai
-  pertanyaan kedua setelah jawaban reminder/mood — jatah proaktif per sesi
+  pertanyaan kedua setelah jawaban reminder/mood jatah proaktif per sesi
   tetap 1-2 (PLAN §2.2).
 - Dicatat `last_asked_at` saat **diucapkan**, bukan saat dijawab, supaya lansia
   yang diam tidak ditanyai berulang kali dalam sehari.
@@ -83,7 +83,7 @@ App lansia tidak punya UI (PLAN §2.6), jadi izin diberikan lewat percakapan:
   memunculkan pertanyaannya, dan kalau tetap dicoba backend menolak dengan
   `CONSENT_ELDER_ONLY`.
 - Daftar izin yang boleh ditanyakan ada di `consentVoice.js: ASKABLE_CONSENTS`.
-  `always_listening` belum masuk karena wake-word-nya sendiri belum ada —
+  `always_listening` belum masuk karena wake-word-nya sendiri belum ada 
   menanyakan izin untuk fitur yang belum jalan sama saja menjanjikan yang
   tidak ada.
 
@@ -91,7 +91,7 @@ App lansia tidak punya UI (PLAN §2.6), jadi izin diberikan lewat percakapan:
 
 `schedules.time_of_day` adalah **jam dinding di tempat lansia**. Semua
 perhitungan tanggal/jam karenanya lewat `AT TIME ZONE elders.timezone` dan
-dikerjakan Postgres, bukan JavaScript — termasuk materialisasi reminder,
+dikerjakan Postgres, bukan JavaScript termasuk materialisasi reminder,
 pengelompokan grafik kepatuhan, dan batas hari ringkasan harian. Jangan
 memakai `due_at::date`, `current_date`, `setHours()`, atau `toISOString()`
 untuk urusan ini: semuanya mengikuti zona server, yang di Back4app adalah UTC.
@@ -104,7 +104,7 @@ backend terbitkan JWT sendiri (PLAN §4.1).
 
 Tidak ada jalan pintas login berbasis email: selain Google, satu-satunya
 jalur masuk adalah `POST /api/auth/guest` (keluarga) dan `POST /api/auth/pair`
-(device lansia) — keduanya aman dipakai di production.
+(device lansia) keduanya aman dipakai di production.
 
 ## Daftar Endpoint
 
@@ -121,7 +121,7 @@ menerbitkan sesi tanpa Google. HP lansia belum punya akun saat memanggilnya
 dan tidak boleh dihadapkan layar login (PLAN §2.6), jadi kodenya sendiri yang
 jadi kredensial: berlaku 15 menit, hangus sekali pakai, dibatasi 20 percobaan
 per jam per IP. Akun `users` berperan `lansia` dibuat otomatis dengan email
-sintetis `@device.invalid` — lansia tidak pernah melihat atau mengetiknya.
+sintetis `@device.invalid` lansia tidak pernah melihat atau mengetiknya.
 Sesinya berumur sangat panjang (`ELDER_JWT_EXPIRES_IN`, default 10 tahun)
 karena tidak ada siapa pun di sisi lansia yang bisa login ulang; pencabutan
 akses lewat "putuskan perangkat", bukan lewat expiry.
@@ -130,7 +130,7 @@ akses lewat "putuskan perangkat", bukan lewat expiry.
 | Method | Path | Keterangan |
 |---|---|---|
 | GET | `/api/elders` | daftar lansia + status ringkas untuk dashboard |
-| POST | `/api/elders` | buat profil lansia (tanpa kode pairing — lihat di bawah) |
+| POST | `/api/elders` | buat profil lansia (tanpa kode pairing lihat di bawah) |
 | GET | `/api/elders/:id` | detail + kontak, obat, jadwal, consent, red flag |
 | PATCH | `/api/elders/:id` | ubah profil |
 | POST | `/api/elders/:id/pairing-code` | terbitkan kode pairing baru (umur 15 menit) |
@@ -171,7 +171,7 @@ Kode lama bikinan seed (tanpa masa berlaku) diperlakukan kedaluwarsa.
 
 Sesi dan tiap giliran mengembalikan `expects`
 (`confirmation` \| `mood` \| `consent` \| `free`) plus `reminderId`/`consentKey`
-bila relevan. App lansia tinggal mengirimkannya balik di giliran berikutnya —
+bila relevan. App lansia tinggal mengirimkannya balik di giliran berikutnya 
 tidak perlu menyimpan state percakapan sendiri.
 
 ### Darurat & device
@@ -191,7 +191,7 @@ tidak perlu menyimpan state percakapan sendiri.
 | POST | `/api/cron/tick` | jalankan satu putaran scheduler (butuh `Authorization: Bearer $CRON_SECRET`) |
 
 Bukan untuk dipanggil app. Ada karena serverless tidak punya proses yang hidup
-terus untuk memegang `setInterval` — pemicunya
+terus untuk memegang `setInterval` pemicunya
 [`.github/workflows/cron-tick.yml`](../.github/workflows/cron-tick.yml), tiap 15
 menit. Idempoten, jadi tick dobel tidak merusak apa pun.
 
@@ -209,14 +209,14 @@ Dua transport, dibedakan dari **bentuk token**, bukan dari kolom database:
 | `ExponentPushToken[...]` | Expo Push Service (`expo-server-sdk`) |
 | selain itu | FCM V1 langsung (`firebase-admin`) |
 
-App keluarga mendaftarkan token FCM mentah, jadi jalur utamanya yang kedua —
+App keluarga mendaftarkan token FCM mentah, jadi jalur utamanya yang kedua 
 ini menghindari langkah `eas credentials` yang interaktif dan mudah terlupa.
 Token yang ditolak permanen (`registration-token-not-registered`) dihapus dari
 tabel `devices`, supaya angka `sent` tidak menyesatkan.
 
 Kredensialnya dibaca dari `FIREBASE_SERVICE_ACCOUNT_B64` (deploy) atau
 `FIREBASE_FCM_SERVICE_ACCOUNT_JSON_PATH` (lokal). Tanpa keduanya server tetap
-jalan — hanya notifikasinya yang tidak terkirim, dan `/health` menulis
+jalan hanya notifikasinya yang tidak terkirim, dan `/health` menulis
 `push: "belum dikonfigurasi"`.
 
 ### Fallback STT
@@ -226,7 +226,7 @@ dan meneruskannya ke Groq Whisper. Batas body untuk rute ini 6 MB (rute lain
 tetap 1 MB), audio maksimal 4 MB, dan lajunya dibatasi 20 permintaan/menit per
 user karena tiap panggilan memakai kuota Groq.
 
-Ini **bukan** jalur normal — app lansia memakai pengenal suara bawaan Android
+Ini **bukan** jalur normal app lansia memakai pengenal suara bawaan Android
 dan hanya jatuh ke sini saat pengenal itu gagal. API key Groq tidak pernah
 sampai ke app, karena itu audionya yang naik ke server.
 
@@ -234,18 +234,18 @@ sampai ke app, karena itu audionya yang naik ke server.
 
 Satu putaran (`runSchedulerTick()`) mengerjakan:
 
-1. `materializeReminders()` — buat `reminder_events` 36 jam ke depan dari
+1. `materializeReminders()` buat `reminder_events` 36 jam ke depan dari
    `schedules` (idempoten lewat `UNIQUE (schedule_id, due_at)`).
-2. `sweepMissedReminders()` — reminder lewat 90 menit tanpa respons ditandai
+2. `sweepMissedReminders()` reminder lewat 90 menit tanpa respons ditandai
    `missed`; yang kritis langsung push ke keluarga.
-3. `refreshTodaySummaries()` — hitung ulang ringkasan hari ini.
+3. `refreshTodaySummaries()` hitung ulang ringkasan hari ini.
 4. Setiap 6 jam sekali: sweep akun tamu kedaluwarsa + baris `rate_limits` lama.
 
 Siapa yang memanggilnya tergantung runtime:
 
 | Runtime | Pemicu |
 |---|---|
-| Lokal / container | `startScheduler()` — `setInterval` 5 menit di dalam proses |
+| Lokal / container | `startScheduler()` `setInterval` 5 menit di dalam proses |
 | Serverless (Vercel) | cron eksternal → `POST /api/cron/tick` |
 
 Giliran pekerjaan 6-jaman disimpan di tabel `app_state`, bukan variabel modul.
@@ -261,7 +261,7 @@ yang cuma mengekspor app Express dari `src/app.js`.
 Nilai env-nya sudah disiapkan di **`backend/.env.vercel`** (tidak masuk git),
 siap ditempel ke kotak *Import .env* di dashboard Vercel. File itu sengaja
 tanpa komentar dan tanpa baris kosong supaya bisa ditempel apa adanya. Isinya
-persis variabel yang dibaca `config/env.js` — tidak termasuk `PORT` (diabaikan
+persis variabel yang dibaca `config/env.js` tidak termasuk `PORT` (diabaikan
 Vercel), kunci Back4app, maupun variabel `EXPO_PUBLIC_*` milik app.
 
 - **Region wajib `sin1`.** Neon ada di `ap-southeast-1`; kalau fungsinya
@@ -271,26 +271,33 @@ Vercel), kunci Back4app, maupun variabel `EXPO_PUBLIC_*` milik app.
   sebagai GitHub Actions secret. Tanpa itu `sweepMissedReminders()` tidak pernah
   jalan dan keluarga tidak pernah tahu saat lansia melewatkan jadwal kritis.
   `GET /health` menampilkannya di `services.cron`.
-- **Pakai `FIREBASE_SERVICE_ACCOUNT_B64`**, bukan path file — tidak ada
+- **Pakai `FIREBASE_SERVICE_ACCOUNT_B64`**, bukan path file tidak ada
   filesystem yang bisa ditunjuk.
 - `PORT` diabaikan di Vercel (dipakai hanya oleh `src/server.js` saat lokal).
-- `maxDuration` di-set 60 detik. Kalau deploy Hobby menolaknya, turunkan —
+- `maxDuration` di-set 60 detik. Kalau deploy Hobby menolaknya, turunkan 
   batasnya berbeda-beda tergantung apakah Fluid Compute aktif. Yang paling
   dekat ke batas adalah `POST /api/stt`.
 
 Scheduler tidak lagi ikut di dalam proses web, jadi menambah instance tidak
-membuat push terkirim ganda — pemicunya tunggal dari luar.
+membuat push terkirim ganda pemicunya tunggal dari luar.
 
 ## Data contoh
 
 `npm run db:seed` membuat:
 
-- **Ibu Sumarni** (72) — 4 jadwal obat, riwayat 7 hari, Metformin malam
+- **Ibu Sumarni** (72) 4 jadwal obat, riwayat 7 hari, Metformin malam
   terlewat 3 hari berturut-turut → memunculkan red flag `medication_missed_streak`
   dan `mood_declining`, plus satu percakapan lengkap dengan transkrip.
-- **Bapak Hartono** (78) — profil kedua, kepatuhan bersih, untuk menguji
+- **Bapak Hartono** (78) profil kedua, kepatuhan bersih, untuk menguji
   tampilan multi-lansia.
 - Caregiver demo: `keluarga.demo@caretaker.id`.
+- Akun device untuk **kedua** lansia (`role = 'lansia'`), jadi `elders.user_id`
+  terisi dan jalur "lansia sendiri yang bicara" (consent, check-in, ringkasan)
+  ikut punya sisi lansia. Konsekuensinya keduanya berstatus sudah ter-pair:
+  untuk mencoba app lansia, putuskan perangkat dulu baru minta kode baru.
+
+Akun tamu (`POST /api/auth/guest`) mendapat perlakuan yang sama: lansia demonya
+langsung punya akun device sendiri, tanpa kode pairing yang menganggur.
 
 Data ini juga yang dipakai sebagai contoh di mockup HTML
 [`../mockup-keluarga/`](../mockup-keluarga/).

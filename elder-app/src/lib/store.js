@@ -4,7 +4,7 @@
  *
  * Pakai `expo-sqlite/kv-store`, bukan SecureStore: isinya bukan kredensial
  * (token tetap di SecureStore, lihat `api/client.js`), dan SecureStore Android
- * dibatasi 2 KB per entri — cache jadwal dua hari bisa melewatinya.
+ * dibatasi 2 KB per entri cache jadwal dua hari bisa melewatinya.
  */
 import Storage from 'expo-sqlite/kv-store';
 

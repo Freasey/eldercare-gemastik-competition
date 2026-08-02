@@ -1,9 +1,9 @@
 /**
- * Jadwal — daftar pengingat berulang milik lansia, plus form tambah/ubah.
+ * Jadwal daftar pengingat berulang milik lansia, plus form tambah/ubah.
  *
  * Perubahan di sini langsung dikirim ke backend, yang membuat ulang
  * `reminder_events` (lihat `schedules.routes.js`). Lansia tidak perlu
- * melakukan apa pun — asisten yang menyesuaikan jam bicaranya (PLAN §2.3).
+ * melakukan apa pun asisten yang menyesuaikan jam bicaranya (PLAN §2.3).
  */
 import { useCallback, useState } from 'react';
 import { Alert, View } from 'react-native';
@@ -169,7 +169,7 @@ function CatatanSinkron({ elder }) {
           <Title>Langsung tersinkron</Title>
           <Note>
             Perubahan jadwal langsung dikirim ke HP {shortName(elder.name)}. Beliau tidak perlu
-            melakukan apa pun — asisten yang akan mengingatkan sesuai jam baru.
+            melakukan apa pun asisten yang akan mengingatkan sesuai jam baru.
           </Note>
         </View>
       </View>

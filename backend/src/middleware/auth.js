@@ -19,7 +19,7 @@ export const requireAuth = asyncHandler(async (req, res, next) => {
   // Dipakai dua hal: menjaga tamu aktif dari sweep, dan menentukan lansia
   // siapa yang ringkasannya masih perlu disegarkan scheduler. Di-throttle di
   // dalam touchLastSeen, dan sengaja tidak di-await supaya tidak menambah
-  // latensi — kalau gagal, request tetap jalan.
+  // latensi kalau gagal, request tetap jalan.
   touchLastSeen(user.id).catch((err) =>
     console.warn('[auth] gagal menyegarkan last_seen_at:', err.message),
   );
@@ -39,7 +39,7 @@ export function requireRole(...roles) {
 }
 
 /**
- * Pastikan user yang login berhak atas :elderId — entah sebagai caregiver
+ * Pastikan user yang login berhak atas :elderId entah sebagai caregiver
  * yang ter-link, atau sebagai lansia itu sendiri. Mengisi req.elder.
  */
 export const requireElderAccess = asyncHandler(async (req, res, next) => {

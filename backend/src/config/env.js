@@ -48,7 +48,7 @@ export const env = {
    */
   isServerless: Boolean(process.env.VERCEL),
 
-  // Login tamu — fitur produk, selalu hidup termasuk di production.
+  // Login tamu fitur produk, selalu hidup termasuk di production.
   // Tiap tamu dapat akun sendiri; yang nganggur dihapus otomatis.
   guestRetentionDays: Number(process.env.GUEST_RETENTION_DAYS || 7),
   // Sesi tamu sengaja lebih pendek dari sesi keluarga asli.
@@ -71,7 +71,7 @@ export const env = {
    * Service account Firebase untuk FCM V1 (services/push.js).
    *
    * Dua bentuk, sengaja: di laptop file JSON-nya ada di disk, sedangkan di
-   * container Back4app tidak ada file apa pun yang bisa ditunjuk — di sana
+   * container Back4app tidak ada file apa pun yang bisa ditunjuk di sana
    * isinya dititipkan sebagai env var base64 (base64 supaya newline di
    * private key tidak rusak saat ditempel ke dashboard).
    */

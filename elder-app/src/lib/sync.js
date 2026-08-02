@@ -2,7 +2,7 @@
  * Sinkronisasi latar: kirim yang tertunda, lalu ambil jadwal terbaru dan
  * jadwalkan ulang notifikasi lokalnya.
  *
- * Dipanggil saat app dibuka dan setiap kali sebuah sesi selesai — dua momen
+ * Dipanggil saat app dibuka dan setiap kali sebuah sesi selesai dua momen
  * yang pasti terjadi tanpa perlu ada yang menekan apa pun. App lansia tidak
  * punya tombol "sinkronkan", dan tidak boleh punya.
  */

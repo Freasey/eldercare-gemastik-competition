@@ -1,5 +1,5 @@
 /**
- * Layar sesi — satu-satunya layar setelah perangkat terhubung.
+ * Layar sesi satu-satunya layar setelah perangkat terhubung.
  *
  * Membuka app SAMA DENGAN memulai percakapan (PLAN §2.6): tidak ada tombol
  * "mulai bicara", tidak ada beranda, tidak ada menu. Yang tampil hanya
@@ -26,7 +26,7 @@ import { say } from '../voice/tts.js';
 import { notifikasiPembuka, saatNotifikasiDiketuk, siapkanNotifikasi } from '../notifications/local.js';
 import { sinkronkan } from '../lib/sync.js';
 
-/** Kalimat kecil di bawah lingkaran. Sengaja pendek — ini bukan bacaan. */
+/** Kalimat kecil di bawah lingkaran. Sengaja pendek ini bukan bacaan. */
 const LABEL = {
   membuka: 'Sebentar ya…',
   mendengar: 'Silakan bicara',
@@ -73,7 +73,7 @@ export function SessionScreen() {
   faseRef.current = fase;
 
   // Sama alasannya: pendeteksi jatuh dipasang sekali dan tidak boleh dipasang
-  // ulang setiap kali keadaan panggilan berubah — memasang ulang berarti
+  // ulang setiap kali keadaan panggilan berubah memasang ulang berarti
   // kehilangan riwayat tahap yang sedang diamatinya.
   const panggilanRef = useRef(panggilan);
   panggilanRef.current = panggilan;
@@ -95,7 +95,7 @@ export function SessionScreen() {
         return;
       }
 
-      // Jadwal disegarkan di latar — sesi tidak menunggunya.
+      // Jadwal disegarkan di latar sesi tidak menunggunya.
       sinkronkan(elder.id).catch(() => {});
 
       // App yang dibuka dari notifikasi pengingat dibedakan dari app yang
@@ -107,7 +107,7 @@ export function SessionScreen() {
   }, [elder.id, mulai]);
 
   // Notifikasi yang diketuk saat app sudah terbuka. Sesi yang sedang berjalan
-  // sengaja tidak dipotong — memotong lansia di tengah kalimat lebih buruk
+  // sengaja tidak dipotong memotong lansia di tengah kalimat lebih buruk
   // daripada pengingat yang menyusul beberapa menit kemudian.
   useEffect(
     () =>
@@ -137,7 +137,7 @@ export function SessionScreen() {
     return pantauKataBangun(() => mulai('wake_word'));
   }, [izinMik, sesiMenganggur, mulai]);
 
-  // Deteksi jatuh jalan terus, termasuk di tengah percakapan — orang bisa jatuh
+  // Deteksi jatuh jalan terus, termasuk di tengah percakapan orang bisa jatuh
   // kapan saja, dan percakapan yang terpotong lebih murah daripada jatuh yang
   // terlewat. Satu-satunya yang menahannya adalah panggilan darurat yang sedang
   // berjalan: keluarganya sudah di ujung sana, tidak perlu dipanggil lagi.
@@ -186,7 +186,7 @@ export function SessionScreen() {
 
         {offline ? (
           <Text style={{ fontSize: type.status, color: colors.ink2, textAlign: 'center', paddingHorizontal: 32 }}>
-            Sedang tidak ada internet — pengingat tetap jalan.
+            Sedang tidak ada internet pengingat tetap jalan.
           </Text>
         ) : null}
       </SafeAreaView>
@@ -196,7 +196,7 @@ export function SessionScreen() {
 
 /**
  * Tanpa mikrofon, app ini tidak bisa apa-apa. Layarnya ditujukan ke keluarga,
- * bukan ke lansia — karena merekalah yang akan membuka pengaturan.
+ * bukan ke lansia karena merekalah yang akan membuka pengaturan.
  */
 function IzinDitolak() {
   return (

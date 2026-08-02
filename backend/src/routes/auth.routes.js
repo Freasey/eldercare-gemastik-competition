@@ -87,7 +87,7 @@ authRouter.post(
     const profile = await verifyGoogleIdToken(idToken);
 
     // Kalau request datang membawa sesi tamu, akun tamu itu yang "dinaikkan"
-    // jadi akun asli — bukan bikin user baru — supaya semua yang sudah
+    // jadi akun asli bukan bikin user baru supaya semua yang sudah
     // dikerjakan tamu (lansia, jadwal, riwayat) ikut terbawa.
     const guest = await guestFromRequest(req);
     if (guest) {
@@ -131,13 +131,13 @@ authRouter.post(
 /**
  * POST /api/auth/guest
  *
- * Fitur produk, bukan jalan pintas development — selalu hidup, termasuk di
+ * Fitur produk, bukan jalan pintas development selalu hidup, termasuk di
  * production. Tiap panggilan membuat akun tamu BARU beserta data demonya
  * sendiri, jadi tamu tidak saling mengotori. Akun yang tidak dipakai lagi
  * dihapus sweep setelah GUEST_RETENTION_DAYS hari.
  *
  * Tamu bisa "naik kelas" jadi akun asli lewat POST /api/auth/google sambil
- * membawa token tamunya — datanya ikut terbawa.
+ * membawa token tamunya datanya ikut terbawa.
  *
  * Limit-nya ketat karena satu panggilan menulis ~80 baris.
  */
@@ -164,7 +164,7 @@ authRouter.post(
  * POST /api/auth/pair
  * Body: { code }
  *
- * Login device lansia — satu-satunya endpoint yang menerbitkan sesi tanpa
+ * Login device lansia satu-satunya endpoint yang menerbitkan sesi tanpa
  * Google. Sengaja tanpa `requireAuth`: HP lansia belum punya akun apa pun saat
  * memanggil ini, dan lansia tidak boleh dihadapkan layar login (PLAN §2.6).
  * Kode itu sendiri yang jadi kredensial, jadi jalurnya dibatasi ketat.

@@ -1,5 +1,5 @@
 /**
- * AI Caretaker — app keluarga.
+ * AI Caretaker app keluarga.
  * Sisi caregiver dari ekosistem dua sisi di ../PLAN.md.
  */
 import { StatusBar } from 'expo-status-bar';

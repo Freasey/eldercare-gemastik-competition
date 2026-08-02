@@ -25,7 +25,7 @@ export const colors = {
 
 /**
  * Skala huruf. Titik terkecil di app ini (18) kira-kira sebesar teks judul di
- * app biasa — tidak ada satu pun teks yang boleh lebih kecil dari itu.
+ * app biasa tidak ada satu pun teks yang boleh lebih kecil dari itu.
  */
 export const type = {
   caption: 30,

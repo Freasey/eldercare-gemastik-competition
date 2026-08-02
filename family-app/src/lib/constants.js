@@ -41,7 +41,7 @@ export const EMERGENCY_STATUS = {
   resolved: { label: 'Selesai', tone: 'good' },
 };
 
-/** Label consent — kuncinya dibuat backend di `elders.routes.js` saat profil dibuat. */
+/** Label consent kuncinya dibuat backend di `elders.routes.js` saat profil dibuat. */
 export const CONSENT_LABELS = {
   share_daily_summary: 'Bagikan ringkasan harian',
   share_mood_signal: 'Bagikan sinyal suasana hati',

@@ -85,7 +85,7 @@ export function EmergencyDetailScreen() {
                     title={event.confirmed_by_elder ? 'Dikonfirmasi lansia' : 'Dinyatakan alarm palsu'}
                     sub={
                       event.confirmed_by_elder
-                        ? 'Membenarkan butuh bantuan — keluarga langsung diberi tahu'
+                        ? 'Membenarkan butuh bantuan keluarga langsung diberi tahu'
                         : 'Menyatakan baik-baik saja, tidak dieskalasi'
                     }
                   />

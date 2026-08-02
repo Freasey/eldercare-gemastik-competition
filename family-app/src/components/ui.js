@@ -335,7 +335,7 @@ export function Chip({ label, active, onPress, icon }) {
 }
 
 /**
- * Sakelar tampilan saja — tidak menyimpan state sendiri. Dipakai untuk panel
+ * Sakelar tampilan saja tidak menyimpan state sendiri. Dipakai untuk panel
  * privasi yang sengaja terkunci: keluarga bisa melihat, tidak bisa mengubah.
  */
 export function Switch({ on, onPress, disabled }) {

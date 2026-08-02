@@ -1,7 +1,7 @@
 /**
  * Rate limit terpusat di Postgres.
  *
- * Sebelumnya hitungannya disimpan di `Map` memori proses — akurat selama
+ * Sebelumnya hitungannya disimpan di `Map` memori proses akurat selama
  * backend cuma satu container. Di serverless asumsi itu runtuh: tiap instance
  * punya Map sendiri, jadi batas efektifnya terkalikan jumlah instance yang
  * kebetulan hidup, dan jumlah itu tidak kita kendalikan.
@@ -10,7 +10,7 @@
  * pairing sebagai kredensial, sehingga pelemahan batas percobaan langsung jadi
  * pelemahan keamanan.
  *
- * Postgres dipilih daripada Redis karena Neon sudah ada — menambah vendor,
+ * Postgres dipilih daripada Redis karena Neon sudah ada menambah vendor,
  * akun, dan env var baru tidak sepadan untuk lima endpoint. Biayanya satu
  * round-trip per request, dan setiap route yang memakai limiter ini toh
  * menyentuh database sesudahnya.
@@ -50,7 +50,7 @@ async function catatHit(bucket, windowMs) {
  *   `name` memisahkan kuota antar-limiter di dalam satu tabel bersama. Wajib
  *   dan ditulis manual, bukan diturunkan dari URL: router assistant dipasang di
  *   bawah `/api/elders/:elderId`, jadi memakai path akan membuat kuotanya
- *   per-lansia — padahal maksudnya per-user lintas lansia.
+ *   per-lansia padahal maksudnya per-user lintas lansia.
  */
 export function rateLimit({ name, windowMs, max, key, message }) {
   if (!name) throw new Error('rateLimit butuh `name` supaya kuotanya tidak tercampur limiter lain');
@@ -77,8 +77,8 @@ export function rateLimit({ name, windowMs, max, key, message }) {
       })
       .catch((err) => {
         // Sengaja fail-open. Limiter yang menolak request saat database
-        // bermasalah tidak menambah keamanan apa pun — handler di belakangnya
-        // pasti gagal juga karena semuanya butuh database — tapi mengubah
+        // bermasalah tidak menambah keamanan apa pun handler di belakangnya
+        // pasti gagal juga karena semuanya butuh database tapi mengubah
         // gangguan sesaat jadi penolakan total, termasuk untuk jalur darurat.
         console.error('[rateLimit] gagal, request diteruskan:', err.message);
         next();
@@ -90,7 +90,7 @@ export function rateLimit({ name, windowMs, max, key, message }) {
 export const byUserOrIp = (req) => (req.user ? `u:${req.user.id}` : `ip:${req.ip || 'unknown'}`);
 
 /**
- * Buang baris yang jendelanya sudah lewat. Dipanggil dari scheduler — tanpa
+ * Buang baris yang jendelanya sudah lewat. Dipanggil dari scheduler tanpa
  * ini tabelnya tumbuh terus oleh kunci IP yang tidak pernah muncul lagi.
  *
  * Ambangnya sengaja jauh lebih longgar dari jendela terpanjang yang dipakai

@@ -4,7 +4,7 @@ import { registerGlobals } from '@livekit/react-native';
 import App from './App';
 
 // WebRTC menyuntikkan RTCPeerConnection, MediaStream, dan kawan-kawannya ke
-// global scope. Harus terjadi SEBELUM komponen mana pun ter-import — kalau
+// global scope. Harus terjadi SEBELUM komponen mana pun ter-import kalau
 // dipanggil di dalam App.js, layar panggilan sudah terlanjur di-evaluasi dan
 // LiveKit menemukan global yang belum ada.
 registerGlobals();

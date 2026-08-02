@@ -1,12 +1,12 @@
 /**
- * Akun tamu — model "coba dulu" seperti guest account di Roblox.
+ * Akun tamu model "coba dulu" seperti guest account di Roblox.
  *
  * Alurnya:
  *   1. Orang menekan "Coba sebagai tamu" → akun baru dibuat otomatis,
  *      lengkap dengan data demo miliknya sendiri (bukan berbagi satu akun,
  *      jadi tamu tidak bisa saling mengotori).
  *   2. Selama dipakai, `last_seen_at` disegarkan.
- *   3. Kalau tamunya login Google, baris user yang sama dipakai ulang —
+ *   3. Kalau tamunya login Google, baris user yang sama dipakai ulang 
  *      `is_guest` jadi false dan datanya ikut terbawa (lihat auth.routes.js).
  *   4. Kalau tidak pernah kembali, akun + seluruh datanya dihapus sweep
  *      setelah GUEST_RETENTION_DAYS hari.
@@ -32,14 +32,18 @@ function guestEmail() {
   return `guest-${crypto.randomBytes(8).toString('hex')}@guest.invalid`;
 }
 
-/** Kode pairing untuk lansia demo milik tamu — kolomnya UNIQUE. */
-function guestPairingCode() {
-  return `G-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+/**
+ * Email sintetis untuk akun device lansia demo. Polanya sengaja sama persis
+ * dengan yang dipakai pairing asli (services/pairing.js), supaya baris yang
+ * lahir dari jalur tamu tidak berbeda bentuk dari yang lahir dari jalur QR.
+ */
+function elderDeviceEmail(elderId) {
+  return `elder-${elderId}-${crypto.randomBytes(4).toString('hex')}@device.invalid`;
 }
 
 /**
  * Buat satu akun tamu beserta data demonya. Semuanya dalam satu transaksi:
- * kalau pembuatan data demo gagal, akunnya ikut batal — tidak ada tamu
+ * kalau pembuatan data demo gagal, akunnya ikut batal tidak ada tamu
  * setengah jadi yang layarnya kosong.
  *
  * @returns {Promise<object>} baris `users` yang dibuat
@@ -53,12 +57,30 @@ export async function createGuestAccount() {
       [guestEmail()],
     );
 
-    await createDemoElder(c, {
+    // Sengaja tanpa pairing_code: lansia demo langsung dianggap sudah ter-pair
+    // (lihat akun device di bawah), jadi kode yang tidak akan pernah bisa
+    // ditukar cuma jadi sampah di kolom yang UNIQUE.
+    const elder = await createDemoElder(c, {
       caregiverUserId: user.id,
-      elderUserId: null, // lansia demo tamu tidak punya akun sendiri
-      pairingCode: guestPairingCode(),
       relation: 'Anak kandung',
     });
+
+    // Lansia demo punya akun device-nya sendiri, seperti kalau pairing-nya
+    // sudah dilakukan kemarin-kemarin. Tanpa ini `elders.user_id` kosong dan
+    // semua jalur yang membedakan "lansia sendiri yang bicara" dari "keluarga
+    // yang mengisi" (checkins.source, assistant, ringkasan) tidak punya sisi
+    // lansia sama sekali di akun demo.
+    //
+    // Dibuat setelah eldernya ada supaya id lansia bisa ikut masuk ke email
+    // sintetisnya, sama seperti redeemPairingCode().
+    const { rows: [elderUser] } = await c.query(
+      `INSERT INTO users (email, name, role, last_seen_at)
+       VALUES ($1, $2, 'lansia', now())
+       RETURNING id`,
+      [elderDeviceEmail(elder.id), elder.name],
+    );
+
+    await c.query('UPDATE elders SET user_id = $2 WHERE id = $1', [elder.id, elderUser.id]);
 
     return user;
   });
@@ -75,7 +97,7 @@ export async function countElders(userId) {
 
 /**
  * Segarkan `last_seen_at`. Di-throttle 1 jam supaya tidak menulis satu baris
- * per request — yang dibutuhkan sweep cuma resolusi harian.
+ * per request yang dibutuhkan sweep cuma resolusi harian.
  *
  * Dipanggil untuk SEMUA user, bukan cuma tamu: `refreshTodaySummaries` ikut
  * memakai kolom ini untuk memutuskan lansia siapa yang masih perlu disegarkan.
@@ -93,8 +115,11 @@ export async function touchLastSeen(userId) {
  *
  * Penting: `elders.user_id` itu ON DELETE SET NULL, jadi menghapus user saja
  * akan meninggalkan baris lansia yatim. Lansia milik tamu karena itu dihapus
- * lebih dulu lewat caregiver_links — sisanya (jadwal, reminder, percakapan,
+ * lebih dulu lewat caregiver_links sisanya (jadwal, reminder, percakapan,
  * ringkasan) ikut terbawa CASCADE dari elders.
+ *
+ * Arah yang sama juga berlaku sebaliknya: akun device lansia demo tidak ikut
+ * terhapus saat eldernya hilang, jadi id-nya dipanen dulu lalu dihapus manual.
  */
 export async function sweepExpiredGuests() {
   const days = env.guestRetentionDays;
@@ -122,9 +147,21 @@ export async function sweepExpiredGuests() {
                 SELECT 1 FROM caregiver_links cl
                  WHERE cl.elder_id = e.id AND cl.caregiver_user_id <> ALL($1::bigint[])
               )
-        RETURNING e.id`,
+        RETURNING e.id, e.user_id`,
       [ids],
     );
+
+    // Akun device lansianya. `is_guest`-nya false, sengaja: kalau ditandai
+    // tamu, sweep akan menghapusnya begitu 7 hari tidak dipakai walaupun
+    // keluarganya sudah naik jadi akun Google lansia tiba-tiba ter-unpair.
+    // Jadi umurnya diikatkan ke eldernya, bukan ke last_seen_at-nya sendiri.
+    const elderUserIds = deletedElders.map((r) => r.user_id).filter(Boolean);
+    if (elderUserIds.length) {
+      await c.query(
+        `DELETE FROM users WHERE id = ANY($1::bigint[]) AND role = 'lansia'`,
+        [elderUserIds],
+      );
+    }
 
     const { rows: deletedUsers } = await c.query(
       `DELETE FROM users WHERE id = ANY($1::bigint[]) AND is_guest = true RETURNING id`,

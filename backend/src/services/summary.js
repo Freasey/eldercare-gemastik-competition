@@ -9,7 +9,7 @@ import { many, one } from '../db/pool.js';
  *
  * "Satu hari" di sini adalah hari menurut jam lansia. Sebelumnya tanggalnya
  * diambil dari `toISOString()` (selalu UTC) lalu dibandingkan dengan
- * `due_at::date` (zona server) — dua acuan berbeda dalam satu fungsi, dan
+ * `due_at::date` (zona server) dua acuan berbeda dalam satu fungsi, dan
  * dua-duanya bukan zona lansia. Efeknya: obat malam masuk hitungan hari
  * berikutnya, dan ringkasan "hari ini" berganti jam 7 pagi WIB.
  */
@@ -17,7 +17,7 @@ export async function buildDailySummary(elderId, date = new Date()) {
   const tz = await elderTimezone(elderId);
 
   // Diambil sebagai teks, bukan DATE: kolom DATE dari pg datang sebagai
-  // timestamp yang sudah digeser ke zona lokal proses — persis jebakan yang
+  // timestamp yang sudah digeser ke zona lokal proses persis jebakan yang
   // sedang diperbaiki di sini.
   const { day } = await one(
     `SELECT to_char(($1::timestamptz AT TIME ZONE $2)::date, 'YYYY-MM-DD') AS day`,

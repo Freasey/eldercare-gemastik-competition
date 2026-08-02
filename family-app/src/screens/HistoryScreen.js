@@ -1,5 +1,5 @@
 /**
- * Riwayat — pola beberapa hari terakhir: kepatuhan obat, suasana hati,
+ * Riwayat pola beberapa hari terakhir: kepatuhan obat, suasana hati,
  * tren pola bicara, daftar percakapan, dan ringkasan harian.
  */
 import { useCallback, useMemo, useState } from 'react';
@@ -152,7 +152,7 @@ function PolaBicara({ week }) {
       </CardHead>
       <Note>
         Dihitung dari kecepatan bicara, jeda mencari kata, dan pengulangan saat mengobrol dengan
-        asisten. Ini bukan diagnosis — hanya pola yang tercatat, untuk bahan cerita ke dokter.
+        asisten. Ini bukan diagnosis hanya pola yang tercatat, untuk bahan cerita ke dokter.
       </Note>
     </Card>
   );

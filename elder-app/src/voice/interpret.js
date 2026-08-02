@@ -3,13 +3,13 @@
  *
  * Isinya sengaja dibatasi tiga hal, masing-masing dengan alasan yang jelas:
  *
- * 1. `bacaanDarurat` — kata "tolong" harus tertangkap sebelum teksnya dikirim
+ * 1. `bacaanDarurat` kata "tolong" harus tertangkap sebelum teksnya dikirim
  *    ke mana pun. Menunggu jawaban server dulu berarti menunda keadaan darurat
  *    selama satu round-trip, dan gagal total kalau justru sedang tidak ada
  *    sinyal.
- * 2. `adalahPenutup` — mengakhiri sesi tidak punya endpoint penafsir; app
+ * 2. `adalahPenutup` mengakhiri sesi tidak punya endpoint penafsir; app
  *    yang memutuskan kapan berhenti mendengar.
- * 3. `bacaYaTidak` dan `bacaJawabanReminder` — dipakai saat OFFLINE, sebagai
+ * 3. `bacaYaTidak` dan `bacaJawabanReminder` dipakai saat OFFLINE, sebagai
  *    cerminan aturan yang sama di backend.
  *
  * PERINGATAN: `bacaJawabanReminder` adalah salinan
@@ -17,12 +17,12 @@
  * mengikuti urutan pengecekan `backend/src/services/consentVoice.js:
  * interpretConsentReply` (negatif diperiksa lebih dulu, karena "tidak boleh"
  * mengandung kata "boleh"). Kalau salah satunya diubah, ubah juga yang di sini
- * — kalau tidak, jawaban yang sama akan berarti berbeda tergantung ada sinyal
+ * kalau tidak, jawaban yang sama akan berarti berbeda tergantung ada sinyal
  * atau tidak. Selain saat offline, penafsiran tetap milik backend.
  */
 
 /**
- * Bentuk sopan "tolong" — permintaan sehari-hari, bukan minta pertolongan.
+ * Bentuk sopan "tolong" permintaan sehari-hari, bukan minta pertolongan.
  * Diperiksa lebih dulu supaya "tolong ulangi" tidak memanggil keluarga.
  */
 const TOLONG_SOPAN =
@@ -39,7 +39,7 @@ const PENDAMPING_DARURAT = /(sakit|jatuh|pusing|sesak|darah|bangun|kuat|bantu|ce
  * Apakah ucapan ini permintaan tolong yang sungguhan.
  *
  * Dibuat ketat karena "tolong" adalah kata paling sopan dalam bahasa
- * Indonesia — kalau setiap "tolong" memicu alur darurat, lansia akan ditanya
+ * Indonesia kalau setiap "tolong" memicu alur darurat, lansia akan ditanya
  * "mau saya hubungi keluarga?" sepanjang hari dan keluarganya berhenti
  * menganggap serius peringatan yang masuk.
  *
@@ -64,7 +64,7 @@ export function bacaanDarurat(teks) {
  * Apakah lansia sedang menutup percakapan.
  *
  * Hanya diperiksa pada giliran percakapan bebas. Pada giliran jawaban obat,
- * "sudah" berarti obatnya sudah diminum — bukan tanda mau berhenti bicara.
+ * "sudah" berarti obatnya sudah diminum bukan tanda mau berhenti bicara.
  */
 export function adalahPenutup(teks) {
   const t = (teks || '').toLowerCase().trim();

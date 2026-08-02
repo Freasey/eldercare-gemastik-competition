@@ -1,7 +1,7 @@
-# AI Caretaker — App Lansia (React Native / Expo)
+# AI Caretaker App Lansia (React Native / Expo)
 
 Sisi **lansia** dari AI Caretaker: voice-first, tanpa UI. Membuka aplikasi ini
-sama dengan memulai percakapan — tidak ada beranda, menu, atau tombol "mulai
+sama dengan memulai percakapan tidak ada beranda, menu, atau tombol "mulai
 bicara". Acuan desain: [`../PLAN.md`](../PLAN.md) §2.2, §2.5, §2.6.
 
 Backend-nya sama dengan app keluarga: [`../backend/`](../backend/).
@@ -11,13 +11,13 @@ Sisi caregiver ada di [`../family-app/`](../family-app/).
 
 Nol komponen yang bisa dipakai bersama: app keluarga adalah lima tab + grafik +
 navigasi, app ini satu layar tanpa navigasi. Menggabungkannya berarti tiap build
-memuat dependency milik peran lain — kamera QR dan STT ikut masuk ke HP
-keluarga, react-navigation dan chart SVG ikut masuk ke HP lansia — padahal
+memuat dependency milik peran lain kamera QR dan STT ikut masuk ke HP
+keluarga, react-navigation dan chart SVG ikut masuk ke HP lansia padahal
 syarat di PLAN §4 justru "harus jalan di HP Android low/mid-range".
 
 Konsekuensinya: package name sendiri (`com.eldercare.elder`), dan app ini
 **tidak** memakai Google Sign-In maupun push notification. Masuknya lewat kode
-pairing, pengingatnya lewat notifikasi lokal — jadi tidak butuh
+pairing, pengingatnya lewat notifikasi lokal jadi tidak butuh
 `google-services.json` sama sekali.
 
 ## Menjalankan
@@ -37,7 +37,7 @@ npx expo run:android           # build + pasang ke HP/emulator (butuh Android SD
 
 `.env` sudah menunjuk ke backend production, jadi tidak ada yang perlu diisi
 untuk menjalankannya. Setelah terpasang sekali, `npm start` cukup untuk sesi
-berikutnya — Metro menyambung ke build yang sudah ada, bukan ke Expo Go.
+berikutnya Metro menyambung ke build yang sudah ada, bukan ke Expo Go.
 
 ### Mengarahkan app ke backend
 
@@ -64,7 +64,7 @@ buka app
   │                     (atau enam hurufnya diketik manual)
   │                          │ POST /api/auth/pair
   │                          ↓ token + profil lansia disimpan
-  └─ sudah ter-pair ──→ SessionScreen — percakapan langsung dimulai
+  └─ sudah ter-pair ──→ SessionScreen percakapan langsung dimulai
 ```
 
 Loop percakapan (`src/voice/useVoiceSession.js`):
@@ -80,7 +80,7 @@ Loop percakapan (`src/voice/useVoiceSession.js`):
 
 **App tidak menyimpan state percakapan sendiri.** Prioritas bicara, penafsiran
 jawaban obat, skor mood, dan kapan izin privasi ditanyakan semuanya dihitung
-backend — app hanya mengembalikan `expects`/`reminderId`/`consentKey` yang
+backend app hanya mengembalikan `expects`/`reminderId`/`consentKey` yang
 barusan diterimanya. Ini konsekuensi langsung dari pembagian "rule vs AI" di
 PLAN §4: kalau app ikut menebak, aturan yang sama jadi punya dua versi.
 
@@ -92,7 +92,7 @@ src/
     client.js         fetch + token di SecureStore + penanda offline/dicabut
     caretaker.js      satu fungsi per endpoint yang dipakai sisi lansia
   voice/
-    tts.js            expo-speech — say() selesai saat suaranya benar berhenti
+    tts.js            expo-speech say() selesai saat suaranya benar berhenti
     stt.js            SATU-SATUNYA file yang tahu library STT + fallback Whisper
     wakeWord.js       pemantau "halo teman" saat sesi menganggur
     interpret.js      aturan bahasa yang harus di HP (darurat, penutup, offline)
@@ -121,13 +121,13 @@ Sebagian kecil aturan bahasa sengaja tidak diserahkan ke backend:
   gagal total kalau justru sedang tidak ada sinyal. Aturannya dibuat ketat:
   "tolong" adalah kata paling sopan dalam bahasa Indonesia, dan "tolong ulangi"
   tidak boleh memanggil keluarga.
-- **Kalimat penutup** tidak punya endpoint penafsir — app yang memutuskan kapan
+- **Kalimat penutup** tidak punya endpoint penafsir app yang memutuskan kapan
   berhenti mendengar. Hanya diperiksa saat percakapan bebas: pada giliran
   jawaban obat, "sudah" berarti sudah diminum.
 - **Penafsiran offline** (`bacaJawabanReminder`, `bacaYaTidak`) adalah salinan
   aturan backend, dipakai hanya saat tidak ada sambungan. Kalau aturan di
   `backend/src/services/groq.js` atau `consentVoice.js` berubah, salinan di
-  `src/voice/interpret.js` harus ikut diubah — kalau tidak, jawaban yang sama
+  `src/voice/interpret.js` harus ikut diubah kalau tidak, jawaban yang sama
   berarti berbeda tergantung ada sinyal atau tidak.
 
 ## Saat tidak ada internet
@@ -136,12 +136,12 @@ Pengingat obat adalah fitur yang paling tidak boleh ikut mati bersama sinyal,
 jadi (PLAN §2.6):
 
 1. Setiap kali app berhasil menghubungi backend, jadwal 2 hari ke depan
-   di-cache dan seluruh notifikasi lokal dijadwalkan **ulang** — bukan ditambal,
+   di-cache dan seluruh notifikasi lokal dijadwalkan **ulang** bukan ditambal,
    supaya jadwal yang dihapus keluarga ikut hilang dari HP lansia.
 2. Tanpa sambungan, app tetap membuka sesi kecil dari cache itu: menagih obat
    yang jatuh tempo dan mencatat jawabannya ke antrean.
 3. "Nanti ya" saat offline langsung menjadwalkan notifikasi lokal 15 menit lagi
-   — penundaan sungguhannya baru terjadi saat antrean terkirim.
+   penundaan sungguhannya baru terjadi saat antrean terkirim.
 4. Antrean dikirim saat app dibuka dan setiap kali sesi selesai. Urutannya
    dijaga, dan isinya kedaluwarsa setelah 24 jam.
 
@@ -171,40 +171,40 @@ Yang diselesaikannya adalah "HP tergeletak di meja, app terbuka, tapi lansia
 harus bangkit untuk menyentuhnya".
 
 Karena mikrofonnya hanya hidup selama layar sesi terbuka dan langsung berhenti
-saat percakapan mulai, izin `always_listening` **tetap belum ditanyakan** —
+saat percakapan mulai, izin `always_listening` **tetap belum ditanyakan** 
 menanyakannya berarti menjanjikan sesuatu yang lebih luas dari yang benar-benar
 terjadi (PLAN §2.5).
 
 Pengenalannya sengaja dipaksa on-device (`requiresOnDeviceRecognition: true`):
 mengalirkan mikrofon ke server terus-menerus hanya untuk menunggu satu kata
 adalah pemborosan kuota sekaligus masalah privasi. Kalau model on-device Bahasa
-Indonesia belum terpasang di HP itu, wake word mati — dan itu hasil yang benar,
+Indonesia belum terpasang di HP itu, wake word mati dan itu hasil yang benar,
 bukan yang harus diakali.
 
 ## Deteksi jatuh
 
 `src/sensors/fallDetection.js`, tiga tahap berurutan: **jatuh bebas** (< 0,45 g)
 → **benturan** (> 2,4 g dalam 1,2 detik) → **diam** (2,5 detik nyaris tanpa
-gerakan). Tahap ketiga yang paling banyak membuang alarm palsu — HP yang
+gerakan). Tahap ketiga yang paling banyak membuang alarm palsu HP yang
 dilempar ke kasur juga melewati dua tahap pertama, tapi orang yang menaruhnya
 akan segera memindahkannya lagi.
 
 Yang lolos deteksi **tidak** langsung memanggil keluarga: alurnya tetap lewat
 pertanyaan konfirmasi seperti jalur kata darurat, dengan kalimat khusus dari
 backend ("Sepertinya tadi ada benturan. Ibu baik-baik saja?"). Karena itu
-ambangnya sengaja longgar — melewatkan jatuh sungguhan jauh lebih mahal
+ambangnya sengaja longgar melewatkan jatuh sungguhan jauh lebih mahal
 daripada satu pertanyaan yang tidak perlu.
 
 ## Fallback Whisper
 
 Jalur normalnya tetap pengenal bawaan Android: gratis, jalan offline, tanpa
 kuota. Fallback baru dipakai saat pengenal itu **gagal**, bukan saat lansia
-memang diam — dan bedanya diambil dari event `speechstart`: ada suara terdengar
+memang diam dan bedanya diambil dari event `speechstart`: ada suara terdengar
 tapi tidak ada teks berarti pengenalnya yang gagal.
 
 Rekamannya bukan rekaman baru. `recordingOptions.persist` membuat pengenal
 bawaan menyimpan audio yang barusan didengarnya, dan file itu yang dikirim ke
-`POST /api/stt`. Alternatifnya — meminta lansia mengulang — berarti menyuruh
+`POST /api/stt`. Alternatifnya meminta lansia mengulang berarti menyuruh
 orang yang sudah bicara sekali untuk bicara lagi karena kesalahan yang bukan
 miliknya.
 
@@ -213,13 +213,13 @@ Groq API key tidak pernah ada di app: audionya yang naik ke backend.
 ## Panggilan darurat
 
 Setelah eskalasi dikonfirmasi, backend mengembalikan token LiveKit di respons
-`confirm`, dan app **langsung masuk room itu** lalu menyalakan mikrofon —
+`confirm`, dan app **langsung masuk room itu** lalu menyalakan mikrofon 
 tanpa layar panggilan dan tanpa tombol angkat. Orang yang benar-benar butuh
 bantuan belum tentu sanggup mengangkat telepon.
 
 Yang diucapkan app menyesuaikan kenyataan: kalau `notifiedDevices` bernilai 0
 (tidak ada HP keluarga yang terdaftar), app **tidak** berkata "sudah saya kabari
-keluarga" — ia mengatakan kabarnya belum sampai dan menganjurkan memanggil orang
+keluarga" ia mengatakan kabarnya belum sampai dan menganjurkan memanggil orang
 di sekitar. Berbohong di titik ini akan membuat lansia berhenti mencari
 pertolongan lain.
 
@@ -227,16 +227,16 @@ Mikrofon panggilan menutup sendiri setelah 3 menit tanpa ada yang bergabung.
 
 ## Yang masih belum jalan
 
-- **Wake word saat app di latar belakang** — lihat batasannya di atas.
+- **Wake word saat app di latar belakang** lihat batasannya di atas.
 - **Notifikasi terjadwal bisa meleset di Android 12+.** Pengingat memakai
   `AlarmManager` lewat expo-notifications tanpa izin exact-alarm, jadi Doze mode
   bisa menggesernya beberapa menit. Menaikkannya ke `USE_EXACT_ALARM` adalah
-  keputusan kebijakan Play Store, bukan teknis — belum diambil.
-- **iOS** — di luar scope fase ini (PLAN §6, Android-only).
+  keputusan kebijakan Play Store, bukan teknis belum diambil.
+- **iOS** di luar scope fase ini (PLAN §6, Android-only).
 
 ### Catatan versi `expo-speech-recognition`
 
-Terpasang `^56.0.1` — versi terbaru yang ada saat ini, sementara project ini
+Terpasang `^56.0.1` versi terbaru yang ada saat ini, sementara project ini
 memakai Expo SDK 57. Library-nya mengikuti penomoran Expo sejak SDK 56, jadi
 naikkan ke `57.x` begitu rilis. Kalau `npx expo run:android` gagal di tahap
 native, ini tersangka pertamanya.
@@ -251,7 +251,7 @@ native, ini tersangka pertamanya.
 - Jalur Whisper diuji ke Groq sungguhan dari sisi server (WAV 16 kHz → teks,
   ~0,8 detik untuk audio 1 detik).
 - **Belum diuji di perangkat**: TTS, STT, wake word, deteksi jatuh, notifikasi
-  lokal, kamera QR, dan audio panggilan darurat — semuanya butuh development
+  lokal, kamera QR, dan audio panggilan darurat semuanya butuh development
   build di HP sungguhan. Deteksi jatuh khususnya perlu ditera ulang di HP
   target; ambang di `fallDetection.js` berasal dari pola umum, bukan dari
   pengukuran di perangkat ini.

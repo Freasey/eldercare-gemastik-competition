@@ -1,7 +1,7 @@
 /**
  * Consent lewat suara (PLAN §2.5).
  *
- * App lansia tidak punya UI, jadi izin tidak bisa diberikan lewat saklar —
+ * App lansia tidak punya UI, jadi izin tidak bisa diberikan lewat saklar 
  * asisten yang menanyakannya. Aturan yang disepakati: izin yang masih MATI
  * ditanyakan ulang **sekali sehari**; izin yang sudah menyala tidak pernah
  * diungkit lagi.
@@ -60,7 +60,7 @@ export async function findConsentToAsk(elderId, timezone = 'Asia/Jakarta') {
 
 /**
  * Tandai sudah ditanyakan. Dicatat saat PERTANYAAN diucapkan, bukan saat
- * dijawab — kalau tidak, lansia yang diam atau menjawab ngalor-ngidul akan
+ * dijawab kalau tidak, lansia yang diam atau menjawab ngalor-ngidul akan
  * ditanyai hal yang sama berulang kali dalam satu hari.
  */
 export async function markConsentAsked(elderId, key) {

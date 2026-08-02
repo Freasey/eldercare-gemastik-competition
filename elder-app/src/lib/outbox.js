@@ -28,7 +28,7 @@ export async function enqueueReminderReply(item) {
 
 /**
  * Kirim semua yang tertunda. Dipanggil saat app dibuka dan setiap kali sebuah
- * permintaan online berhasil — jadi tidak perlu mendeteksi status jaringan.
+ * permintaan online berhasil jadi tidak perlu mendeteksi status jaringan.
  *
  * @returns {Promise<{sent: number, left: number}>}
  */
@@ -50,7 +50,7 @@ export async function flushOutbox() {
       terkirim += 1;
     } catch (err) {
       if (isOffline(err)) {
-        // Masih offline — hentikan di sini supaya urutannya tidak teracak.
+        // Masih offline hentikan di sini supaya urutannya tidak teracak.
         sisa.push(...antrean.slice(i));
         break;
       }

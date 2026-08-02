@@ -3,7 +3,7 @@
  *
  * Ada karena serverless tidak punya proses yang hidup terus: `setInterval` di
  * dalam fungsi mati begitu response terkirim. Tanpa endpoint ini, materialisasi
- * reminder dan — yang paling penting — `sweepMissedReminders()` tidak pernah
+ * reminder dan yang paling penting `sweepMissedReminders()` tidak pernah
  * jalan, sehingga keluarga tidak pernah diberi tahu saat lansia melewatkan
  * jadwal kritis.
  *
@@ -41,7 +41,7 @@ function secretCocok(diberikan, seharusnya) {
 cronRouter.post(
   '/tick',
   asyncHandler(async (req, res) => {
-    // Tanpa secret, endpoint ini mati — bukan terbuka. Backend yang ter-deploy
+    // Tanpa secret, endpoint ini mati bukan terbuka. Backend yang ter-deploy
     // tanpa CRON_SECRET lebih baik kelihatan rusak daripada diam-diam
     // membiarkan siapa pun menjalankan sweep.
     if (!env.cronSecret) {

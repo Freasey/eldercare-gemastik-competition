@@ -2,7 +2,7 @@
  * Isi satu percakapan.
  *
  * Kalau lansia belum mengizinkan transkrip dibagikan, backend mengirim
- * `transcriptWithheld: true` dan daftar pesan kosong — ringkasannya tetap
+ * `transcriptWithheld: true` dan daftar pesan kosong ringkasannya tetap
  * dikirim. Keadaan itu ditampilkan terang-terangan sebagai fitur privasi,
  * bukan sebagai error (PLAN §2.5).
  */

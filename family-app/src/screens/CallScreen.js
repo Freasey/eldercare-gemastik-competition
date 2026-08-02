@@ -1,5 +1,5 @@
 /**
- * Panggilan suara dalam aplikasi (PLAN §2.4 — darurat tidak pernah keluar app).
+ * Panggilan suara dalam aplikasi (PLAN §2.4 darurat tidak pernah keluar app).
  *
  * Urutannya: minta izin mikrofon → `POST .../emergencies/:id/join` (menandai
  * kejadian jadi `acknowledged` dan menerbitkan token LiveKit) → sambung ke room
@@ -47,7 +47,7 @@ export function CallScreen() {
 
     (async () => {
       // Izin mikrofon diminta SEBELUM token: kalau ditolak, tidak ada gunanya
-      // menandai kejadian ini "sedang ditangani" — keluarga belum bisa bicara.
+      // menandai kejadian ini "sedang ditangani" keluarga belum bisa bicara.
       if (Platform.OS === 'android') {
         const izin = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
@@ -146,7 +146,7 @@ export function CallScreen() {
 
 /**
  * Isi panggilan. Dipisah karena hook LiveKit hanya hidup di dalam
- * `<LiveKitRoom>` — di komponen induk semuanya masih kosong.
+ * `<LiveKitRoom>` di komponen induk semuanya masih kosong.
  */
 function RuangPanggilan({ elder, onTutup }) {
   const c = useColors();
@@ -161,7 +161,7 @@ function RuangPanggilan({ elder, onTutup }) {
   const tersambungPenuh = status === ConnectionState.Connected && lawanBicara.length > 0;
 
   // Penghitung baru jalan setelah ada orang di seberang, dan sengaja tidak
-  // di-reset kalau sambungannya sempat putus-nyambung — yang ingin diketahui
+  // di-reset kalau sambungannya sempat putus-nyambung yang ingin diketahui
   // keluarga adalah "sudah berapa lama saya menemani", bukan uptime WebRTC.
   const mulai = useRef(null);
   useEffect(() => {

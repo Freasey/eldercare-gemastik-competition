@@ -2,7 +2,7 @@
  * Alur darurat (PLAN §2.4):
  *   trigger → konfirmasi ke lansia dulu → eskalasi push ke keluarga →
  *   kalau perlu, room LiveKit untuk voice call + chat in-app.
- * Tidak ada SMS/telepon PSTN — seluruh jalur tetap di dalam app.
+ * Tidak ada SMS/telepon PSTN seluruh jalur tetap di dalam app.
  */
 import { Router } from 'express';
 import { z } from 'zod';
@@ -35,7 +35,7 @@ emergencyRouter.get(
 /**
  * POST /api/elders/:elderId/emergencies
  * Dipanggil device lansia saat mendeteksi trigger. Status awal `detected`:
- * BELUM dieskalasi — app harus konfirmasi ke lansia dulu untuk menekan
+ * BELUM dieskalasi app harus konfirmasi ke lansia dulu untuk menekan
  * false positive.
  */
 emergencyRouter.post(
@@ -112,7 +112,7 @@ emergencyRouter.post(
       event: escalated,
       escalated: true,
       notifiedDevices: push.sent,
-      // Kalau LiveKit belum dikonfigurasi, eskalasi push tetap jalan —
+      // Kalau LiveKit belum dikonfigurasi, eskalasi push tetap jalan 
       // panggilan suara-nya saja yang belum tersedia.
       call: isLivekitConfigured()
         ? await createRoomToken({
@@ -171,7 +171,7 @@ emergencyRouter.post(
           SET status = 'resolved',
               resolved_at = now(),
               acknowledged_by = COALESCE(acknowledged_by, $3),
-              detail = COALESCE(detail || ' — ' || $4, detail)
+              detail = COALESCE(detail || ' ' || $4, detail)
         WHERE id = $1 AND elder_id = $2 RETURNING *`,
       [req.params.id, req.elder.id, req.user.id, note ?? null],
     );

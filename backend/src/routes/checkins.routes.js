@@ -25,7 +25,7 @@ checkinsRouter.get(
   }),
 );
 
-/** POST /api/elders/:elderId/checkins — dari sisi lansia atau dicatat keluarga */
+/** POST /api/elders/:elderId/checkins dari sisi lansia atau dicatat keluarga */
 checkinsRouter.post(
   '/',
   requireElderAccess,

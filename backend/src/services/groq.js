@@ -1,6 +1,6 @@
 /**
  * Groq client (free tier). Dipakai HANYA untuk memahami/merespons percakapan
- * bebas dan meringkas — bukan untuk logika jadwal/prioritas reminder
+ * bebas dan meringkas bukan untuk logika jadwal/prioritas reminder
  * (itu rule-based di contextEngine.js).
  */
 import { env } from '../config/env.js';
@@ -58,7 +58,7 @@ export async function chat(messages, { model = env.groqModel, temperature = 0.6,
 
 /**
  * Ubah riwayat percakapan jadi ringkasan 1-2 kalimat untuk keluarga.
- * Dipanggil saat sesi ditutup, bukan tiap turn — hemat kuota.
+ * Dipanggil saat sesi ditutup, bukan tiap turn hemat kuota.
  */
 export async function summarizeConversation(turns) {
   const transcript = turns

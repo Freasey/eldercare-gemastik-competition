@@ -1,10 +1,10 @@
 /**
- * Beranda — kabar hari ini.
+ * Beranda kabar hari ini.
  *
  * Kartu prioritas di tengah layar adalah pembeda utama produk: keluarga bisa
  * membaca kalimat persis yang akan diucapkan asisten ke lansia berikutnya,
  * beserta alasannya. Angkanya datang dari `GET .../assistant/context`, jadi
- * yang tampil di sini benar-benar keputusan context engine di backend —
+ * yang tampil di sini benar-benar keputusan context engine di backend 
  * bukan tiruan aturan yang ditulis ulang di sisi app.
  */
 import { useCallback } from 'react';
@@ -278,7 +278,7 @@ function SisaJadwal({ reminders, onLihatSemua }) {
 function AktivitasTerbaru({ items, elderId, onLihatSemua }) {
   const nav = useNavigation();
 
-  // Reminder yang masih menunggu tidak ditampilkan di sini — sudah punya
+  // Reminder yang masih menunggu tidak ditampilkan di sini sudah punya
   // kartunya sendiri di atas. Feed ini isinya yang sudah terjadi.
   const feed = items
     .filter((i) => i.kind !== 'reminder' || i.status !== 'pending')

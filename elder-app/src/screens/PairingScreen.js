@@ -2,7 +2,7 @@
  * Layar pertama, dan satu-satunya layar yang benar-benar disentuh manusia.
  *
  * Ditujukan ke KELUARGA, bukan ke lansia (PLAN §2.1 & §2.6): app membuka
- * dirinya dengan berbicara — meminta lansia memanggil anak atau cucunya —
+ * dirinya dengan berbicara meminta lansia memanggil anak atau cucunya 
  * lalu menampilkan pemindai QR untuk kode yang muncul di app keluarga.
  *
  * Kode ketik manual disediakan karena kamera HP lama sering gagal fokus di
@@ -36,7 +36,7 @@ export function PairingScreen() {
   const [sibuk, setSibuk] = useState(false);
 
   // Sekali pindai saja. Tanpa ini kamera menembak endpoint berkali-kali dalam
-  // sedetik, dan percobaan kedua pasti gagal — kode hangus sekali pakai.
+  // sedetik, dan percobaan kedua pasti gagal kode hangus sekali pakai.
   const terkunci = useRef(false);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function PairingScreen() {
       await hubungkan(hasil);
     } catch (err) {
       setPesan(err.message);
-      // Kode yang salah harus bisa dicoba lagi — kamera dibuka kembali.
+      // Kode yang salah harus bisa dicoba lagi kamera dibuka kembali.
       terkunci.current = false;
       setSibuk(false);
     }

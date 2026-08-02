@@ -194,7 +194,7 @@ const SHAPES = {
   ),
 };
 
-/** Logo Google — satu-satunya ikon berwarna solid, bukan garis. */
+/** Logo Google satu-satunya ikon berwarna solid, bukan garis. */
 function GoogleMark({ size }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">

@@ -2,7 +2,7 @@
  * Pembungkus fetch ke backend Express (lihat ../../backend/README.md).
  *
  * Alamat backend dibaca dari EXPO_PUBLIC_API_URL supaya berpindah antara
- * localhost dan URL production cukup mengubah `.env` — tidak ada URL yang
+ * localhost dan URL production cukup mengubah `.env` tidak ada URL yang
  * di-hardcode di dalam kode layar.
  */
 import * as SecureStore from 'expo-secure-store';

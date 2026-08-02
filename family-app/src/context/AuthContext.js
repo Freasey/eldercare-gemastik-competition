@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
           if (alive) setUser(me);
         }
       } catch {
-        // Token kedaluwarsa/backend pindah — buang saja, user login lagi.
+        // Token kedaluwarsa/backend pindah buang saja, user login lagi.
         await clearToken();
       } finally {
         if (alive) setRestoring(false);
@@ -62,7 +62,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Daftarkan push begitu ada sesi — termasuk sesi yang dipulihkan saat app
+   * Daftarkan push begitu ada sesi termasuk sesi yang dipulihkan saat app
    * dibuka, karena token FCM bisa dirotasi Android kapan saja dan yang
    * tersimpan di server jadi basi tanpa ada kejadian apa pun yang menandainya.
    *

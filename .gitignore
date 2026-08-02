@@ -1,4 +1,4 @@
-# Kredensial — jangan pernah masuk git.
+# Kredensial jangan pernah masuk git.
 # Pola `.env.*` sengaja menyapu semua varian (.env.local, .env.vercel, ...)
 # supaya file baru tidak perlu diingat satu per satu; hanya .env.example yang
 # ditarik kembali karena memang tidak berisi nilai asli.
@@ -23,5 +23,5 @@ node_modules/
 *.log
 .DS_Store
 
-# Dibuat Vercel CLI saat `vercel link` — memuat id project/org.
+# Dibuat Vercel CLI saat `vercel link` memuat id project/org.
 .vercel/

@@ -1,14 +1,14 @@
 /**
- * Deteksi jatuh lewat accelerometer (PLAN §2.4 — backend sudah lama menerima
+ * Deteksi jatuh lewat accelerometer (PLAN §2.4 backend sudah lama menerima
  * `triggerType: 'fall_detection'`, sensornya yang belum ada).
  *
  * **Tiga tahap, bukan satu ambang batas.** Mendeteksi "guncangan kuat" saja
  * akan berbunyi setiap kali HP ditaruh di meja atau masuk saku. Yang dicari
  * adalah urutan yang khas jatuh:
  *
- *   1. jatuh bebas  — percepatan total mendekati 0 g (HP ikut jatuh)
- *   2. benturan     — lonjakan tajam saat menyentuh lantai
- *   3. diam         — tidak banyak bergerak sesudahnya
+ *   1. jatuh bebas  percepatan total mendekati 0 g (HP ikut jatuh)
+ *   2. benturan     lonjakan tajam saat menyentuh lantai
+ *   3. diam         tidak banyak bergerak sesudahnya
  *
  * Tahap ketiga yang paling banyak membuang alarm palsu: HP yang dilempar ke
  * kasur juga melewati tahap 1 dan 2, tapi orang yang menaruhnya biasanya
@@ -79,7 +79,7 @@ export function pantauJatuh(onJatuh) {
     }
 
     if (tahap === 'jatuhBebas') {
-      // Tidak ada benturan yang menyusul — kemungkinan besar cuma HP yang
+      // Tidak ada benturan yang menyusul kemungkinan besar cuma HP yang
       // diayun atau diturunkan cepat.
       if (sekarang - waktuJatuhBebas > JEDA_MAKS_BENTURAN_MS) {
         tahap = 'menunggu';

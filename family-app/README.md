@@ -1,4 +1,4 @@
-# AI Caretaker — App Keluarga (React Native / Expo)
+# AI Caretaker App Keluarga (React Native / Expo)
 
 Sisi **caregiver** dari AI Caretaker: mengatur pengingat, membaca kabar harian,
 dan menerima peringatan darurat. Hasil porting dari prototipe
@@ -6,7 +6,7 @@ dan menerima peringatan darurat. Hasil porting dari prototipe
 [`../backend/`](../backend/). Acuan desain: [`../PLAN.md`](../PLAN.md).
 
 App sisi lansia (voice-first, tanpa UI) ada di project terpisah:
-[`../elder-app/`](../elder-app/) — alasan pemisahannya di PLAN §4.3.
+[`../elder-app/`](../elder-app/) alasan pemisahannya di PLAN §4.3.
 
 ## Menjalankan
 
@@ -38,7 +38,7 @@ buat `.env.local` (menang atas `.env`) lalu jalankan `cd ../backend && npm run d
 Alamat `http://` **hanya jalan di development build** (varian debug). Build
 release memblokir cleartext HTTP, jadi APK yang dibagikan wajib `https://`.
 
-`10.0.2.2` adalah alamat khusus emulator Android untuk `localhost` mesin host —
+`10.0.2.2` adalah alamat khusus emulator Android untuk `localhost` mesin host 
 `localhost` saja akan menunjuk ke emulator itu sendiri. Untuk HP fisik, cari IP
 laptop dengan `ipconfig` dan pastikan keduanya satu Wi-Fi.
 
@@ -54,7 +54,7 @@ Jalurnya sama di backend lokal maupun production.
 Tombol **Google** sengaja dinonaktifkan: butuh Android OAuth client ID, yang
 butuh SHA-1 dari keystore, yang baru ada setelah build pertama. Begitu client ID
 itu jadi, `loginWithGoogle(idToken)` di [`src/api/caretaker.js`](src/api/caretaker.js)
-tinggal dipakai — sisa app tidak berubah karena keduanya menghasilkan JWT yang
+tinggal dipakai sisa app tidak berubah karena keduanya menghasilkan JWT yang
 sama, dan akun tamu yang sedang aktif ikut "naik kelas" jadi akun asli.
 
 ## Struktur
@@ -106,16 +106,16 @@ src/
 
 ## Tiga hal yang sengaja ditonjolkan
 
-Sama seperti di mockup — ini pembeda produk, jadi dibuat kelihatan:
+Sama seperti di mockup ini pembeda produk, jadi dibuat kelihatan:
 
 1. **Context engine terlihat.** Kartu di Beranda menampilkan kalimat persis yang
    akan diucapkan asisten ke lansia berikutnya beserta alasan prioritasnya.
    Berbeda dengan mockup yang menyalin aturannya di sisi klien, app ini membaca
-   `GET /api/elders/:id/assistant/context` — jadi yang tampil benar-benar
+   `GET /api/elders/:id/assistant/context` jadi yang tampil benar-benar
    keputusan context engine di backend, bukan tiruan yang bisa ikut basi.
 2. **Privasi sebagai fitur.** Panel izin di Profil bisa dilihat tapi tidak bisa
    diubah keluarga; backend menolaknya lewat `CONSENT_ELDER_ONLY`. Transkrip
-   percakapan yang belum diizinkan tampil sebagai penjelasan, bukan error —
+   percakapan yang belum diizinkan tampil sebagai penjelasan, bukan error 
    ringkasannya tetap terkirim. Izin dinyalakan lansia sendiri lewat suara:
    asisten menanyakannya sekali sehari selama masih mati (lihat
    `backend/README.md` bagian "Consent lewat suara").
@@ -130,7 +130,7 @@ Sama seperti di mockup — ini pembeda produk, jadi dibuat kelihatan:
 Yang didaftarkan ke backend adalah **token FCM mentah**
 (`getDevicePushTokenAsync`), bukan `ExponentPushToken[...]`. Bedanya penting:
 token Expo baru sampai ke Android setelah service account FCM diunggah ke
-project Expo lewat `eas credentials` — satu langkah interaktif lagi yang harus
+project Expo lewat `eas credentials` satu langkah interaktif lagi yang harus
 diingat orang. Token FCM dilayani `firebase-admin` di backend memakai service
 account yang sudah ada, jadi rantainya lebih pendek. Backend menerima kedua
 bentuk (`backend/src/services/push.js`), jadi keputusan ini bisa dibalik tanpa
@@ -138,21 +138,21 @@ mengubah server.
 
 Konsekuensinya: `google-services.json` **wajib** ada di root project ini
 (ditunjuk `android.googleServicesFile`). File itu di-gitignore, jadi salin dari
-root repo saat menyiapkan mesin baru — tanpanya token tidak pernah terbit dan
+root repo saat menyiapkan mesin baru tanpanya token tidak pernah terbit dan
 notifikasi diam-diam tidak akan pernah datang.
 
 Dua kanal Android, bukan satu: `emergency` (MAX importance, menembus mode
 senyap) dan `default`. Kalau kabar harian dan panggilan darurat berbagi satu
-kanal, keluarga hanya punya dua pilihan — diganggu terus-menerus atau
-membisukan keduanya — dan yang kedua itulah yang biasanya terjadi.
+kanal, keluarga hanya punya dua pilihan diganggu terus-menerus atau
+membisukan keduanya dan yang kedua itulah yang biasanya terjadi.
 
 Pendaftaran terjadi otomatis setiap kali ada sesi (termasuk sesi yang dipulihkan
 saat app dibuka), karena token FCM bisa dirotasi Android kapan saja. Di layar
-Profil ada tombol **"Kirim notifikasi uji"** — membuktikan jalurnya sampai ke HP
+Profil ada tombol **"Kirim notifikasi uji"** membuktikan jalurnya sampai ke HP
 tanpa perlu memicu kejadian darurat palsu.
 
 Mengetuk notifikasi darurat membuka langsung layar kejadiannya, termasuk saat
-app sedang mati sama sekali (`getLastNotificationResponseAsync`) — justru itu
+app sedang mati sama sekali (`getLastNotificationResponseAsync`) justru itu
 kasus yang paling penting: HP di saku, app tertutup.
 
 ## Yang belum jalan
@@ -168,9 +168,9 @@ kasus yang paling penting: HP di saku, app tertutup.
   ikon SVG disalin dari `app.js`. Tampilannya sengaja dibuat sama.
 - Mockup memakai data statis dari `data.js` dengan penamaan `camelCase`. App ini
   membaca response backend yang `snake_case` (`time_of_day`, `is_critical`,
-  `due_at`) — perhatikan bedanya saat membandingkan dua kode itu.
+  `due_at`) perhatikan bedanya saat membandingkan dua kode itu.
 - Kolom `DATE` dari Postgres datang sebagai ISO timestamp yang sudah digeser ke
   zona lokal, bukan `"YYYY-MM-DD"`. `toDate()` di `lib/format.js` menangani
   keduanya.
-- Bingkai HP palsu di mockup (390×844 di layar lebar) tidak ikut dipindahkan —
+- Bingkai HP palsu di mockup (390×844 di layar lebar) tidak ikut dipindahkan 
   di HP asli tidak diperlukan.

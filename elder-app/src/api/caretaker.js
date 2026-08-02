@@ -21,7 +21,7 @@ export const pairDevice = (code) =>
 
 /**
  * Buka sesi. Backend yang menjalankan context-check dan memutuskan kalimat
- * pembuka beserta prioritasnya — app tidak ikut menghitung apa pun.
+ * pembuka beserta prioritasnya app tidak ikut menghitung apa pun.
  *
  * @param {'button'|'scheduled'|'wake_word'|'emergency'} trigger
  */
@@ -49,7 +49,7 @@ export const endSession = (elderId, conversationId, reason) =>
 /**
  * Fallback speech-to-text saat pengenal bawaan HP gagal (lihat voice/stt.js).
  *
- * API key Groq hanya hidup di server, jadi audionya yang naik ke backend —
+ * API key Groq hanya hidup di server, jadi audionya yang naik ke backend 
  * bukan app yang memanggil Groq langsung. Batas waktunya lebih longgar dari
  * permintaan biasa: unggah audio di jaringan rumah bisa lambat, dan menyerah
  * kepagian berarti kembali ke keadaan "app tidak mendengar apa-apa" yang justru
@@ -63,7 +63,7 @@ export const endSession = (elderId, conversationId, reason) =>
  * paling ingin dihindari di sesi percakapan.
  *
  * Batas ini juga harus tetap di bawah `maxDuration` fungsi backend
- * (vercel.json), supaya yang menyerah selalu klien lebih dulu — menunggu lebih
+ * (vercel.json), supaya yang menyerah selalu klien lebih dulu menunggu lebih
  * lama dari umur fungsi berarti menanti jawaban yang sudah mati di server.
  * Menyerah di sini aman: pemanggil memperlakukannya sebagai "tidak terdengar"
  * dan sesi tetap lanjut.
@@ -75,7 +75,7 @@ export const transcribeAudio = (body) =>
 
 /**
  * Jadwal beberapa hari ke depan, untuk di-cache dan dijadwalkan jadi
- * notifikasi lokal (PLAN §2.6 — pengingat harus tetap bunyi tanpa internet).
+ * notifikasi lokal (PLAN §2.6 pengingat harus tetap bunyi tanpa internet).
  */
 export const fetchReminders = (elderId, days = 2) =>
   api(`/api/elders/${elderId}/reminders?days=${days}`);
@@ -86,7 +86,7 @@ export const respondReminder = (elderId, reminderId, body) =>
 
 /* ---------------- darurat ---------------- */
 
-/** Status awal `detected` — belum mengganggu keluarga sampai dikonfirmasi. */
+/** Status awal `detected` belum mengganggu keluarga sampai dikonfirmasi. */
 export const triggerEmergency = (elderId, body) =>
   api(`/api/elders/${elderId}/emergencies`, { method: 'POST', body });
 

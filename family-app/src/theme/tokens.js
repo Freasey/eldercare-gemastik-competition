@@ -3,7 +3,7 @@
  * supaya app RN terlihat sama persis dengan prototipe yang sudah disetujui.
  *
  * Aturan yang ikut dibawa dari mockup: warna status TIDAK PERNAH berdiri
- * sendiri — selalu dipasangkan dengan ikon + teks, supaya tetap terbaca oleh
+ * sendiri selalu dipasangkan dengan ikon + teks, supaya tetap terbaca oleh
  * pengguna dengan buta warna.
  */
 
@@ -86,7 +86,7 @@ export const type = {
   mono: { fontSize: 12.5, fontWeight: '600', fontVariant: ['tabular-nums'] },
 };
 
-/** Bayangan kartu — RN memisahkan iOS (shadow*) dan Android (elevation). */
+/** Bayangan kartu RN memisahkan iOS (shadow*) dan Android (elevation). */
 export function cardShadow(c) {
   return {
     shadowColor: c.shadow,

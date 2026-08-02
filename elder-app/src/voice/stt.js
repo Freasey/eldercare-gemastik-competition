@@ -1,15 +1,15 @@
 /**
- * Sisi "dengar" — STT bawaan OS lewat expo-speech-recognition, dengan fallback
+ * Sisi "dengar" STT bawaan OS lewat expo-speech-recognition, dengan fallback
  * Groq Whisper lewat backend (PLAN §4).
  *
  * SELURUH ketergantungan pada library STT berhenti di file ini. Pemanggil
- * (`useVoiceSession.js`) tidak tahu — dan tidak boleh tahu — teks yang
+ * (`useVoiceSession.js`) tidak tahu dan tidak boleh tahu teks yang
  * diterimanya berasal dari pengenal bawaan HP atau dari Whisper.
  *
  * **Kenapa fallback-nya memakai rekaman yang sama, bukan merekam ulang.**
  * `recordingOptions.persist` membuat pengenal bawaan menyimpan audio yang
  * barusan didengarnya ke file. Kalau hasilnya kosong, file itu yang dikirim ke
- * backend. Alternatifnya — meminta lansia mengulang lalu merekam sendiri —
+ * backend. Alternatifnya meminta lansia mengulang lalu merekam sendiri 
  * berarti menyuruh orang yang sudah bicara sekali untuk bicara lagi karena
  * kesalahan yang bukan miliknya, dan menggandakan waktu tunggu.
  *
@@ -23,7 +23,7 @@ import { transcribeAudio } from '../api/caretaker.js';
 
 /**
  * Jeda diam yang dianggap "sudah selesai bicara". Bawaan Android sekitar 1
- * detik — terlalu cepat untuk lansia, yang sering berhenti di tengah kalimat
+ * detik terlalu cepat untuk lansia, yang sering berhenti di tengah kalimat
  * untuk mengambil napas dan akan terpotong terus-menerus.
  */
 const JEDA_DIAM_MS = 2500;
@@ -43,11 +43,11 @@ const MIN_BYTE_LAYAK_KIRIM = 8000;
  *
  * Yang sebenarnya membatasi ukuran rekaman itu `BATAS_DENGAR_MS`: `persist`
  * menghasilkan WAV, yang constant bitrate, jadi durasi menentukan ukuran secara
- * linear — 20 detik pada 16 kHz mono ≈ 640 KB. Angka di bawah ini punya jarak
+ * linear 20 detik pada 16 kHz mono ≈ 640 KB. Angka di bawah ini punya jarak
  * beberapa kali lipat dari itu.
  *
  * Jadi ini sabuk pengaman untuk kalau asumsi bitrate tadi meleset di HP
- * tertentu, supaya yang terjadi adalah "fallback dilewati" — bukan unggahan
+ * tertentu, supaya yang terjadi adalah "fallback dilewati" bukan unggahan
  * yang ditolak backend atau, lebih buruk, ditolak platform dengan error yang
  * tidak bisa kita terjemahkan ke lansia. Ambangnya sengaja di bawah
  * `MAX_AUDIO_BYTES` backend supaya penolakannya terjadi di sini, sebelum ada
@@ -56,7 +56,7 @@ const MIN_BYTE_LAYAK_KIRIM = 8000;
  * Sengaja TIDAK memotong rekaman jadi sekian byte pertama: kalimat lansia yang
  * terpotong di tengah masih terbaca sebagai kalimat utuh oleh Whisper, dan
  * backend menafsirkan teksnya apa adanya untuk jawaban obat. "sudah minum obat"
- * yang terpotong jadi "sudah" bukan jawaban yang kurang — itu jawaban yang
+ * yang terpotong jadi "sudah" bukan jawaban yang kurang itu jawaban yang
  * berbeda. Diam jauh lebih aman daripada salah.
  */
 const MAX_BYTE_LAYAK_KIRIM = 2.5 * 1024 * 1024;
@@ -64,7 +64,7 @@ const MAX_BYTE_LAYAK_KIRIM = 2.5 * 1024 * 1024;
 /**
  * Konteks untuk Whisper. Tanpa ini, kata yang sering diucapkan lansia dalam
  * percakapan ini ("obat", "sudah minum", "tolong") kadang tertulis jadi kata
- * lain yang bunyinya mirip — dan penafsiran jawaban obat di backend membaca
+ * lain yang bunyinya mirip dan penafsiran jawaban obat di backend membaca
  * teks itu apa adanya.
  */
 const PETUNJUK_WHISPER =
@@ -81,12 +81,12 @@ export async function requestMicPermission() {
  * Dengarkan satu giliran bicara.
  *
  * @param {{onPartial?: (teks: string) => void, fallback?: boolean}} [opts]
- *   `onPartial` dipakai untuk live caption — lansia melihat kalimatnya muncul
+ *   `onPartial` dipakai untuk live caption lansia melihat kalimatnya muncul
  *   sambil bicara, jadi tahu app benar-benar mendengar (PLAN §2.6).
  *   `fallback` bisa dimatikan untuk pemakaian yang tidak boleh menunggu
  *   jaringan, mis. pendeteksi wake word.
  * @returns {Promise<{text: string|null, error: string|null, sumber: 'device'|'whisper'|null}>}
- *   `text` null berarti tidak ada yang terdengar — pemanggil memperlakukannya
+ *   `text` null berarti tidak ada yang terdengar pemanggil memperlakukannya
  *   sebagai diam, bukan sebagai kesalahan.
  */
 export async function listenOnce({ onPartial, fallback = true } = {}) {
@@ -104,13 +104,13 @@ export async function listenOnce({ onPartial, fallback = true } = {}) {
   /**
    * Gerbang paling penting di file ini.
    *
-   * Lansia yang memang tidak menjawab adalah kejadian yang WAJAR dan sering —
+   * Lansia yang memang tidak menjawab adalah kejadian yang WAJAR dan sering 
    * loop percakapan memperlakukannya sebagai "diam" dan menutup sesi dengan
    * sopan. Mengirim rekaman sunyi itu ke Whisper berarti membayar kuota dan
    * beberapa detik penantian untuk mendapat jawaban yang sudah kita tahu:
    * kosong.
    *
-   * `speechstart` adalah pembedanya — pengenal bawaan menyalakannya begitu ada
+   * `speechstart` adalah pembedanya pengenal bawaan menyalakannya begitu ada
    * yang terdengar seperti ucapan. Ada suara tapi tidak ada teks berarti
    * pengenalnya yang gagal, dan itulah satu-satunya keadaan yang pantas
    * dilempar ke Whisper. `nomatch` dan error keras diperlakukan sama.
@@ -135,7 +135,7 @@ export async function listenOnce({ onPartial, fallback = true } = {}) {
     return { text: text?.trim() || null, error: null, sumber: text?.trim() ? 'whisper' : null };
   } catch (err) {
     // Offline atau kuota habis. Kembalikan keadaan seperti sebelum ada
-    // fallback — sesi tetap boleh lanjut, tidak boleh berhenti karena ini.
+    // fallback sesi tetap boleh lanjut, tidak boleh berhenti karena ini.
     return { text: null, error: hasil.error ?? err.message, sumber: null };
   } finally {
     bersihkan();
@@ -166,7 +166,7 @@ function dengarSekali({ onPartial } = {}) {
     }, BATAS_DENGAR_MS);
 
     // `audioend` membawa path rekaman dan dijamin datang setelah berkasnya
-    // selesai ditulis — jangan membacanya dari `audiostart`.
+    // selesai ditulis jangan membacanya dari `audiostart`.
     langganan.push(
       ExpoSpeechRecognitionModule.addListener('audioend', (event) => {
         uri = event.uri ?? null;
@@ -262,7 +262,7 @@ function hapusBerkas(uri) {
     const berkas = new File(uri);
     if (berkas.exists) berkas.delete();
   } catch {
-    // Berkas cache — kalau gagal dihapus, Android yang akan membersihkannya.
+    // Berkas cache kalau gagal dihapus, Android yang akan membersihkannya.
   }
 }
 
@@ -271,6 +271,6 @@ export function stopListening() {
   try {
     ExpoSpeechRecognitionModule.abort();
   } catch {
-    // Tidak sedang mendengar — tidak ada yang perlu dibatalkan.
+    // Tidak sedang mendengar tidak ada yang perlu dibatalkan.
   }
 }

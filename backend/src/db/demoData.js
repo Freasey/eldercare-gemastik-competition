@@ -2,12 +2,12 @@
  * Pembangun data contoh untuk satu lansia.
  *
  * Dipakai dua tempat:
- *   1. `npm run db:seed` — akun demo tetap untuk development
- *   2. `POST /api/auth/guest` — tiap tamu dapat salinannya sendiri
+ *   1. `npm run db:seed` akun demo tetap untuk development
+ *   2. `POST /api/auth/guest` tiap tamu dapat salinannya sendiri
  *
  * Sengaja membangun ulang, bukan meng-copy baris milik akun demo: semua
  * tanggal dihitung relatif terhadap saat fungsi dipanggil, jadi tamu yang
- * mendaftar bulan depan tetap melihat data "minggu ini" — bukan data basi
+ * mendaftar bulan depan tetap melihat data "minggu ini" bukan data basi
  * dari kapan `db:seed` terakhir dijalankan.
  */
 
@@ -104,7 +104,7 @@ export async function createDemoElder(c, {
 
   // --- riwayat reminder 7 hari terakhir ---
   // Pola: Ibu Sumarni patuh, kecuali Metformin malam yang beberapa kali
-  // terlewat — ini yang jadi red flag di dashboard keluarga.
+  // terlewat ini yang jadi red flag di dashboard keluarga.
   const history = [
     ['pagiAmlo', '07:00', () => 'confirmed'],
     ['pagiMetf', '08:00', () => 'confirmed'],

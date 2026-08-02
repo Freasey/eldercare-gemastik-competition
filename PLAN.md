@@ -1,30 +1,30 @@
-# AI Caretaker — Development Plan
+# AI Caretaker Development Plan
 
 > Dokumen acuan development. Update file ini setiap ada keputusan besar baru
 > (arsitektur, flow, stack) supaya tetap jadi single source of truth.
-> Kredensial environment ada terpisah di [`.env`](./.env) — **jangan taruh
+> Kredensial environment ada terpisah di [`.env`](./.env) **jangan taruh
 > secret di file ini**.
 
 Status (per 2026-07-29): desain selesai, kredensial dasar terkumpul.
-Implementasi dimulai — lihat §7.
+Implementasi dimulai lihat §7.
 
 ---
 
 ## 1. Konsep Proyek
 
-AI Caretaker — aplikasi mobile untuk lansia di Indonesia, dibedakan lewat
+AI Caretaker aplikasi mobile untuk lansia di Indonesia, dibedakan lewat
 desain **voice-first**: lansia bisa memakai app sepenuhnya lewat suara
 (dengar, ngerti, jawab) tanpa perlu baca/ketik/navigasi UI sentuh. Kemungkinan
 besar untuk submission kompetisi **GEMASTIK**.
 
 Ekosistem dua sisi:
-- **App Lansia** — voice-first, UI minimal, reminder proaktif, deteksi
+- **App Lansia** voice-first, UI minimal, reminder proaktif, deteksi
   darurat, sinyal penurunan kognitif dari pola bicara.
-- **App/Portal Caregiver** — UI konvensional, buat setup awal, terima
+- **App/Portal Caregiver** UI konvensional, buat setup awal, terima
   ringkasan, dan alert darurat.
 
 **Kenapa voice-first**: lansia sering kesulitan dengan UI sentuh kecil dan
-app padat teks — ini diferensiator utama dibanding app kesehatan lansia lain.
+app padat teks ini diferensiator utama dibanding app kesehatan lansia lain.
 
 ---
 
@@ -51,7 +51,7 @@ sebagai fallback aksesibilitas, tanpa menu/teks berat).
    generik):
    `reminder overdue/urgent > reminder due sekarang > mood check-in overdue > sapaan umum`
 4. Percakapan lanjut turn-by-turn; pertanyaan proaktif dibatasi ~1-2 per sesi
-   biar nggak berasa interogasi — kalau lansia mau lanjut ngobrol, biarkan
+   biar nggak berasa interogasi kalau lansia mau lanjut ngobrol, biarkan
    bebas.
 5. Sesi berakhir: silence timeout, closing phrase, atau tombol ditekan lagi.
 6. Hasil (konfirmasi obat, sinyal mood/kognitif) → masuk ke ringkasan
@@ -59,7 +59,7 @@ sebagai fallback aksesibilitas, tanpa menu/teks berat).
 
 **Prinsip desain**: context-check engine yang sama dipakai baik untuk trigger
 manual (tombol) maupun reminder otomatis (app-initiated tanpa tekan tombol)
-— dianggap satu sistem, bukan dua. Aturan prioritas di atas adalah spec untuk
+dianggap satu sistem, bukan dua. Aturan prioritas di atas adalah spec untuk
 scheduler/reminder logic.
 
 ### 2.3 Daily Loop & Data ke Caregiver
@@ -75,7 +75,7 @@ scheduler/reminder logic.
 "Nanti ya" menggeser `due_at` **baris yang sama** (+15 menit, maksimal 3 kali),
 bukan membuat baris baru. Kalau baris baru yang dibuat, baris lamanya
 tertinggal berstatus `snoozed` dengan waktu lewat, lalu ditandai `missed` oleh
-sweep — menunda obat kritis malah langsung memicu notifikasi "terlewat" ke
+sweep menunda obat kritis malah langsung memicu notifikasi "terlewat" ke
 keluarga sekaligus merusak angka kepatuhan. Satu kewajiban = satu baris;
 berapa kali ditunda terbaca dari `attempts`. Logikanya dipakai bersama jalur
 suara dan jalur app keluarga ([`backend/src/services/reminders.js`](./backend/src/services/reminders.js)).
@@ -87,28 +87,28 @@ suara dan jalur app keluarga ([`backend/src/services/reminders.js`](./backend/sr
 - **Eskalasi ke caregiver**: push notification (Expo) dulu. Kalau caregiver
   offline/tidak merespons → **in-app messaging + in-app voice call**
   (gaya WhatsApp, bukan telepon PSTN sungguhan) via **LiveKit**.
-  *(Ini menggantikan rencana awal SMS/telepon lewat Twilio — diputuskan
+  *(Ini menggantikan rencana awal SMS/telepon lewat Twilio diputuskan
   2026-07-29 supaya seluruh jalur darurat tetap in-app.)*
 
 ### 2.5 Privacy & Consent
-First-class design concern, bukan sekadar checkbox compliance — potensi
+First-class design concern, bukan sekadar checkbox compliance potensi
 diferensiator penilaian lomba. Always-listening + share data kesehatan/
 percakapan ke keluarga perlu explicit consent control dari lansia.
 
 Backend menolak keluarga mengubah consent (`CONSENT_ELDER_ONLY`), dan default
 `share_conversation_transcript` + `always_listening` = **mati**. Karena app
-lansia tidak punya UI (§2.6), izin diberikan lewat **suara** — sudah
+lansia tidak punya UI (§2.6), izin diberikan lewat **suara** sudah
 diimplementasi 2026-08-01:
 
 - Izin yang masih mati ditanyakan **sekali sehari** (hari menurut jam lansia);
   yang sudah menyala tidak pernah diungkit lagi.
 - Muncul sebagai pembuka di hari yang sepi, atau menyusul sebagai pertanyaan
-  kedua setelah jawaban reminder/mood — jatah proaktif per sesi tetap 1-2.
+  kedua setelah jawaban reminder/mood jatah proaktif per sesi tetap 1-2.
 - Dicatat saat diucapkan, bukan saat dijawab, supaya lansia yang diam tidak
   ditanyai berulang kali dalam sehari.
 - Hanya device lansia yang boleh menjawab; percobaan dari sesi keluarga
   ditolak `CONSENT_ELDER_ONLY`.
-- Jawabannya ditafsirkan rule-based, bukan LLM — urutan pengecekannya penting
+- Jawabannya ditafsirkan rule-based, bukan LLM urutan pengecekannya penting
   karena "tidak boleh" mengandung kata "boleh" dan "tidak apa-apa" justru
   berarti setuju.
 
@@ -119,7 +119,7 @@ saat percakapan mulai, jadi menanyakan izin bernama "selalu mendengarkan"
 berarti menjanjikan sesuatu yang lebih luas dari yang benar-benar terjadi.
 Izin itu baru relevan kalau wake word pindah ke foreground service.
 
-### 2.6 App Lansia — Tanpa UI (keputusan 2026-08-01)
+### 2.6 App Lansia Tanpa UI (keputusan 2026-08-01)
 
 Perombakan dari "satu tombol besar" (§2.2) jadi **nol tombol**:
 
@@ -137,14 +137,14 @@ Perombakan dari "satu tombol besar" (§2.2) jadi **nol tombol**:
   Menggantikan `POST /api/elders/pair` yang lama, yang mensyaratkan user sudah
   login dan karena itu tidak pernah bisa dipakai HP lansia. Kode pairing naik
   status jadi kredensial: berlaku 15 menit, hangus sekali pakai, 20 percobaan
-  per jam per IP, dan diterbitkan saat keluarga menekan tombolnya — bukan saat
+  per jam per IP, dan diterbitkan saat keluarga menekan tombolnya bukan saat
   profil dibuat. Pencabutan akses lewat "putuskan perangkat" (mengosongkan
   `elders.user_id`), bukan lewat expiry token.
 - **Pengecualian yang jujur**: izin mikrofon dan kamera Android tetap lewat
   dialog sistem yang harus diketuk. "Tanpa UI" berlaku setelah setup selesai.
 
 **Reminder saat offline (keputusan 2026-08-01)**: dibunyikan **notifikasi lokal
-di device** (`expo-notifications`), bukan push dari server — jadi tetap jalan
+di device** (`expo-notifications`), bukan push dari server jadi tetap jalan
 tanpa internet. Konsekuensinya app lansia menyimpan cache jadwal
 (`GET /reminders?days=2`), menjadwalkan ulang notifikasi tiap sinkron, dan
 mengantre jawaban lansia untuk dikirim belakangan saat online.
@@ -154,21 +154,21 @@ mengantre jawaban lansia untuk dikirim belakangan saat online.
 ## 3. Smart Glasses (Deferred)
 
 Ide awal: pairing dengan smart glasses (kamera+mic+speaker). **Ditunda ke
-fase lanjut** — MVP fokus phone-only dulu (no-glasses-first).
+fase lanjut** MVP fokus phone-only dulu (no-glasses-first).
 
 Ringkasan riset (re-verify sebelum dipakai, landscape bergerak cepat):
-- **Meta Ray-Ban/Ray-Ban Display** — form factor paling natural, tapi publish
+- **Meta Ray-Ban/Ray-Ban Display** form factor paling natural, tapi publish
   masih partner-gated per pertengahan 2026, risiko deadline kompetisi.
-- **Rokid** — Android-based, terjangkau, paling realistis buat demo fisik
+- **Rokid** Android-based, terjangkau, paling realistis buat demo fisik
   dengan budget mahasiswa.
-- **Vuzix** — SDK paling matang/terbuka, tapi form factor enterprise, kurang
+- **Vuzix** SDK paling matang/terbuka, tapi form factor enterprise, kurang
   cocok secara sosial untuk lansia.
-- [xg-glass-sdk](https://github.com/hkust-spark/xg-glass-sdk) — unified API
+- [xg-glass-sdk](https://github.com/hkust-spark/xg-glass-sdk) unified API
   lintas vendor + simulator, kandidat abstraction layer kalau nanti
   diimplementasi.
 
 **Prinsip arsitektur**: glasses harus jadi enhancement layer opsional, bukan
-dependency keras — pengalaman inti harus tetap 100% jalan lewat mic/speaker
+dependency keras pengalaman inti harus tetap 100% jalan lewat mic/speaker
 HP saja.
 
 ---
@@ -177,18 +177,18 @@ HP saja.
 
 | Layer | Pilihan | Catatan |
 |---|---|---|
-| Mobile app | **React Native (Expo)** | **Dua project terpisah** — [`family-app/`](./family-app) dan [`elder-app/`](./elder-app), lihat §4.3. Menggantikan rencana Flutter awal. |
-| Backend | **Express.js** (manual, no BaaS) | Semua logic ditulis manual — tanpa auto-CRUD/rules ala Firestore. |
-| Hosting backend | **Vercel** (serverless, Hobby) | Deploy dari GitHub repo, tanpa kartu kredit. Sempat di Back4app (container) 2026-08-02, lalu pindah ke Vercel di hari yang sama — konsekuensinya ada di catatan migrasi di bawah. |
+| Mobile app | **React Native (Expo)** | **Dua project terpisah** [`family-app/`](./family-app) dan [`elder-app/`](./elder-app), lihat §4.3. Menggantikan rencana Flutter awal. |
+| Backend | **Express.js** (manual, no BaaS) | Semua logic ditulis manual tanpa auto-CRUD/rules ala Firestore. |
+| Hosting backend | **Vercel** (serverless, Hobby) | Deploy dari GitHub repo, tanpa kartu kredit. Sempat di Back4app (container) 2026-08-02, lalu pindah ke Vercel di hari yang sama konsekuensinya ada di catatan migrasi di bawah. |
 | Database | **NeonDB** (serverless Postgres, free tier) | Menggantikan rencana Firestore. |
 | Auth | **Manual JWT + Google Sign-In** | Lihat detail alur di §4.1. Tanpa Firebase Auth. |
 | LLM | **Groq free tier** | `llama-3.3-70b-versatile` untuk percakapan sehari-hari; `compound` dipakai terbatas (query real-time seperti cuaca, capped 250 req/hari). |
-| Voice I/O | **Native OS STT/TTS** | Default, gratis, offline-capable, dukung Bahasa Indonesia. Groq Whisper sbg fallback kalau device STT gagal. Groq TTS (Orpheus) di-ruled-out — no Indonesian support. |
-| Push notification | **Expo Push Notifications** | Perlu Firebase project terpisah untuk FCM V1 (lihat §4.2 — wajib sejak Google deprecate legacy FCM API pertengahan 2024). |
+| Voice I/O | **Native OS STT/TTS** | Default, gratis, offline-capable, dukung Bahasa Indonesia. Groq Whisper sbg fallback kalau device STT gagal. Groq TTS (Orpheus) di-ruled-out no Indonesian support. |
+| Push notification | **Expo Push Notifications** | Perlu Firebase project terpisah untuk FCM V1 (lihat §4.2 wajib sejak Google deprecate legacy FCM API pertengahan 2024). |
 | Emergency call/chat | **LiveKit** | In-app voice call + messaging, menggantikan rencana Twilio SMS/PSTN. |
 
 **Rule vs AI split**: logic prioritas jadwal/reminder = plain rule-based code,
-BUKAN LLM call. LLM cuma dipanggil untuk pemahaman percakapan bebas — hemat
+BUKAN LLM call. LLM cuma dipanggil untuk pemahaman percakapan bebas hemat
 quota free-tier dan bikin behavior reminder obat predictable.
 
 **Filter tiap keputusan stack**: (1) harus jalan di free tier asli (budget
@@ -219,7 +219,7 @@ authorization-code flow).
 
 Minimal `users` table: `id, google_id, email, name, avatar_url, role (lansia/keluarga), created_at`.
 
-### 4.2 Push Notification — yang masih kurang
+### 4.2 Push Notification yang masih kurang
 Expo Push butuh **Firebase project terpisah** (Cloud Messaging saja, tanpa
 fitur Firebase lain) karena migrasi wajib ke FCM V1:
 1. Buat Firebase project, daftarkan Android app (package name harus sama
@@ -228,7 +228,7 @@ fitur Firebase lain) karena migrasi wajib ke FCM V1:
    walau build native lokal).
 3. Generate Service Account key (JSON) dari Firebase project settings →
    upload ke Expo via `eas credentials` (Android → Push Notifications →
-   FCM V1 service account key) — tetap perlu walau build lokal, karena
+   FCM V1 service account key) tetap perlu walau build lokal, karena
    kredensial ini disimpan di sisi Expo push service.
 
 Build Android dilakukan lokal (laptop/PC user sendiri), bukan lewat Claude.
@@ -238,8 +238,8 @@ Build Android dilakukan lokal (laptop/PC user sendiri), bukan lewat Claude.
 Rencana awal "satu codebase untuk dua mode" **dibatalkan**. App keluarga dan app
 lansia tidak berbagi satu komponen pun: yang satu lima tab + grafik + navigasi,
 yang satu lagi satu layar tanpa navigasi sama sekali (§2.6). Menyatukannya
-berarti tiap build memuat dependency milik peran lain — kamera QR + STT ikut ke
-HP keluarga, react-navigation + chart SVG ikut ke HP lansia — padahal filter di
+berarti tiap build memuat dependency milik peran lain kamera QR + STT ikut ke
+HP keluarga, react-navigation + chart SVG ikut ke HP lansia padahal filter di
 §4 justru "harus jalan di HP Android low/mid-range".
 
 Akibatnya:
@@ -250,7 +250,7 @@ Akibatnya:
   Masuknya lewat kode pairing (§2.6), pengingatnya lewat notifikasi lokal.
 - Yang dipakai bersama hanya kontrak backend, bukan kode. Pola yang sengaja
   ditiru (bukan di-share): pembungkus `api()` dan pola `.env` dua file.
-- App lansia **tidak bisa dijalankan di Expo Go** — modul native STT, kamera,
+- App lansia **tidak bisa dijalankan di Expo Go** modul native STT, kamera,
   dan notifikasi mengharuskan development build (`npx expo run:android`).
 
 Stack tambahan khusus app lansia: `expo-speech` (TTS), `expo-speech-recognition`
@@ -262,19 +262,19 @@ jadwal + antrean offline).
 
 ## 5. Status Kredensial (update 2026-08-02)
 
-Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
+Lihat [`.env`](./.env) untuk nilai aktual **jangan commit file itu ke git**.
 
 | Item | Status |
 |---|---|
 | NeonDB `DATABASE_URL` | ✅ Diterima |
-| Google OAuth — Web client ID + secret | ✅ Diterima |
-| Google OAuth — Android client ID | ⏳ Belum (butuh SHA-1 — baru bisa diambil setelah project RN/keystore ada) |
-| Google OAuth — iOS client ID | ⏳ Belum — **tidak diperlukan untuk fase ini**, scope Android-only (lihat §6) |
+| Google OAuth Web client ID + secret | ✅ Diterima |
+| Google OAuth Android client ID | ⏳ Belum (butuh SHA-1 baru bisa diambil setelah project RN/keystore ada) |
+| Google OAuth iOS client ID | ⏳ Belum **tidak diperlukan untuk fase ini**, scope Android-only (lihat §6) |
 | Groq API key | ✅ Diterima |
 | JWT secret | ✅ Digenerate otomatis |
 | Expo project ID | ✅ Diterima |
-| Firebase `google-services.json` | ✅ Ada di root (`project_id: competition-project-f87e2`, package `com.eldercare.app`) — dikonfirmasi user ini memang project untuk AI Caretaker |
-| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`). Untuk deploy, isinya dikirim sebagai `FIREBASE_SERVICE_ACCOUNT_B64` — host serverless tidak punya file yang bisa ditunjuk |
+| Firebase `google-services.json` | ✅ Ada di root (`project_id: competition-project-f87e2`, package `com.eldercare.app`) dikonfirmasi user ini memang project untuk AI Caretaker |
+| Firebase FCM V1 service account JSON | ✅ Ada di root (path di `.env`). Untuk deploy, isinya dikirim sebagai `FIREBASE_SERVICE_ACCOUNT_B64` host serverless tidak punya file yang bisa ditunjuk |
 | LiveKit (URL, API key, secret) | ✅ Diterima |
 | Vercel | ✅ **Backend sudah di-deploy**: `https://eldercare-gemastik-competition.vercel.app` (`/health` → database, groq, livekit, google, push, cron semuanya ok, region `sin1`). Kedua app sudah menunjuk ke sana secara default |
 
@@ -285,53 +285,53 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 - [x] Port mockup HTML keluarga ke React Native (Expo) → [`family-app/`](./family-app).
 - [x] **Bug context engine**: judul "Waktunya…" bikin kalimat dobel. Diperbaiki
       2026-08-01 lewat helper `subject()` di `contextEngine.js` yang membuang
-      awalan "waktunya/saatnya/jadwal" dari judul — penamaan jadwal tetap bebas.
+      awalan "waktunya/saatnya/jadwal" dari judul penamaan jadwal tetap bebas.
 - [x] **Bug snooze**: "nanti ya" lewat suara tidak pernah kembali menagih.
       Diperbaiki 2026-08-01, lihat §2.3.1.
-- [x] **Zona waktu diabaikan scheduler** — diperbaiki 2026-08-01: semua
+- [x] **Zona waktu diabaikan scheduler** diperbaiki 2026-08-01: semua
       perhitungan tanggal/jam pindah ke Postgres lewat
       `AT TIME ZONE elders.timezone` (materialisasi reminder, filter harian,
       grafik kepatuhan, ringkasan harian/mingguan, sapaan pagi/siang/sore).
       Diuji: jadwal 07:00 WIB vs 07:00 WIT tersimpan terpaut tepat 2 jam dan
       dua-duanya jatuh di jam 07:00 lokal masing-masing.
-- [ ] Pasang LiveKit, push notification, dan Google Sign-In di app keluarga —
+- [ ] Pasang LiveKit, push notification, dan Google Sign-In di app keluarga 
       ketiganya butuh development build dulu.
 - [x] Layar "tambah lansia" + "hubungkan perangkat" (QR & kode) di app keluarga
       (2026-08-01).
-- [x] Endpoint `POST /api/auth/pair` — login device lansia tanpa Google (§2.6),
+- [x] Endpoint `POST /api/auth/pair` login device lansia tanpa Google (§2.6),
       selesai 2026-08-01.
-- [x] Consent lewat suara (§2.5) — selesai 2026-08-01.
-- [x] Bangun app sisi lansia (voice-first, tanpa UI — §2.6) →
+- [x] Consent lewat suara (§2.5) selesai 2026-08-01.
+- [x] Bangun app sisi lansia (voice-first, tanpa UI §2.6) →
       [`elder-app/`](./elder-app), selesai 2026-08-01. Project RN terpisah,
       lihat §4.3.
-- [x] Batalkan sesi percakapan kosong saat `/end` — selesai 2026-08-01. Sesi
+- [x] Batalkan sesi percakapan kosong saat `/end` selesai 2026-08-01. Sesi
       tanpa satu pun jawaban lansia dihapus, bukan disembunyikan; reminder yang
       sempat dibacakan tetap `spoken` sehingga sweep tetap menandainya terlewat.
-- [x] Deploy backend — selesai 2026-08-02. Mula-mula ke Back4app, lalu pindah
+- [x] Deploy backend selesai 2026-08-02. Mula-mula ke Back4app, lalu pindah
       ke Vercel di hari yang sama:
       `https://eldercare-gemastik-competition.vercel.app`. Jalur masuk app
       keluarga sekarang login tamu.
-- [x] Push notification darurat sampai ke HP keluarga — selesai 2026-08-02.
+- [x] Push notification darurat sampai ke HP keluarga selesai 2026-08-02.
       FCM V1 langsung lewat `firebase-admin`, bukan Expo Push Service; app
       mendaftarkan token FCM mentah. Alasannya di `backend/README.md`.
-- [x] Audio panggilan darurat di kedua sisi — selesai 2026-08-02
+- [x] Audio panggilan darurat di kedua sisi selesai 2026-08-02
       (`@livekit/react-native`). Sisi lansia masuk room otomatis tanpa layar
       panggilan, sesuai §2.6.
-- [x] Deteksi jatuh (`triggerType: 'fall_detection'`) — selesai 2026-08-02,
+- [x] Deteksi jatuh (`triggerType: 'fall_detection'`) selesai 2026-08-02,
       accelerometer tiga tahap di `elder-app/src/sensors/fallDetection.js`.
       Ambangnya masih perlu ditera di HP target.
-- [x] Wake word — selesai 2026-08-02, **terbatas pada app yang sedang terbuka**.
+- [x] Wake word selesai 2026-08-02, **terbatas pada app yang sedang terbuka**.
       Lihat `elder-app/README.md`; ini juga yang menahan izin `always_listening`
       (§2.5).
-- [x] Fallback Groq Whisper saat STT device gagal — selesai 2026-08-02 lewat
+- [x] Fallback Groq Whisper saat STT device gagal selesai 2026-08-02 lewat
       `POST /api/stt`. Memakai rekaman yang sama dengan pengenal bawaan
       (`recordingOptions.persist`), jadi lansia tidak perlu mengulang.
 - [ ] Buat Google OAuth client ID Android (butuh SHA-1, ambil dari
       `eas credentials` atau debug keystore setelah project RN dibuat).
-      **Tidak lagi memblokir apa pun** — login tamu jadi jalur resmi sementara.
+      **Tidak lagi memblokir apa pun** login tamu jadi jalur resmi sementara.
 - [ ] Tera ulang ambang deteksi jatuh di HP target, dan uji seluruh fitur
       perangkat (TTS, STT, wake word, jatuh, audio panggilan) di HP sungguhan.
-- [ ] Putuskan: LiveKit Cloud (free tier) vs self-host — saat ini asumsi
+- [ ] Putuskan: LiveKit Cloud (free tier) vs self-host saat ini asumsi
       LiveKit Cloud (URL yang diberikan mengarah ke `*.livekit.cloud`).
 
 **Keputusan dev-environment (2026-07-29, diperbarui 2026-08-02):**
@@ -344,7 +344,7 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
   sampai Google Sign-In siap. Jalan pintas `dev-login` sudah dihapus dari
   backend maupun app.
 - **Kedua app tidak lagi bisa lewat Expo Go.** Semuanya memakai modul native
-  (WebRTC, notifikasi, sensor, pengenal suara) — `npx expo run:android`.
+  (WebRTC, notifikasi, sensor, pengenal suara) `npx expo run:android`.
 - Alamat `http://` cuma jalan di build debug; build release memblokir cleartext
   HTTP. APK yang dibagikan wajib menunjuk ke `https://`.
 
@@ -354,12 +354,12 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 
 | Bagian | Status |
 |---|---|
-| [`backend/`](./backend) — Express API | ✅ **Di-deploy** ke `https://eldercare-gemastik-competition.vercel.app` |
-| [`mockup-keluarga/`](./mockup-keluarga) — prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
-| [`family-app/`](./family-app) — React Native (Expo) app keluarga | ✅ Layar inti + push notif + audio panggilan; belum diuji di perangkat |
-| [`elder-app/`](./elder-app) — React Native (Expo) app lansia | ✅ Pairing, loop suara, pengingat offline, wake word, deteksi jatuh, fallback Whisper, audio darurat; belum diuji di perangkat |
+| [`backend/`](./backend) Express API | ✅ **Di-deploy** ke `https://eldercare-gemastik-competition.vercel.app` |
+| [`mockup-keluarga/`](./mockup-keluarga) prototipe HTML app keluarga | ✅ Selesai, jadi acuan porting |
+| [`family-app/`](./family-app) React Native (Expo) app keluarga | ✅ Layar inti + push notif + audio panggilan; belum diuji di perangkat |
+| [`elder-app/`](./elder-app) React Native (Expo) app lansia | ✅ Pairing, loop suara, pengingat offline, wake word, deteksi jatuh, fallback Whisper, audio darurat; belum diuji di perangkat |
 
-### Update 2026-08-02 — menutup semua yang tersisa kecuali Google Sign-In
+### Update 2026-08-02 menutup semua yang tersisa kecuali Google Sign-In
 
 Backend di-deploy, lalu enam hal yang selama ini "sudah disiapkan jalurnya tapi
 belum jalan" dikerjakan sampai tuntas:
@@ -376,7 +376,7 @@ belum jalan" dikerjakan sampai tuntas:
 Dua keputusan yang layak dicatat karena bisa dipertanyakan lagi nanti:
 
 1. **Push lewat FCM V1 langsung, bukan Expo Push Service.** Jalur Expo butuh
-   service account diunggah ke project Expo lewat `eas credentials` — langkah
+   service account diunggah ke project Expo lewat `eas credentials` langkah
    interaktif yang mudah terlupa dan gagalnya senyap. Backend menerima kedua
    bentuk token, jadi keputusan ini bisa dibalik tanpa mengubah server.
 2. **Fallback Whisper memakai rekaman yang sama**, bukan merekam ulang
@@ -387,17 +387,17 @@ Dua keputusan yang layak dicatat karena bisa dipertanyakan lagi nanti:
 
 Verifikasi: bundle Android kedua app berhasil (family 1486 modul, elder 1003
 modul, tanpa error); jalur Whisper diuji ke Groq sungguhan; kredensial FCM
-diuji sampai Google menjawab. **Belum ada yang diuji di HP sungguhan** —
+diuji sampai Google menjawab. **Belum ada yang diuji di HP sungguhan** 
 semua fitur perangkat butuh development build.
 
-**Update 2026-08-01** — backend & app keluarga disiapkan untuk app lansia
+**Update 2026-08-01** backend & app keluarga disiapkan untuk app lansia
 tanpa UI (§2.6): endpoint pairing device lansia, consent lewat suara, dan
 perbaikan zona waktu di sisi backend; layar Tambah lansia + Hubungkan
 perangkat (QR) di app keluarga. Verifikasi: alur pairing, consent, dan zona
 waktu diuji end-to-end ke backend yang jalan dengan NeonDB sungguhan, dan
 bundle Android app keluarga berhasil (1176 modul).
 
-**`elder-app/`** (dibuat 2026-08-01, Expo SDK 57, tanpa router): dua keadaan —
+**`elder-app/`** (dibuat 2026-08-01, Expo SDK 57, tanpa router): dua keadaan 
 layar pairing (QR + kode ketik) dan layar sesi suara. Loop percakapannya satu
 alur `async` lurus (bicara → dengar → kirim → bicara) supaya "jangan menyalakan
 mikrofon selagi speaker bunyi" tidak bisa dilanggar diam-diam. State percakapan
@@ -408,18 +408,18 @@ dan `consentKey` yang barusan diterimanya. Detail ada di
 Yang sengaja dikerjakan di HP, bukan di backend: deteksi kata darurat (tidak
 boleh menunggu round-trip, dan harus tetap jalan tanpa sinyal), kalimat penutup
 (tidak ada endpoint penafsirnya), serta salinan aturan jawaban obat yang hanya
-dipakai saat offline — salinan ini wajib ikut diubah kalau aturan di backend
+dipakai saat offline salinan ini wajib ikut diubah kalau aturan di backend
 berubah.
 
 Verifikasi: bundle Android berhasil (720 modul), dan seluruh endpoint yang
 dipanggil app diuji sungguhan ke backend + NeonDB memakai token device lansia
 hasil `POST /api/auth/pair` (ambil jadwal `?days=2` → buka sesi → satu giliran
 bicara → picu darurat lalu batalkan → tutup sesi). Belum diuji di perangkat:
-TTS, STT, notifikasi lokal, dan kamera QR — semuanya butuh development build.
+TTS, STT, notifikasi lokal, dan kamera QR semuanya butuh development build.
 
 **`family-app/`** (dibuat 2026-07-29, Expo SDK 57 + React Navigation): lima tab
 (Beranda, Jadwal, Riwayat, Darurat, Profil) plus layar percakapan, detail
-darurat, dan panggilan. Semua data dari backend — tidak ada data contoh yang
+darurat, dan panggilan. Semua data dari backend tidak ada data contoh yang
 ditanam di app. Detail ada di [`family-app/README.md`](./family-app/README.md).
 
 Verifikasi yang sudah dilakukan: bundle Android berhasil (975 modul, tanpa
@@ -429,7 +429,7 @@ lewat pemanggilan endpoint sungguhan dengan akun demo.
 ~~Belum jalan karena butuh development build: suara panggilan LiveKit, push
 notification, dan Google Sign-In.~~ Dua yang pertama selesai 2026-08-02 (lihat
 update di atas). Yang tersisa hanya **Google Sign-In**, dan itu tidak lagi
-memblokir apa pun — jalur masuknya login tamu.
+memblokir apa pun jalur masuknya login tamu.
 
 **Backend** sudah mengimplementasi: auth (Google ID token → JWT, login tamu,
 pairing device lansia),
@@ -460,7 +460,7 @@ masing-masing diganti:
 Reminder ke lansia sendiri **tidak** bergantung pada tick: jadwal
 di-materialize langsung saat dibuat/diubah, dan HP lansia menjadwalkan
 notifikasinya secara lokal. Yang benar-benar bergantung pada tick cuma
-`sweepMissedReminders()`, yang ambangnya sudah 90 menit — karena itu interval 15
+`sweepMissedReminders()`, yang ambangnya sudah 90 menit karena itu interval 15
 menit dapat diterima.
 
 ---

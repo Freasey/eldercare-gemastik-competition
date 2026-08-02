@@ -1,10 +1,10 @@
 /**
- * Push notification ke HP keluarga — langkah terakhir jalur darurat (PLAN §2.4).
+ * Push notification ke HP keluarga langkah terakhir jalur darurat (PLAN §2.4).
  *
  * Yang dikirim ke backend adalah **token FCM mentah** (`getDevicePushTokenAsync`),
  * bukan `ExponentPushToken[...]`. Bedanya penting: token Expo baru sampai ke
  * Android setelah service account FCM diunggah ke project Expo lewat
- * `eas credentials` — satu langkah interaktif lagi yang harus diingat orang.
+ * `eas credentials` satu langkah interaktif lagi yang harus diingat orang.
  * Token FCM langsung dilayani `firebase-admin` di backend memakai service
  * account yang sudah kita punya, jadi rantainya lebih pendek dan lebih sedikit
  * yang bisa lupa dikerjakan. Backend menerima kedua bentuk (`services/push.js`),
@@ -24,7 +24,7 @@ import { deleteDevice, registerDevice } from '../api/caretaker.js';
  *
  * Kanal `emergency` sengaja MAX importance dan menembus mode senyap. Kalau
  * kabar harian dan panggilan darurat berbagi satu kanal, keluarga hanya punya
- * dua pilihan: diganggu terus-menerus, atau membisukan keduanya — dan yang
+ * dua pilihan: diganggu terus-menerus, atau membisukan keduanya dan yang
  * kedua itulah yang biasanya terjadi.
  */
 const KANAL = {
@@ -112,7 +112,7 @@ export async function daftarkanPush() {
 }
 
 /**
- * Cabut pendaftaran saat logout — kalau tidak, HP ini tetap menerima kabar
+ * Cabut pendaftaran saat logout kalau tidak, HP ini tetap menerima kabar
  * darurat lansia milik akun yang sudah ditinggalkan.
  */
 export async function batalkanPush() {
@@ -145,7 +145,7 @@ export function saatNotifikasiDiketuk(onKetuk) {
 
 /**
  * Notifikasi yang membuka app dari keadaan mati. Listener di atas tidak
- * menangkapnya — responsnya sudah lewat sebelum React sempat memasang
+ * menangkapnya responsnya sudah lewat sebelum React sempat memasang
  * langganan. Ini justru kasus yang paling penting untuk darurat: HP di saku,
  * app tertutup.
  */

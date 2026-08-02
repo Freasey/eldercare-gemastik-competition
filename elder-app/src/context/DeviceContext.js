@@ -1,7 +1,7 @@
 /**
  * Keadaan perangkat: sudah terhubung ke seorang lansia, atau belum.
  *
- * Hanya ada dua keadaan itu, dan itulah seluruh "navigasi" app ini — tidak ada
+ * Hanya ada dua keadaan itu, dan itulah seluruh "navigasi" app ini tidak ada
  * router, tidak ada tumpukan layar, tidak ada tombol kembali (PLAN §2.6).
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
@@ -32,7 +32,7 @@ export function DeviceProvider({ children }) {
   }, []);
 
   /**
-   * Dipanggil saat backend menolak perangkat ini — biasanya karena keluarga
+   * Dipanggil saat backend menolak perangkat ini biasanya karena keluarga
    * menekan "putuskan perangkat". App kembali ke keadaan awal dan meminta kode
    * baru, bukan menampilkan pesan error yang tidak bisa ditindaklanjuti lansia.
    */

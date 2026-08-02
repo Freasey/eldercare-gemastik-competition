@@ -1,7 +1,7 @@
 /**
  * Entry point untuk runtime yang punya proses hidup terus (lokal, container).
  *
- * Di Vercel file ini tidak pernah dijalankan — di sana yang dipakai
+ * Di Vercel file ini tidak pernah dijalankan di sana yang dipakai
  * `api/index.js`, dan scheduler-nya dipicu cron eksternal lewat
  * `POST /api/cron/tick`.
  */

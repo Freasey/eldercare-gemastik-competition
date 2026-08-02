@@ -2,7 +2,7 @@
  * Grafik riwayat, dipindahkan dari mockup HTML ke react-native-svg.
  *
  * Dua aturan dari mockup yang ikut dibawa:
- * 1. Warna tidak pernah jadi satu-satunya pembeda — hari bermasalah diberi
+ * 1. Warna tidak pernah jadi satu-satunya pembeda hari bermasalah diberi
  *    penanda bentuk (titik) + keterangan di legenda.
  * 2. Setiap grafik punya versi tabel, supaya isinya tetap terbaca kalau
  *    grafiknya sulit dicerna.

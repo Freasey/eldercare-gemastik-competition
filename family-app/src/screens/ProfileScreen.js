@@ -1,11 +1,11 @@
 /**
- * Profil — data lansia, panel privasi, dan akun keluarga.
+ * Profil data lansia, panel privasi, dan akun keluarga.
  *
  * Panel privasi sengaja hanya bisa dilihat, tidak bisa diubah dari sini:
  * backend menolak PATCH consent yang tidak datang dari device lansia sendiri
  * (`elders.routes.js`, kode error CONSENT_ELDER_ONLY). Sakelarnya tetap
  * ditampilkan supaya keluarga paham apa yang sedang dibagikan dan apa yang
- * tidak — privasi sebagai fitur yang terlihat, bukan checkbox tersembunyi.
+ * tidak privasi sebagai fitur yang terlihat, bukan checkbox tersembunyi.
  */
 import { useCallback, useState } from 'react';
 import { Alert, Linking, View } from 'react-native';
@@ -63,7 +63,7 @@ export function ProfileScreen({ navigation }) {
     if (push?.ok) {
       Alert.alert(
         'Matikan notifikasi darurat?',
-        'Izin notifikasi diatur Android, bukan di dalam app ini. Buka Pengaturan untuk mematikannya — tapi ingat, kabar darurat dari ' +
+        'Izin notifikasi diatur Android, bukan di dalam app ini. Buka Pengaturan untuk mematikannya tapi ingat, kabar darurat dari ' +
           `${shortName(elder.name)} tidak akan sampai selama izinnya mati.`,
         [
           { text: 'Batal', style: 'cancel' },
@@ -128,7 +128,7 @@ export function ProfileScreen({ navigation }) {
                 sub="Tahun lahir"
               />
               <Row
-                title={data.elder.prayer_reminder ? 'Aktif — jadwal sholat' : 'Tidak aktif'}
+                title={data.elder.prayer_reminder ? 'Aktif jadwal sholat' : 'Tidak aktif'}
                 sub="Pengingat ibadah"
               />
               {/* Kodenya tidak ditampilkan di sini: umurnya cuma 15 menit,
@@ -202,7 +202,7 @@ export function ProfileScreen({ navigation }) {
                   push === null
                     ? 'Mendaftarkan perangkat…'
                     : push.ok
-                      ? 'Aktif — HP ini akan berbunyi saat ada kejadian darurat'
+                      ? 'Aktif HP ini akan berbunyi saat ada kejadian darurat'
                       : push.alasan
                 }
                 onPress={ubahNotifikasi}

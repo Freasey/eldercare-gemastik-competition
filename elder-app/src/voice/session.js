@@ -1,5 +1,5 @@
 /**
- * Sesi percakapan — satu bentuk, dua sumber.
+ * Sesi percakapan satu bentuk, dua sumber.
  *
  * Loop di `useVoiceSession.js` tidak boleh tahu apakah sedang online atau
  * tidak. Karena itu keduanya dibungkus jadi objek yang sama:
@@ -8,7 +8,7 @@
  *
  * Sesi online hanya meneruskan ke backend: prioritas bicara, penafsiran
  * jawaban, dan aturan penundaan semuanya milik server (PLAN §4, "rule vs AI").
- * Sesi offline adalah versi yang jauh lebih kecil — hanya sanggup menagih
+ * Sesi offline adalah versi yang jauh lebih kecil hanya sanggup menagih
  * pengingat dari cache dan mengantre jawabannya (PLAN §2.6).
  */
 import { endSession, openSession, sendTurn } from '../api/caretaker.js';
@@ -18,7 +18,7 @@ import { enqueueReminderReply } from '../lib/outbox.js';
 import { bacaJawabanReminder } from './interpret.js';
 import { snoozeLokal } from '../notifications/local.js';
 
-/** Perangkat sudah tidak berhak — keluarga menekan "putuskan perangkat". */
+/** Perangkat sudah tidak berhak keluarga menekan "putuskan perangkat". */
 export class DeviceRevokedError extends Error {}
 
 /**
@@ -54,7 +54,7 @@ function sesiOnline(elderId, dibuka) {
 
     /**
      * Satu giliran. `expects`/`reminderId`/`consentKey` dikirim balik apa
-     * adanya — backend yang memegang state percakapan, app hanya kurir.
+     * adanya backend yang memegang state percakapan, app hanya kurir.
      */
     turn: async ({ text, expects, reminderId, consentKey }) => {
       const hasil = await sendTurn(elderId, conversationId, {
@@ -89,7 +89,7 @@ const TAGIH_SAMPAI_MENIT = 15;
 /**
  * Sesi tanpa internet. Sengaja tidak berpura-pura bisa mengobrol: tanpa Groq
  * tidak ada percakapan bebas, dan menjanjikannya justru membuat lansia merasa
- * tidak didengar. Yang tersisa — menagih obat dan mencatat jawabannya —
+ * tidak didengar. Yang tersisa menagih obat dan mencatat jawabannya 
  * justru bagian yang paling tidak boleh hilang saat sinyal mati.
  */
 function sesiOffline(elderId) {
@@ -127,7 +127,7 @@ function sesiOffline(elderId) {
 
       if (maksud === 'unclear') {
         // Sekali saja diulang. Kalau tetap tidak jelas, jawaban berikutnya
-        // masuk ke cabang di bawah dan sesi ditutup — tanpa mencatat apa pun,
+        // masuk ke cabang di bawah dan sesi ditutup tanpa mencatat apa pun,
         // supaya sweep di backend tetap menandainya terlewat apa adanya.
         return {
           speech: 'Maaf, saya kurang menangkap. Obatnya sudah diminum atau belum?',

@@ -11,7 +11,7 @@
  *   `POST /api/cron/tick` (routes/cron.routes.js).
  *
  * Konsekuensi bentuk kedua: tidak ada lagi state yang boleh disimpan di
- * variabel modul antar-tick — lihat `ambilGiliran()`.
+ * variabel modul antar-tick lihat `ambilGiliran()`.
  */
 import { many, one } from '../db/pool.js';
 import { sweepRateLimits } from '../middleware/rateLimit.js';
@@ -33,7 +33,7 @@ const HORIZON_HOURS = 36;
  * satu-satunya cara benar mengubahnya jadi titik waktu absolut adalah lewat
  * `AT TIME ZONE elders.timezone`. Versi JS sebelumnya memakai `setHours()`
  * yang mengikuti jam server: benar selama backend jalan di laptop WIB, meleset
- * 7 jam begitu dideploy ke container Back4app yang UTC — dan tetap salah untuk
+ * 7 jam begitu dideploy ke container Back4app yang UTC dan tetap salah untuk
  * lansia di WITA/WIT sekalipun servernya di Jakarta. Postgres sekalian
  * menangani database zona waktu dan DST tanpa dependency tambahan.
  */
@@ -65,7 +65,7 @@ export async function materializeReminders() {
 
 /**
  * Tandai reminder lewat waktu yang tidak pernah direspons sebagai `missed`.
- * Untuk reminder kritis, keluarga langsung diberi tahu — ini salah satu
+ * Untuk reminder kritis, keluarga langsung diberi tahu ini salah satu
  * trigger eskalasi darurat di PLAN §2.4.
  */
 export async function sweepMissedReminders(now = new Date()) {
@@ -105,12 +105,12 @@ const ACTIVE_WITHIN_HOURS = 24;
 
 /**
  * Segarkan ringkasan hari ini, supaya kartu di app keluarga ikut bergerak
- * sepanjang hari — bukan cuma saat tutup hari.
+ * sepanjang hari bukan cuma saat tutup hari.
  *
  * Endpoint "ringkasan hari ini" sebenarnya sudah menghitung ulang sendiri saat
  * dipanggil; yang butuh baris tersimpan cuma agregat mingguan. Jadi ini murni
  * demi kartu yang bergerak, dan tidak layak dibayar untuk lansia yang tidak
- * ada yang menonton — mayoritasnya akun tamu yang cuma mampir sekali.
+ * ada yang menonton mayoritasnya akun tamu yang cuma mampir sekali.
  */
 export async function refreshTodaySummaries() {
   const elders = await many(
@@ -137,7 +137,7 @@ export async function refreshTodaySummaries() {
   return { summaries: elders.length };
 }
 
-/** Pembersihan akun tamu tidak perlu tiap tick — cukup beberapa jam sekali. */
+/** Pembersihan akun tamu tidak perlu tiap tick cukup beberapa jam sekali. */
 const GUEST_SWEEP_EVERY_HOURS = 6;
 
 /**
@@ -148,7 +148,7 @@ const GUEST_SWEEP_EVERY_HOURS = 6;
  * proses yang hidup terus. Di serverless variabel itu ikut hilang tiap instance
  * dibekukan, sehingga pekerjaan 6-jam-sekali berubah jadi hampir tiap tick.
  *
- * Klaimnya satu statement — `WHERE` pada baris yang sedang di-update — supaya
+ * Klaimnya satu statement `WHERE` pada baris yang sedang di-update supaya
  * dua tick yang kebetulan tumpang tindih tidak sama-sama merasa dapat giliran.
  */
 async function ambilGiliran(key, everyHours) {

@@ -72,7 +72,7 @@ function Tabs() {
 
 /**
  * Akun baru belum memantau siapa pun. Tab-nya sengaja tidak ditampilkan sama
- * sekali dalam keadaan itu — semua tab bergantung pada `elder` yang belum ada,
+ * sekali dalam keadaan itu semua tab bergantung pada `elder` yang belum ada,
  * jadi yang muncul cuma layar kosong tanpa penjelasan.
  */
 function TabsOrEmpty(props) {

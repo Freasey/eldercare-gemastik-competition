@@ -1,7 +1,7 @@
 /**
  * Pairing device lansia (PLAN §2.6).
  *
- * HP lansia tidak punya akun Google dan tidak boleh punya layar login — jadi
+ * HP lansia tidak punya akun Google dan tidak boleh punya layar login jadi
  * kode pairing yang ditampilkan app keluarga sekaligus jadi kredensial masuk.
  * Karena itu kode di sini diperlakukan seperti password sekali pakai:
  * berlaku singkat, dibuat tepat sebelum dipakai, dan hangus begitu ditukar.
@@ -14,7 +14,7 @@ export const PAIRING_CODE_TTL_MINUTES = 15;
 
 /**
  * Alfabet tanpa huruf/angka yang mudah tertukar saat dibacakan lewat telepon
- * (tanpa I, O, 0, 1) — kode ini sering didiktekan ke anggota keluarga lain.
+ * (tanpa I, O, 0, 1) kode ini sering didiktekan ke anggota keluarga lain.
  */
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -44,7 +44,7 @@ export async function issuePairingCode(elderId) {
 /**
  * Tukar kode jadi akun device lansia.
  *
- * Akun `users` dibuat otomatis dengan email sintetis — pola yang sama dipakai
+ * Akun `users` dibuat otomatis dengan email sintetis pola yang sama dipakai
  * akun tamu (lihat services/guest.js): kolomnya UNIQUE NOT NULL, dan domain
  * .invalid dijamin tidak akan pernah bentrok dengan email Google asli
  * (RFC 2606). Lansia tidak pernah melihat atau mengetik alamat ini.
@@ -94,7 +94,7 @@ export async function redeemPairingCode(code) {
 /**
  * Putuskan perangkat. Tidak perlu mekanisme revoke token: begitu `user_id`
  * kosong, JWT device lama tetap sah sebagai user tapi `requireElderAccess`
- * menolaknya — app lansia otomatis kembali ke keadaan belum ter-pair.
+ * menolaknya app lansia otomatis kembali ke keadaan belum ter-pair.
  */
 export async function unpairElder(elderId) {
   return one(
