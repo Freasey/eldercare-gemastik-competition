@@ -17,3 +17,8 @@ $KeystorePassword = 'ganti-dengan-password-keystore'
 
 # Boleh dikosongkan kalau sama dengan password keystore.
 $KeyPassword = ''
+
+# Opsional. Biarkan kosong dan build-apk.ps1 akan mencari sendiri JDK 17 (atau
+# 21) di tempat-tempat yang lazim, termasuk JDK bawaan Android Studio. Isi hanya
+# kalau JDK-mu ada di lokasi tidak lazim dan tidak ketemu otomatis.
+# $JdkPath = "C:\Program Files\Microsoft\jdk-17.0.13.11-hotspot"

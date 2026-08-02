@@ -52,30 +52,149 @@ function Berhenti($teks) {
     exit 1
 }
 
+# ------------------------------------------------------------- konfigurasi --
+
+<#
+    Dibaca di sini, di level script, bukan di dalam fungsi: dot-source menaruh
+    variabelnya di scope pemanggil, jadi kalau dilakukan di dalam fungsi
+    nilainya ikut hilang begitu fungsi itu selesai. Dan `JdkPath` sudah
+    dibutuhkan sebelum urusan keystore dimulai.
+#>
+$script:PathKonfigurasi = Join-Path $root 'build.env.ps1'
+$script:AdaKonfigurasi = Test-Path $script:PathKonfigurasi
+if ($script:AdaKonfigurasi) { . $script:PathKonfigurasi }
+
+# ------------------------------------------------------------------- JDK --
+
+<#
+    Versi JDK yang boleh dipakai, berurut dari yang paling disukai.
+
+    17 adalah yang disebut dokumen Expo SDK 57. 21 tetap diterima karena
+    Android Gradle Plugin 8.x mendukungnya dan Android Studio versi baru
+    membundel JBR 21 — memblokirnya berarti menyuruh orang memasang JDK kedua
+    padahal yang ada kemungkinan besar sudah jalan. Kalau 21 yang terpilih,
+    script memberi tahu supaya 17 jadi tersangka pertama saat Gradle rewel.
+#>
+$script:JdkDiterima = @(17, 21)
+
+<#
+    Baca versi major sebuah folder JDK dari berkas `release` di dalamnya.
+    Lebih murah dan lebih andal daripada menjalankan java.exe sekali per
+    kandidat, dan tidak terpengaruh stderr yang aneh-aneh.
+#>
+function Baca-VersiJdk($folder) {
+    $release = Join-Path $folder 'release'
+    if (Test-Path $release) {
+        $baris = Select-String -Path $release -Pattern '^JAVA_VERSION="?(\d+)' | Select-Object -First 1
+        if ($baris) { return [int]$baris.Matches[0].Groups[1].Value }
+    }
+
+    $exe = Join-Path $folder 'bin\java.exe'
+    if (-not (Test-Path $exe)) { return 0 }
+
+    # `2>&1` di PowerShell 5.1 membungkus stderr native jadi ErrorRecord dan
+    # membuat $? bernilai false walau exit code 0. Lewat cmd.exe tidak begitu.
+    $keluaran = cmd /c "`"$exe`" -version 2>&1"
+    $cocok = [regex]::Match(($keluaran -join ' '), 'version "(\d+)')
+    if ($cocok.Success) { return [int]$cocok.Groups[1].Value }
+    return 0
+}
+
+<# Semua tempat JDK biasa mendarat di Windows, termasuk bawaan Android Studio. #>
+function Cari-SemuaJdk {
+    $folder = New-Object System.Collections.Generic.List[string]
+
+    if ($env:JAVA_HOME) { $folder.Add($env:JAVA_HOME) }
+
+    # Android Studio membundel JetBrains Runtime — sering satu-satunya JDK yang
+    # dipunya orang yang tidak pernah sengaja memasang Java.
+    foreach ($studio in @(
+            "$env:ProgramFiles\Android\Android Studio\jbr",
+            "${env:ProgramFiles(x86)}\Android\Android Studio\jbr",
+            "$env:LOCALAPPDATA\Programs\Android Studio\jbr")) {
+        if (Test-Path $studio) { $folder.Add($studio) }
+    }
+
+    foreach ($induk in @(
+            "$env:ProgramFiles\Microsoft",
+            "$env:ProgramFiles\Eclipse Adoptium",
+            "$env:ProgramFiles\Amazon Corretto",
+            "$env:ProgramFiles\Zulu",
+            "$env:ProgramFiles\Java",
+            "${env:ProgramFiles(x86)}\Java",
+            "$env:LOCALAPPDATA\Programs\Eclipse Adoptium")) {
+        if (-not (Test-Path $induk)) { continue }
+        Get-ChildItem $induk -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            if (Test-Path (Join-Path $_.FullName 'bin\java.exe')) { $folder.Add($_.FullName) }
+        }
+    }
+
+    $hasil = @()
+    foreach ($f in ($folder | Select-Object -Unique)) {
+        $versi = Baca-VersiJdk $f
+        if ($versi -gt 0) { $hasil += [pscustomobject]@{ Path = $f; Versi = $versi } }
+    }
+    return $hasil
+}
+
+function Pilih-Jdk {
+    # Override manual dari build.env.ps1 menang atas segalanya.
+    if ($script:JdkPath) {
+        $versi = Baca-VersiJdk $script:JdkPath
+        if ($versi -eq 0) { Berhenti "JdkPath di build.env.ps1 bukan folder JDK: $($script:JdkPath)" }
+        return [pscustomobject]@{ Path = $script:JdkPath; Versi = $versi }
+    }
+
+    $semua = Cari-SemuaJdk
+    foreach ($mau in $script:JdkDiterima) {
+        $cocok = $semua | Where-Object { $_.Versi -eq $mau } | Select-Object -First 1
+        if ($cocok) { return $cocok }
+    }
+
+    $daftar = if ($semua) {
+        ($semua | ForEach-Object { "  - JDK $($_.Versi) di $($_.Path)" }) -join "`n"
+    } else {
+        '  (tidak ada JDK yang ditemukan sama sekali)'
+    }
+
+    Berhenti @"
+Tidak ada JDK 17 (atau 21) di komputer ini.
+
+Yang ketemu:
+$daftar
+
+JDK 25 TIDAK bisa dipakai — Gradle untuk React Native belum mendukungnya, dan
+errornya akan muncul jauh di dalam build sebagai pesan yang tidak menyebut Java
+sama sekali.
+
+Pasang JDK 17 tanpa mengganggu Java yang sudah ada:
+
+  winget install --id Microsoft.OpenJDK.17
+
+Lalu buka PowerShell baru dan jalankan script ini lagi — ia akan menemukannya
+sendiri, JAVA_HOME tidak perlu diset manual.
+
+Kalau JDK-nya ada di tempat tidak lazim, isi `JdkPath` di build.env.ps1.
+"@
+}
+
 # ---------------------------------------------------------------- prasyarat --
 
 function Uji-Prasyarat {
     Tulis-Tahap 'Memeriksa prasyarat'
 
-    # `2>&1` di PowerShell 5.1 membungkus stderr native jadi ErrorRecord dan
-    # membuat $? bernilai false walau exit code 0. Lewat cmd.exe tidak begitu.
-    $javaOut = cmd /c 'java -version 2>&1'
-    if (-not $javaOut) { Berhenti 'java tidak ditemukan di PATH.' }
+    $jdk = Pilih-Jdk
 
-    $cocok = [regex]::Match(($javaOut -join ' '), 'version "(\d+)')
-    if (-not $cocok.Success) { Berhenti "Tidak bisa membaca versi Java dari: $javaOut" }
+    # Diset untuk proses ini saja, tidak menyentuh environment variable milik
+    # sistem: Gradle membaca JAVA_HOME, dan JDK lain yang terlanjur ada di PATH
+    # tidak boleh menang atas pilihan kita.
+    $env:JAVA_HOME = $jdk.Path
+    $env:PATH = "$($jdk.Path)\bin;$env:PATH"
 
-    $major = [int]$cocok.Groups[1].Value
-    if ($major -ne 17) {
-        Berhenti @"
-Butuh JDK 17, yang aktif sekarang JDK $major.
-
-Jangan copot JDK yang lain — cukup arahkan JAVA_HOME ke JDK 17 di sesi ini:
-  `$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.x.x-hotspot"
-  `$env:PATH = "`$env:JAVA_HOME\bin;`$env:PATH"
-"@
+    Tulis-Ok "JDK $($jdk.Versi): $($jdk.Path)"
+    if ($jdk.Versi -ne 17) {
+        Tulis-Ingat "Dokumen Expo SDK 57 menyebut JDK 17. JDK $($jdk.Versi) umumnya jalan, tapi kalau Gradle gagal dengan pesan yang membingungkan, pasang JDK 17 dan coba lagi."
     }
-    Tulis-Ok "JDK 17 aktif"
 
     $sdk = $env:ANDROID_HOME
     if (-not $sdk) { $sdk = $env:ANDROID_SDK_ROOT }
@@ -99,12 +218,10 @@ Jangan copot JDK yang lain — cukup arahkan JAVA_HOME ke JDK 17 di sesi ini:
 function Ambil-Kredensial {
     Tulis-Tahap 'Kredensial keystore'
 
-    $configPath = Join-Path $root 'build.env.ps1'
-    if (Test-Path $configPath) {
-        . $configPath
+    if ($script:AdaKonfigurasi) {
         Tulis-Ok 'Dibaca dari build.env.ps1'
     } else {
-        Tulis-Ingat 'build.env.ps1 tidak ada — ditanyakan sekarang, tidak disimpan.'
+        Tulis-Ingat 'build.env.ps1 tidak ada — password ditanyakan sekarang, tidak disimpan.'
         Tulis-Ingat 'Salin build.env.example.ps1 jadi build.env.ps1 kalau mau sekali isi saja.'
     }
 
