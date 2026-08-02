@@ -5,6 +5,15 @@
 google-services.json
 GoogleService-Info.plist
 
+# Build APK lokal (build-apk.ps1)
+build.env.ps1
+dist/
+# Keystore: kehilangannya berarti app tidak bisa di-update lagi, jadi simpan di
+# luar repo. Pola ini cuma jaring pengaman kalau ada yang terlanjur menaruhnya
+# di sini.
+*.jks
+*.keystore
+
 node_modules/
 *.log
 .DS_Store
