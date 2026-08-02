@@ -37,6 +37,23 @@ app.use('/api/stt', express.json({ limit: '4mb' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
+/**
+ * Identitas layanan.
+ *
+ * Backend ini tidak punya halaman depan — semua yang berguna ada di bawah
+ * `/api`. Tapi URL-nya pasti akan dibuka orang di browser (juri, anggota tim,
+ * siapa pun yang menerima tautannya), dan yang mereka temukan seharusnya bukan
+ * pesan error. Ini menjawab "apa ini dan apakah hidup?" tanpa membocorkan
+ * apa pun.
+ */
+app.get('/', (req, res) => {
+  res.json({
+    service: 'AI Caretaker API',
+    status: 'ok',
+    health: '/health',
+  });
+});
+
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
