@@ -2,9 +2,7 @@
  * Sesi login keluarga.
  *
  * Jalur utama saat ini `POST /api/auth/guest`: tanpa input, masuk ke akun demo,
- * dan hidup di backend lokal maupun production. `signInAsDemo` (dev-login)
- * disimpan untuk development karena bisa memilih email mana pun — tapi backend
- * mematikannya di production.
+ * dan hidup di backend lokal maupun production.
  *
  * Google OAuth menyusul: Android client ID butuh SHA-1 dari keystore yang baru
  * terbit setelah build pertama. Begitu ada, tinggal panggil
@@ -13,7 +11,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { clearToken, loadToken, saveToken } from '../api/client.js';
-import { devLogin, fetchMe, guestLogin } from '../api/caretaker.js';
+import { fetchMe, guestLogin } from '../api/caretaker.js';
 import { batalkanPush, daftarkanPush } from '../notifications/push.js';
 
 const AuthContext = createContext(null);
@@ -48,15 +46,6 @@ export function AuthProvider({ children }) {
 
   const signInAsGuest = useCallback(async () => {
     const { token, user: me } = await guestLogin();
-    await saveToken(token);
-    setUser(me);
-    return me;
-  }, []);
-
-  const signInAsDemo = useCallback(async (email) => {
-    const { token, user: me } = await devLogin(
-      email || process.env.EXPO_PUBLIC_DEV_LOGIN_EMAIL || 'keluarga.demo@caretaker.id',
-    );
     await saveToken(token);
     setUser(me);
     return me;
@@ -99,10 +88,9 @@ export function AuthProvider({ children }) {
       push,
       refreshPush,
       signInAsGuest,
-      signInAsDemo,
       signOut,
     }),
-    [user, restoring, push, refreshPush, signInAsGuest, signInAsDemo, signOut],
+    [user, restoring, push, refreshPush, signInAsGuest, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

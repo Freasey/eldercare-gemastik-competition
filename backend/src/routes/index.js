@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authRouter } from './auth.routes.js';
+import { cronRouter } from './cron.routes.js';
 import { eldersRouter } from './elders.routes.js';
 import { schedulesRouter } from './schedules.routes.js';
 import { remindersRouter } from './reminders.routes.js';
@@ -13,6 +14,7 @@ import { sttRouter } from './stt.routes.js';
 export const apiRouter = Router();
 
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/cron', cronRouter);
 apiRouter.use('/devices', devicesRouter);
 apiRouter.use('/stt', sttRouter);
 

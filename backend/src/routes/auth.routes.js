@@ -144,6 +144,7 @@ authRouter.post(
 authRouter.post(
   '/guest',
   rateLimit({
+    name: 'auth:guest',
     windowMs: 60 * 60 * 1000,
     max: 10,
     message: 'Terlalu banyak akun tamu dibuat dari jaringan ini. Coba lagi sebentar lagi.',
@@ -171,6 +172,7 @@ authRouter.post(
 authRouter.post(
   '/pair',
   rateLimit({
+    name: 'auth:pair',
     windowMs: 60 * 60 * 1000,
     max: 20,
     message: 'Terlalu banyak percobaan kode dari jaringan ini. Coba lagi sebentar lagi.',
@@ -199,36 +201,6 @@ authRouter.post(
       user: publicUser(result.user),
       elder: result.elder,
     });
-  }),
-);
-
-/**
- * POST /api/auth/dev-login
- * Jalan pintas untuk development & demo mockup HTML — tidak aktif di production
- * (butuh ALLOW_DEV_LOGIN=true dan NODE_ENV != production).
- */
-authRouter.post(
-  '/dev-login',
-  asyncHandler(async (req, res) => {
-    if (!env.allowDevLogin) throw ApiError.forbidden('dev-login dimatikan di environment ini');
-
-    const { email, name, role } = z
-      .object({
-        email: z.string().email(),
-        name: z.string().min(1).optional(),
-        role: roleSchema.optional(),
-      })
-      .parse(req.body);
-
-    let user = await one('SELECT * FROM users WHERE email = $1', [email]);
-    if (!user) {
-      user = await one(
-        `INSERT INTO users (email, name, role) VALUES ($1, $2, $3) RETURNING *`,
-        [email, name || email.split('@')[0], role || 'keluarga'],
-      );
-    }
-
-    res.json({ token: signSession(user), user: publicUser(user) });
   }),
 );
 

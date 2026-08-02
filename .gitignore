@@ -17,3 +17,6 @@ dist/
 node_modules/
 *.log
 .DS_Store
+
+# Dibuat Vercel CLI saat `vercel link` — memuat id project/org.
+.vercel/

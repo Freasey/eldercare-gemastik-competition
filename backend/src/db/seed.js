@@ -93,7 +93,7 @@ async function main() {
     }
 
     console.log('[seed] selesai.');
-    console.log(`[seed] caregiver demo: ${DEMO_CAREGIVER_EMAIL} (pakai POST /api/auth/dev-login)`);
+    console.log(`[seed] caregiver demo: ${DEMO_CAREGIVER_EMAIL}`);
   });
 
   await pool.end();

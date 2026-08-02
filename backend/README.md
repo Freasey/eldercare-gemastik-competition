@@ -17,13 +17,15 @@ Env dibaca dari `backend/.env`; kalau tidak ada, otomatis jatuh ke `.env` di
 root project. Lihat [`.env.example`](./.env.example).
 
 Cek cepat: `GET http://localhost:4000/health` — menampilkan status DB, Groq,
-LiveKit, dan Google OAuth.
+LiveKit, Google OAuth, push, dan cron.
 
 ## Struktur
 
 ```
+api/index.js             handler serverless Vercel (cuma re-export src/app.js)
 src/
-  server.js              entrypoint + health check + graceful shutdown
+  app.js                 perakitan Express + health check, tanpa listen()
+  server.js              entrypoint lokal: listen + scheduler + graceful shutdown
   config/env.js          pembacaan & validasi env
   db/
     schema.sql           definisi tabel
@@ -100,9 +102,9 @@ untuk urusan ini: semuanya mengikuti zona server, yang di Back4app adalah UTC.
 `/api/auth/*`. Alur produksi: RN kirim Google ID token → backend verifikasi →
 backend terbitkan JWT sendiri (PLAN §4.1).
 
-Untuk development & mockup HTML tersedia `POST /api/auth/dev-login` yang
-hanya butuh email. Endpoint ini mati otomatis kalau `NODE_ENV=production`
-atau `ALLOW_DEV_LOGIN` bukan `true`. **Matikan sebelum deploy ke Back4app.**
+Tidak ada jalan pintas login berbasis email: selain Google, satu-satunya
+jalur masuk adalah `POST /api/auth/guest` (keluarga) dan `POST /api/auth/pair`
+(device lansia) — keduanya aman dipakai di production.
 
 ## Daftar Endpoint
 
@@ -112,7 +114,6 @@ atau `ALLOW_DEV_LOGIN` bukan `true`. **Matikan sebelum deploy ke Back4app.**
 | POST | `/api/auth/google` | tukar Google ID token jadi JWT |
 | POST | `/api/auth/guest` | akun tamu + data demo sendiri |
 | POST | `/api/auth/pair` | **device lansia**: tukar kode pairing jadi sesi, tanpa Google |
-| POST | `/api/auth/dev-login` | jalan pintas dev (email saja) |
 | GET | `/api/auth/me` | profil user yang login |
 
 `POST /api/auth/pair` adalah satu-satunya endpoint selain tamu yang
@@ -184,6 +185,16 @@ tidak perlu menyimpan state percakapan sendiri.
 | POST | `/api/devices/test` | notifikasi uji ke device sendiri (maks 5/menit) |
 | POST | `/api/stt` | transkripsi audio base64, fallback STT app lansia |
 
+### Internal
+| Method | Path | Keterangan |
+|---|---|---|
+| POST | `/api/cron/tick` | jalankan satu putaran scheduler (butuh `Authorization: Bearer $CRON_SECRET`) |
+
+Bukan untuk dipanggil app. Ada karena serverless tidak punya proses yang hidup
+terus untuk memegang `setInterval` — pemicunya
+[`.github/workflows/cron-tick.yml`](../.github/workflows/cron-tick.yml), tiap 15
+menit. Idempoten, jadi tick dobel tidak merusak apa pun.
+
 `POST .../confirm` dengan `confirmed: true` mengembalikan `notifiedDevices`
 (berapa HP keluarga yang benar-benar dikirimi) dan `call` (kredensial LiveKit
 untuk sisi lansia). App lansia memakai keduanya: yang pertama menentukan
@@ -221,22 +232,48 @@ sampai ke app, karena itu audionya yang naik ke server.
 
 ## Scheduler
 
-`startScheduler()` jalan tiap 5 menit di dalam proses server:
+Satu putaran (`runSchedulerTick()`) mengerjakan:
 
 1. `materializeReminders()` — buat `reminder_events` 36 jam ke depan dari
    `schedules` (idempoten lewat `UNIQUE (schedule_id, due_at)`).
 2. `sweepMissedReminders()` — reminder lewat 90 menit tanpa respons ditandai
    `missed`; yang kritis langsung push ke keluarga.
 3. `refreshTodaySummaries()` — hitung ulang ringkasan hari ini.
+4. Setiap 6 jam sekali: sweep akun tamu kedaluwarsa + baris `rate_limits` lama.
 
-## Catatan deploy (Back4app)
+Siapa yang memanggilnya tergantung runtime:
 
-- Set semua env di dashboard Back4app, dan pastikan `ALLOW_DEV_LOGIN` tidak
-  di-set.
-- `PORT` diambil dari env — jangan di-hardcode.
-- Scheduler ikut jalan di dalam container yang sama; kalau nanti di-scale
-  lebih dari satu instance, pindahkan ke worker terpisah supaya push tidak
-  terkirim ganda.
+| Runtime | Pemicu |
+|---|---|
+| Lokal / container | `startScheduler()` — `setInterval` 5 menit di dalam proses |
+| Serverless (Vercel) | cron eksternal → `POST /api/cron/tick` |
+
+Giliran pekerjaan 6-jaman disimpan di tabel `app_state`, bukan variabel modul.
+Di serverless variabel itu ikut hilang tiap instance dibekukan, yang membuat
+pekerjaan "6 jam sekali" jalan hampir tiap tick.
+
+## Catatan deploy (Vercel)
+
+Root directory project Vercel diarahkan ke `backend/`. Konfigurasinya ada di
+[`vercel.json`](./vercel.json): semua trafik di-*rewrite* ke `api/index.js`,
+yang cuma mengekspor app Express dari `src/app.js`.
+
+- **Region wajib `sin1`.** Neon ada di `ap-southeast-1`; kalau fungsinya
+  tertinggal di default `iad1` (US East), tiap query menyeberang Pasifik dan
+  satu request yang melakukan beberapa query berurutan ikut menanggungnya.
+- **`CRON_SECRET` wajib diisi**, lalu pasang nilai yang sama beserta `API_URL`
+  sebagai GitHub Actions secret. Tanpa itu `sweepMissedReminders()` tidak pernah
+  jalan dan keluarga tidak pernah tahu saat lansia melewatkan jadwal kritis.
+  `GET /health` menampilkannya di `services.cron`.
+- **Pakai `FIREBASE_SERVICE_ACCOUNT_B64`**, bukan path file — tidak ada
+  filesystem yang bisa ditunjuk.
+- `PORT` diabaikan di Vercel (dipakai hanya oleh `src/server.js` saat lokal).
+- `maxDuration` di-set 60 detik. Kalau deploy Hobby menolaknya, turunkan —
+  batasnya berbeda-beda tergantung apakah Fluid Compute aktif. Yang paling
+  dekat ke batas adalah `POST /api/stt`.
+
+Scheduler tidak lagi ikut di dalam proses web, jadi menambah instance tidak
+membuat push terkirim ganda — pemicunya tunggal dari luar.
 
 ## Data contoh
 
@@ -247,7 +284,7 @@ sampai ke app, karena itu audionya yang naik ke server.
   dan `mood_declining`, plus satu percakapan lengkap dengan transkrip.
 - **Bapak Hartono** (78) — profil kedua, kepatuhan bersih, untuk menguji
   tampilan multi-lansia.
-- Caregiver demo: `keluarga.demo@caretaker.id` (login lewat `dev-login`).
+- Caregiver demo: `keluarga.demo@caretaker.id`.
 
 Data ini juga yang dipakai sebagai contoh di mockup HTML
 [`../mockup-keluarga/`](../mockup-keluarga/).

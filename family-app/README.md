@@ -47,15 +47,15 @@ Profil, supaya salah alamat langsung ketahuan.
 
 ## Masuk
 
-Untuk sekarang: tombol **"Masuk sebagai demo keluarga"** → memanggil
-`POST /api/auth/dev-login` dengan email dari `EXPO_PUBLIC_DEV_LOGIN_EMAIL`
-(default `keluarga.demo@caretaker.id`, akun yang dibuat `npm run db:seed`).
+Untuk sekarang: tombol **"Coba sebagai tamu"** → memanggil
+`POST /api/auth/guest`, yang membuat akun tamu berisi data contoh sendiri.
+Jalurnya sama di backend lokal maupun production.
 
 Tombol **Google** sengaja dinonaktifkan: butuh Android OAuth client ID, yang
 butuh SHA-1 dari keystore, yang baru ada setelah build pertama. Begitu client ID
 itu jadi, `loginWithGoogle(idToken)` di [`src/api/caretaker.js`](src/api/caretaker.js)
 tinggal dipakai — sisa app tidak berubah karena keduanya menghasilkan JWT yang
-sama. **`ALLOW_DEV_LOGIN` wajib dimatikan sebelum backend dideploy.**
+sama, dan akun tamu yang sedang aktif ikut "naik kelas" jadi akun asli.
 
 ## Struktur
 
@@ -93,7 +93,7 @@ src/
 
 | Layar | Isi | Endpoint |
 |---|---|---|
-| Masuk | dev-login, alamat server | `POST /api/auth/dev-login` |
+| Masuk | login tamu, alamat server | `POST /api/auth/guest` |
 | Tambah lansia | nama, tahun lahir, telepon, relasi, **zona waktu**, pengingat sholat | `POST /api/elders` |
 | Hubungkan perangkat | QR + kode, hitung mundur, putuskan perangkat | `POST /api/elders/:id/pairing-code`, `.../unpair` |
 | Beranda | status lansia, **kalimat berikutnya dari asisten**, red flag, sisa jadwal, aktivitas terbaru | `assistant/context`, `reminders`, `timeline`, `summaries/week` |

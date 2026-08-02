@@ -17,7 +17,18 @@ import { ApiError } from '../middleware/errors.js';
 const GROQ_STT_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 
 /** Batas ukuran audio yang diterima. ~20 detik m4a jauh di bawah angka ini. */
-export const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
+/**
+ * Batas audio mentah yang mau diterima.
+ *
+ * Angkanya ditentukan batas body Vercel (4.5 MB), bukan kemampuan Whisper:
+ * audio dikirim sebagai base64, yang menggembungkan ukuran ~33%, jadi 3 MB
+ * mentah ≈ 4 MB terkirim — masih di bawah batas dengan sisa ruang.
+ *
+ * Ini pagar, bukan ukuran nyata. Rekaman sungguhan dibatasi lebih dulu oleh
+ * `BATAS_DENGAR_MS` 20 detik di sisi app lansia, yang untuk WAV 16 kHz mono
+ * berarti ~640 KB.
+ */
+export const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
 
 /**
  * @param {Buffer} audio berkas audio utuh (m4a/wav/webm/ogg)

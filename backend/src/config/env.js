@@ -29,8 +29,24 @@ export const env = {
   googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || '',
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
-  allowDevLogin:
-    process.env.ALLOW_DEV_LOGIN === 'true' && process.env.NODE_ENV !== 'production',
+
+  /**
+   * Kredensial pemicu scheduler dari luar (routes/cron.routes.js).
+   *
+   * Wajib diisi begitu backend jalan di serverless: di sana tidak ada proses
+   * yang hidup terus, jadi satu-satunya yang menjalankan sweep reminder
+   * terlewat adalah cron eksternal yang memanggil endpoint itu. Dibiarkan
+   * kosong = endpoint mati total (503), bukan terbuka.
+   */
+  cronSecret: process.env.CRON_SECRET || '',
+
+  /**
+   * Di serverless tidak ada proses panjang: tiap instance punya pool sendiri
+   * dan bisa ada puluhan instance sekaligus, jadi `max` besar justru menghabiskan
+   * kuota koneksi Neon. Dipakai juga untuk memutuskan apakah scheduler internal
+   * ikut dinyalakan (lihat server.js).
+   */
+  isServerless: Boolean(process.env.VERCEL),
 
   // Login tamu — fitur produk, selalu hidup termasuk di production.
   // Tiap tamu dapat akun sendiri; yang nganggur dihapus otomatis.

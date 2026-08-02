@@ -308,9 +308,8 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
       tanpa satu pun jawaban lansia dihapus, bukan disembunyikan; reminder yang
       sempat dibacakan tetap `spoken` sehingga sweep tetap menandainya terlewat.
 - [x] Deploy backend ke Back4app — selesai 2026-08-02:
-      `https://gemastikproject-i48g9adu.b4a.run`. `NODE_ENV=production` membuat
-      `allowDevLogin` mati sendiri di `config/env.js`, jadi jalur masuk app
-      keluarga sekarang login tamu.
+      `https://gemastikproject-i48g9adu.b4a.run`. Jalur masuk app keluarga
+      sekarang login tamu.
 - [x] Push notification darurat sampai ke HP keluarga — selesai 2026-08-02.
       FCM V1 langsung lewat `firebase-admin`, bukan Expo Push Service; app
       mendaftarkan token FCM mentah. Alasannya di `backend/README.md`.
@@ -340,8 +339,9 @@ Lihat [`.env`](./.env) untuk nilai aktual — **jangan commit file itu ke git**.
 - ~~Backend tetap lokal selama development~~ → **sudah di-deploy** (2026-08-02).
   Kedua app menunjuk ke URL Back4app lewat `.env`; untuk kerja lokal, buat
   `.env.local` yang menang atas `.env`.
-- Auth di RN app: `dev-login` mati di production, jadi jalur masuknya
-  **login tamu** (`POST /api/auth/guest`) sampai Google Sign-In siap.
+- Auth di RN app: jalur masuknya **login tamu** (`POST /api/auth/guest`)
+  sampai Google Sign-In siap. Jalan pintas `dev-login` sudah dihapus dari
+  backend maupun app.
 - **Kedua app tidak lagi bisa lewat Expo Go.** Semuanya memakai modul native
   (WebRTC, notifikasi, sensor, pengenal suara) — `npx expo run:android`.
 - Alamat `http://` cuma jalan di build debug; build release memblokir cleartext
@@ -430,7 +430,8 @@ notification, dan Google Sign-In.~~ Dua yang pertama selesai 2026-08-02 (lihat
 update di atas). Yang tersisa hanya **Google Sign-In**, dan itu tidak lagi
 memblokir apa pun — jalur masuknya login tamu.
 
-**Backend** sudah mengimplementasi: auth (Google ID token → JWT + dev-login),
+**Backend** sudah mengimplementasi: auth (Google ID token → JWT, login tamu,
+pairing device lansia),
 CRUD lansia/jadwal/kontak, materialisasi reminder + sweep missed, context
 engine rule-based, endpoint assistant (terhubung ke Groq), alur darurat
 lengkap dengan token room LiveKit, Expo push, dan ringkasan harian/mingguan.
@@ -442,7 +443,24 @@ tutup + ringkasan otomatis); satu siklus darurat (deteksi → konfirmasi →
 eskalasi + token LiveKit → tutup).
 
 Catatan: `.env` root sekarang juga memuat variabel runtime backend
-(`NODE_ENV`, `PORT`, `ALLOW_DEV_LOGIN`, `GROQ_MODEL`).
+(`NODE_ENV`, `PORT`, `GROQ_MODEL`, `CRON_SECRET`).
+
+**Migrasi ke Vercel (2026-08-02).** Backend disiapkan untuk jalan serverless.
+Empat asumsi lama runtuh karena tidak ada lagi proses yang hidup terus, dan
+masing-masing diganti:
+
+| Asumsi lama | Penggantinya |
+|---|---|
+| `setInterval` memegang scheduler | `POST /api/cron/tick` dipicu GitHub Actions tiap 15 menit |
+| `lastGuestSweep` di variabel modul | klaim atomik di tabel `app_state` |
+| rate limit di `Map` memori | tabel `rate_limits` (paling penting untuk `auth/pair`) |
+| region default | dipaksa `sin1`, sekampung dengan Neon |
+
+Reminder ke lansia sendiri **tidak** bergantung pada tick: jadwal
+di-materialize langsung saat dibuat/diubah, dan HP lansia menjadwalkan
+notifikasinya secara lokal. Yang benar-benar bergantung pada tick cuma
+`sweepMissedReminders()`, yang ambangnya sudah 90 menit — karena itu interval 15
+menit dapat diterima.
 
 ---
 

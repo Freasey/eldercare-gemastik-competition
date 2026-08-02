@@ -1,0 +1,64 @@
+
+# Pengganti scheduler internal backend.
+#
+# Backend tidak lagi berjalan sebagai proses yang hidup terus, jadi tidak ada
+# yang memegang `setInterval`. Workflow inilah yang memanggil tick-nya.
+#
+# Interval 15 menit, bukan 5, karena dua alasan:
+#   1. Yang benar-benar bergantung pada tick cuma `sweepMissedReminders()`, dan
+#      itu sendiri sudah punya ambang 90 menit — jadi 15 menit hanya menambah
+#      delay maksimum jadi 105 menit. Reminder ke lansia sendiri tidak ikut
+#      terpengaruh: HP lansia menjadwalkannya secara lokal.
+#   2. `*/5` menghabiskan ~1440 dari 2000 menit Actions gratis per bulan kalau
+#      repo-nya private. `*/15` cuma ~480.
+#
+# GitHub sering menjalankan cron ini telat beberapa menit saat sedang ramai.
+# Itu dapat diterima di sini justru karena alasan (1).
+
+name: Scheduler tick
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  # Supaya bisa dipicu manual dari tab Actions saat menguji.
+  workflow_dispatch:
+
+# Tick yang menumpuk tidak berguna — semuanya idempoten dan mengerjakan hal
+# yang sama. Kalau ada yang masih jalan, biarkan selesai dan lewati yang baru.
+concurrency:
+  group: scheduler-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Panggil /api/cron/tick
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Secret API_URL dan CRON_SECRET wajib diisi di repo settings."
+            exit 1
+          fi
+
+          kode=$(curl --silent --show-error --location \
+            --max-time 120 \
+            --retry 2 --retry-delay 10 --retry-connrefused \
+            --request POST "$API_URL/api/cron/tick" \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            --write-out '%{http_code}' \
+            --output respons.json)
+
+          echo "HTTP $kode"
+          cat respons.json || true
+          echo
+
+          # Cold start Vercel bisa membuat panggilan pertama lambat, tapi bukan
+          # gagal. Yang dianggap gagal cuma status non-2xx.
+          if [ "$kode" -lt 200 ] || [ "$kode" -ge 300 ]; then
+            echo "::error::Tick gagal dengan HTTP $kode"
+            exit 1
+          fi

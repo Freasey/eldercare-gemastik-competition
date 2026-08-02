@@ -41,6 +41,7 @@ function isElderDevice(req) {
  * supaya membaca konteks dan menjawab reminder tetap bebas.
  */
 const llmLimiter = rateLimit({
+  name: 'assistant:llm',
   windowMs: 60 * 60 * 1000,
   max: 60,
   key: byUserOrIp,

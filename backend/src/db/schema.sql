@@ -219,3 +219,37 @@ CREATE TABLE IF NOT EXISTS daily_summaries (
   created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (elder_id, summary_date)
 );
+
+-- ---------------------------------------------------------------------------
+-- State milik proses, bukan milik pengguna.
+--
+-- Ada karena backend tidak lagi berjalan sebagai satu proses panjang. Hal-hal
+-- yang dulu cukup disimpan di variabel modul ("kapan terakhir sweep tamu")
+-- ikut hilang tiap instance serverless dibekukan, sehingga pekerjaan yang
+-- seharusnya 6 jam sekali jadi jalan hampir tiap tick. Di sini nilainya
+-- bertahan dan bisa diperebutkan secara atomik antar-instance.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS app_state (
+  key         TEXT PRIMARY KEY,
+  value       TEXT,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ---------------------------------------------------------------------------
+-- Rate limit terpusat (middleware/rateLimit.js).
+--
+-- Dulu hitungannya di memori proses, yang akurat selama cuma ada satu
+-- container. Di serverless tiap instance punya Map sendiri, jadi batas
+-- efektifnya terkalikan jumlah instance — dan yang paling berbahaya dari itu
+-- adalah `POST /api/auth/pair`, yang kode pairing-nya sendiri berperan sebagai
+-- kredensial.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS rate_limits (
+  bucket        TEXT PRIMARY KEY,
+  window_start  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  hits          INT NOT NULL DEFAULT 0
+);
+
+-- Dipakai pembersihan berkala di scheduler; tanpa ini tabelnya tumbuh terus
+-- oleh kunci IP yang tidak pernah muncul lagi.
+CREATE INDEX IF NOT EXISTS idx_rate_limits_window ON rate_limits (window_start);

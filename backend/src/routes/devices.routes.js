@@ -63,6 +63,7 @@ devicesRouter.delete(
 devicesRouter.post(
   '/test',
   rateLimit({
+    name: 'devices:test',
     windowMs: 60_000,
     max: 5,
     key: byUserOrIp,

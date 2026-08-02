@@ -16,10 +16,6 @@ export const loginWithGoogle = (idToken) =>
  */
 export const guestLogin = () => api('/api/auth/guest', { method: 'POST', auth: false });
 
-/** Jalan pintas development — hanya hidup kalau backend memasang ALLOW_DEV_LOGIN. */
-export const devLogin = (email) =>
-  api('/api/auth/dev-login', { method: 'POST', auth: false, body: { email, role: 'keluarga' } });
-
 export const fetchMe = () => api('/api/auth/me');
 
 /* ---------------- lansia ---------------- */

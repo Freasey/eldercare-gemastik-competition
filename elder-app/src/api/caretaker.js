@@ -54,9 +54,22 @@ export const endSession = (elderId, conversationId, reason) =>
  * permintaan biasa: unggah audio di jaringan rumah bisa lambat, dan menyerah
  * kepagian berarti kembali ke keadaan "app tidak mendengar apa-apa" yang justru
  * ingin diperbaiki fitur ini.
+ *
+ * 45 detik dulu dipilih tanpa batas atas yang jelas. Ukuran yang benar
+ * sebenarnya lama operasinya: unggah ~850 KB plus Whisper turbo untuk klip 20
+ * detik jatuh di kisaran 3-6 detik, dan 15 detik memberi ruang lebih dari dua
+ * kali lipat untuk jaringan yang buruk. Lewat dari itu bukan lagi "lambat" tapi
+ * "tidak akan datang", dan lansia yang menunggu dalam diam adalah hal yang
+ * paling ingin dihindari di sesi percakapan.
+ *
+ * Batas ini juga harus tetap di bawah `maxDuration` fungsi backend
+ * (vercel.json), supaya yang menyerah selalu klien lebih dulu — menunggu lebih
+ * lama dari umur fungsi berarti menanti jawaban yang sudah mati di server.
+ * Menyerah di sini aman: pemanggil memperlakukannya sebagai "tidak terdengar"
+ * dan sesi tetap lanjut.
  */
 export const transcribeAudio = (body) =>
-  api('/api/stt', { method: 'POST', body, timeoutMs: 45000 });
+  api('/api/stt', { method: 'POST', body, timeoutMs: 15000 });
 
 /* ---------------- reminder ---------------- */
 

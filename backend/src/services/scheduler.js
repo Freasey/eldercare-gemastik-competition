@@ -2,11 +2,19 @@
  * Scheduler: mengubah `schedules` (aturan berulang) jadi `reminder_events`
  * (kejadian bertanggal), dan menandai yang tidak direspons sebagai missed.
  *
- * Dijalankan periodik dari server.js. Sengaja tanpa cron library — interval
- * sederhana sudah cukup dan satu container Back4app tidak perlu koordinasi
- * antar-instance.
+ * Dua cara menjalankannya, tergantung bentuk runtime-nya:
+ *
+ * - **Lokal / container biasa**: `startScheduler()` dipanggil server.js dan
+ *   menyalakan interval di dalam proses yang hidup terus.
+ * - **Serverless**: tidak ada proses yang hidup terus, jadi tidak ada yang
+ *   memegang interval. Pemicunya cron eksternal yang memanggil
+ *   `POST /api/cron/tick` (routes/cron.routes.js).
+ *
+ * Konsekuensi bentuk kedua: tidak ada lagi state yang boleh disimpan di
+ * variabel modul antar-tick — lihat `ambilGiliran()`.
  */
 import { many, one } from '../db/pool.js';
+import { sweepRateLimits } from '../middleware/rateLimit.js';
 import { notifyCaregivers } from './push.js';
 import { buildDailySummary } from './summary.js';
 import { sweepExpiredGuests } from './guest.js';
@@ -130,8 +138,31 @@ export async function refreshTodaySummaries() {
 }
 
 /** Pembersihan akun tamu tidak perlu tiap tick — cukup beberapa jam sekali. */
-const GUEST_SWEEP_EVERY_MS = 6 * 3_600_000;
-let lastGuestSweep = 0;
+const GUEST_SWEEP_EVERY_HOURS = 6;
+
+/**
+ * Coba "ambil giliran" untuk pekerjaan yang jarang, dan kembalikan true hanya
+ * kalau giliran itu benar-benar didapat.
+ *
+ * Dulu penjadwalannya cukup sebuah variabel modul, karena backend berupa satu
+ * proses yang hidup terus. Di serverless variabel itu ikut hilang tiap instance
+ * dibekukan, sehingga pekerjaan 6-jam-sekali berubah jadi hampir tiap tick.
+ *
+ * Klaimnya satu statement — `WHERE` pada baris yang sedang di-update — supaya
+ * dua tick yang kebetulan tumpang tindih tidak sama-sama merasa dapat giliran.
+ */
+async function ambilGiliran(key, everyHours) {
+  const row = await one(
+    `INSERT INTO app_state (key, value, updated_at)
+     VALUES ($1, now()::text, now())
+     ON CONFLICT (key) DO UPDATE
+        SET value = now()::text, updated_at = now()
+      WHERE app_state.updated_at < now() - ($2 || ' hours')::interval
+      RETURNING key`,
+    [key, everyHours],
+  );
+  return Boolean(row);
+}
 
 /** Satu putaran penuh. */
 export async function runSchedulerTick() {
@@ -140,10 +171,14 @@ export async function runSchedulerTick() {
   const sum = await refreshTodaySummaries();
 
   let guests = null;
-  if (Date.now() - lastGuestSweep >= GUEST_SWEEP_EVERY_MS) {
-    lastGuestSweep = Date.now();
+  let rateLimits = null;
+  if (await ambilGiliran('last_guest_sweep', GUEST_SWEEP_EVERY_HOURS)) {
     guests = await sweepExpiredGuests().catch((err) => {
       console.error('[scheduler] sweep tamu gagal:', err.message);
+      return null;
+    });
+    rateLimits = await sweepRateLimits().catch((err) => {
+      console.error('[scheduler] sweep rate limit gagal:', err.message);
       return null;
     });
   }
@@ -151,7 +186,7 @@ export async function runSchedulerTick() {
   if (mat.created || sweep.missed) {
     console.log(`[scheduler] +${mat.created} reminder, ${sweep.missed} ditandai missed`);
   }
-  return { ...mat, ...sweep, ...sum, guests };
+  return { ...mat, ...sweep, ...sum, guests, rateLimits };
 }
 
 export function startScheduler({ intervalMs = 5 * 60_000 } = {}) {

@@ -39,6 +39,29 @@ const BATAS_DENGAR_MS = 20000;
 const MIN_BYTE_LAYAK_KIRIM = 8000;
 
 /**
+ * Batas atasnya, dan alasannya berbeda sama sekali dari batas bawah.
+ *
+ * Yang sebenarnya membatasi ukuran rekaman itu `BATAS_DENGAR_MS`: `persist`
+ * menghasilkan WAV, yang constant bitrate, jadi durasi menentukan ukuran secara
+ * linear — 20 detik pada 16 kHz mono ≈ 640 KB. Angka di bawah ini punya jarak
+ * beberapa kali lipat dari itu.
+ *
+ * Jadi ini sabuk pengaman untuk kalau asumsi bitrate tadi meleset di HP
+ * tertentu, supaya yang terjadi adalah "fallback dilewati" — bukan unggahan
+ * yang ditolak backend atau, lebih buruk, ditolak platform dengan error yang
+ * tidak bisa kita terjemahkan ke lansia. Ambangnya sengaja di bawah
+ * `MAX_AUDIO_BYTES` backend supaya penolakannya terjadi di sini, sebelum ada
+ * satu byte pun yang diunggah lewat kuota lansia.
+ *
+ * Sengaja TIDAK memotong rekaman jadi sekian byte pertama: kalimat lansia yang
+ * terpotong di tengah masih terbaca sebagai kalimat utuh oleh Whisper, dan
+ * backend menafsirkan teksnya apa adanya untuk jawaban obat. "sudah minum obat"
+ * yang terpotong jadi "sudah" bukan jawaban yang kurang — itu jawaban yang
+ * berbeda. Diam jauh lebih aman daripada salah.
+ */
+const MAX_BYTE_LAYAK_KIRIM = 2.5 * 1024 * 1024;
+
+/**
  * Konteks untuk Whisper. Tanpa ini, kata yang sering diucapkan lansia dalam
  * percakapan ini ("obat", "sudah minum", "tolong") kadang tertulis jadi kata
  * lain yang bunyinya mirip — dan penafsiran jawaban obat di backend membaca
@@ -219,7 +242,15 @@ function dengarSekali({ onPartial } = {}) {
 function layakDikirim(uri) {
   try {
     const berkas = new File(uri);
-    return berkas.exists && (berkas.size ?? 0) >= MIN_BYTE_LAYAK_KIRIM;
+    if (!berkas.exists) return false;
+
+    const ukuran = berkas.size ?? 0;
+    if (ukuran > MAX_BYTE_LAYAK_KIRIM) {
+      console.warn(`[stt] rekaman ${ukuran} byte melebihi batas unggah, fallback dilewati`);
+      return false;
+    }
+
+    return ukuran >= MIN_BYTE_LAYAK_KIRIM;
   } catch {
     return false;
   }

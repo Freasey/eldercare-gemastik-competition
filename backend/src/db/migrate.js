@@ -6,6 +6,8 @@ import { pool } from './pool.js';
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 const DROP_ORDER = [
+  'rate_limits',
+  'app_state',
   'daily_summaries',
   'consents',
   'devices',

@@ -22,6 +22,7 @@ sttRouter.use(requireAuth);
 // (satu giliran bicara = satu panggilan) tapi menutup HP yang error berulang.
 sttRouter.use(
   rateLimit({
+    name: 'stt',
     windowMs: 60_000,
     max: 20,
     key: byUserOrIp,
