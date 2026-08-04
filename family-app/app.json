@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AI Caretaker",
+    "name": "RawatLansia Keluarga",
     "slug": "ai-caretaker-family",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -52,6 +52,15 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#0E7C6B",
           "defaultChannel": "default"
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0E7C6B",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain"
         }
       ]
     ],

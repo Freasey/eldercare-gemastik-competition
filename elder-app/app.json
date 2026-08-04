@@ -1,15 +1,22 @@
 {
   "expo": {
-    "name": "Teman Bicara",
+    "name": "RawatLansia",
     "slug": "ai-caretaker-elder",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "scheme": "aicaretaker",
     "userInterfaceStyle": "light",
     "backgroundColor": "#f4f7f6",
     "android": {
       "package": "com.eldercare.elder",
       "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#E8930C",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
@@ -47,6 +54,7 @@
       [
         "expo-notifications",
         {
+          "icon": "./assets/android-icon-monochrome.png",
           "color": "#0e7c6b"
         }
       ],
@@ -58,6 +66,15 @@
             "minSdkVersion": 24,
             "cmakeVersion": "3.31.6"
           }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#E8930C",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain"
         }
       ]
     ]
