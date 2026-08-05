@@ -26,7 +26,7 @@ import {
 import { ConnectionState } from 'livekit-client';
 import { Avatar, Note } from '../components/ui.js';
 import { Icon } from '../components/Icon.js';
-import { useColors } from '../theme/theme.js';
+import { font, useColors } from '../theme/theme.js';
 import { useElders } from '../context/ElderContext.js';
 import { joinEmergency } from '../api/caretaker.js';
 
@@ -249,14 +249,14 @@ function Bingkai({ elder, c, children }) {
             backgroundColor: 'rgba(255,255,255,0.12)',
           }}
         >
-          <Text style={{ fontSize: 11.5, fontWeight: '650', color: '#fff' }}>
+          <Text style={{ fontFamily: font.semibold, fontSize: 12, color: '#fff' }}>
             Panggilan dalam aplikasi
           </Text>
         </View>
 
         <Avatar name={elder?.name} size={104} bg="rgba(255,255,255,0.14)" fg="#fff" />
 
-        <Text style={{ fontSize: 24, fontWeight: '700', color: '#fff' }}>
+        <Text style={{ fontFamily: font.extrabold, fontSize: 25, letterSpacing: -0.4, color: '#fff' }}>
           {elder?.name || 'Lansia'}
         </Text>
 

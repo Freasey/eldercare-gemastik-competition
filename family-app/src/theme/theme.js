@@ -1,10 +1,13 @@
 /**
  * Sediakan palet aktif (terang/gelap) mengikuti setelan sistem, sama seperti
  * mockup HTML yang memakai `prefers-color-scheme`.
+ *
+ * Token non-warna (huruf, radius, spasi, skala teks) ikut diekspor ulang dari
+ * sini supaya layar cukup mengimpor satu berkas.
  */
 import { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import { palettes, cardShadow } from './tokens.js';
+import { palettes, cardShadow, font, radius, space, type } from './tokens.js';
 
 const ThemeContext = createContext(palettes.light);
 
@@ -23,4 +26,4 @@ export function useIsDark() {
   return useColorScheme() === 'dark';
 }
 
-export { cardShadow };
+export { cardShadow, font, radius, space, type };

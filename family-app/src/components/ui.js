@@ -1,6 +1,13 @@
 /**
- * Primitif tampilan yang dipakai di banyak layar. Bentuk & ukurannya
- * mengikuti `mockup-keluarga/styles.css` (kartu 18px, baris 12px, dst).
+ * Primitif tampilan yang dipakai di banyak layar.
+ *
+ * Bentuk & ukurannya mengikuti redesign "Elda Companion": kartu 18px, ubin
+ * ikon rounded-square 44px, dan jam baris berada di KANAN dengan warna teal
+ * bukan di kiri dengan warna abu seperti versi sebelumnya.
+ *
+ * Semua ukuran huruf datang dari `theme/tokens.js: type`, dan tiap entri di
+ * sana menyebut `fontFamily`, bukan `fontWeight` alasannya ada di komentar
+ * berkas itu (huruf muatan sendiri + Android).
  */
 import {
   ActivityIndicator,
@@ -10,20 +17,20 @@ import {
   View,
 } from 'react-native';
 import { Icon } from './Icon.js';
-import { cardShadow, useColors } from '../theme/theme.js';
+import { cardShadow, radius, type, useColors } from '../theme/theme.js';
 import { initials as toInitials } from '../lib/format.js';
 
 /* ---------------- teks ---------------- */
 
 export function Title({ children, style }) {
   const c = useColors();
-  return <Text style={[{ fontSize: 14.5, fontWeight: '700', color: c.ink }, style]}>{children}</Text>;
+  return <Text style={[type.cardTitle, { color: c.ink }, style]}>{children}</Text>;
 }
 
 export function Body({ children, style, numberOfLines }) {
   const c = useColors();
   return (
-    <Text numberOfLines={numberOfLines} style={[{ fontSize: 13.5, lineHeight: 20, color: c.ink }, style]}>
+    <Text numberOfLines={numberOfLines} style={[type.body, { color: c.ink }, style]}>
       {children}
     </Text>
   );
@@ -32,7 +39,7 @@ export function Body({ children, style, numberOfLines }) {
 export function Note({ children, style, numberOfLines }) {
   const c = useColors();
   return (
-    <Text numberOfLines={numberOfLines} style={[{ fontSize: 12, lineHeight: 18, color: c.ink2 }, style]}>
+    <Text numberOfLines={numberOfLines} style={[type.sub, { color: c.ink2 }, style]}>
       {children}
     </Text>
   );
@@ -40,16 +47,7 @@ export function Note({ children, style, numberOfLines }) {
 
 export function SectionTitle({ children, style }) {
   const c = useColors();
-  return (
-    <Text
-      style={[
-        { fontSize: 11.5, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', color: c.ink3 },
-        style,
-      ]}
-    >
-      {children}
-    </Text>
-  );
+  return <Text style={[type.label, { color: c.ink3 }, style]}>{children}</Text>;
 }
 
 /* ---------------- wadah ---------------- */
@@ -61,11 +59,11 @@ export function Card({ children, style }) {
       style={[
         {
           backgroundColor: c.surface,
-          borderRadius: 18,
+          borderRadius: radius.card,
           borderWidth: StyleSheet.hairlineWidth,
           borderColor: c.line,
-          padding: 15,
-          gap: 11,
+          padding: 16,
+          gap: 12,
         },
         cardShadow(c),
         style,
@@ -105,56 +103,80 @@ export function Rows({ children }) {
 }
 
 /**
- * Satu baris daftar: [jam] [ikon] [judul + keterangan] [ujung].
+ * Ubin ikon rounded-square. `tint`: sage (netral) | accent (obat/kontrol)
+ * atau warna latar & ikon yang ditentukan sendiri lewat `bg`/`color`.
+ */
+export function IconTile({ name, tint = 'sage', bg, color, size = 44 }) {
+  const c = useColors();
+  const latar = bg || (tint === 'accent' ? c.accentSoft : c.sageSoft);
+  const isi = color || (tint === 'accent' ? c.accent : c.accentInk);
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius.tile,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: latar,
+      }}
+    >
+      {typeof name === 'string' ? <Icon name={name} size={size * 0.45} color={isi} /> : name}
+    </View>
+  );
+}
+
+/**
+ * Satu baris daftar: [ubin ikon] [judul + keterangan] [jam] [ujung].
+ *
+ * Jam sengaja berada di sisi kanan bersama `end`, bukan di kiri seperti versi
+ * lama seluruh daftar di redesign menaruhnya di sana, dan kolom kiri yang
+ * kosong membuat judulnya tidak pernah sejajar antar kartu.
+ *
  * Kalau `onPress` diisi, seluruh baris jadi tombol.
  */
-export function Row({ time, icon, iconColor, iconBg, title, sub, end, onPress, children }) {
+export function Row({
+  time,
+  icon,
+  iconColor,
+  iconBg,
+  iconTint,
+  title,
+  badge,
+  sub,
+  end,
+  onPress,
+  children,
+}) {
   const c = useColors();
 
   const inner = (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 11 }}>
-      {time ? (
-        <Text
-          style={{
-            fontSize: 12.5,
-            fontWeight: '700',
-            color: c.ink2,
-            width: 42,
-            fontVariant: ['tabular-nums'],
-          }}
-        >
-          {time}
-        </Text>
-      ) : null}
-
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 12 }}>
       {icon ? (
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: iconBg || c.surface2,
-          }}
-        >
-          {typeof icon === 'string' ? (
-            <Icon name={icon} size={16} color={iconColor || c.ink2} />
-          ) : (
-            icon
-          )}
-        </View>
+        <IconTile name={icon} tint={iconTint} bg={iconBg} color={iconColor} />
       ) : null}
 
-      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
         {title != null ? (
-          <Text style={{ fontSize: 13.5, fontWeight: '600', color: c.ink }}>{title}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+            {/* flexShrink, bukan numberOfLines: judul panjang boleh mengecil
+                ruangnya, tapi lencana di sebelahnya tidak boleh ikut terdorong
+                keluar layar. */}
+            <Text style={[type.rowTitle, { color: c.ink, flexShrink: 1 }]}>{title}</Text>
+            {badge}
+          </View>
         ) : null}
         {sub != null ? <Note numberOfLines={3}>{sub}</Note> : null}
         {children}
       </View>
 
-      {end ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>{end}</View> : null}
+      {time || end ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {time ? <Text style={[type.rowTime, { color: c.accent }]}>{time}</Text> : null}
+          {end}
+        </View>
+      ) : null}
     </View>
   );
 
@@ -166,6 +188,22 @@ export function Row({ time, icon, iconColor, iconBg, title, sub, end, onPress, c
   );
 }
 
+/**
+ * Satu baris yang berdiri sebagai kartunya sendiri.
+ *
+ * Di redesign, daftar jadwal dan aktivitas tidak lagi berupa satu kartu berisi
+ * banyak baris berpemisah, melainkan tumpukan kartu terpisah. Padding kartunya
+ * dikecilkan supaya padding milik `Row` yang menentukan tinggi baris kalau
+ * keduanya dipakai penuh, barisnya jadi terlalu tinggi.
+ */
+export function RowCard({ style, ...rowProps }) {
+  return (
+    <Card style={[{ paddingVertical: 4, paddingHorizontal: 14, gap: 0 }, style]}>
+      <Row {...rowProps} />
+    </Card>
+  );
+}
+
 /* ---------------- lencana & status ---------------- */
 
 /** Lencana kecil. `tone`: neutral | good | warning | critical */
@@ -174,7 +212,7 @@ export function Pill({ children, tone = 'neutral', icon }) {
   const map = {
     neutral: [c.surface2, c.ink2, c.ink3],
     good: [c.goodSoft, c.good, c.good],
-    warning: [c.warningSoft, c.warning, c.warning],
+    warning: [c.warningSoft, c.warningInk, c.warning],
     critical: [c.criticalSoft, c.critical, c.critical],
   };
   const [bg, fg, dot] = map[tone] || map.neutral;
@@ -186,9 +224,9 @@ export function Pill({ children, tone = 'neutral', icon }) {
         alignItems: 'center',
         gap: 5,
         backgroundColor: bg,
-        paddingHorizontal: 9,
+        paddingHorizontal: 10,
         paddingVertical: 5,
-        borderRadius: 999,
+        borderRadius: radius.pill,
       }}
     >
       {icon ? (
@@ -196,7 +234,7 @@ export function Pill({ children, tone = 'neutral', icon }) {
       ) : (
         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dot }} />
       )}
-      <Text style={{ fontSize: 11.5, fontWeight: '650', color: fg }}>{children}</Text>
+      <Text style={[type.pill, { color: fg }]}>{children}</Text>
     </View>
   );
 }
@@ -220,20 +258,20 @@ export function StatusIcon({ status }) {
   return (
     <View
       style={{
-        width: 26,
-        height: 26,
-        borderRadius: 13,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: bg,
       }}
     >
-      <Icon name={name} size={13} color={fg} />
+      <Icon name={name} size={14} color={fg} />
     </View>
   );
 }
 
-export function Avatar({ name, size = 40, bg, fg }) {
+export function Avatar({ name, size = 44, bg, fg }) {
   const c = useColors();
   return (
     <View
@@ -243,12 +281,27 @@ export function Avatar({ name, size = 40, bg, fg }) {
         borderRadius: size / 2,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: bg || c.accentSoft,
+        backgroundColor: bg || c.sageSoft,
       }}
     >
-      <Text style={{ fontSize: size * 0.34, fontWeight: '700', color: fg || c.accentInk }}>
+      <Text style={{ fontFamily: type.cardTitle.fontFamily, fontSize: size * 0.34, color: fg || c.accentInk }}>
         {toInitials(name)}
       </Text>
+    </View>
+  );
+}
+
+/**
+ * Bilah kemajuan tipis di kaki kartu statistik. Selalu berpasangan dengan
+ * angkanya sendiri, jadi tidak ada informasi yang hanya ada di panjang bilah.
+ */
+export function ProgressBar({ value = 0, tone }) {
+  const c = useColors();
+  const lebar = Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
+
+  return (
+    <View style={{ height: 5, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
+      <View style={{ width: `${lebar * 100}%`, height: '100%', backgroundColor: tone || c.accent }} />
     </View>
   );
 }
@@ -278,9 +331,9 @@ export function Button({ label, icon, onPress, variant = 'primary', disabled, lo
           backgroundColor: bg,
           borderColor: border,
           borderWidth: StyleSheet.hairlineWidth,
-          paddingVertical: 13,
-          paddingHorizontal: 16,
-          borderRadius: 14,
+          paddingVertical: 15,
+          paddingHorizontal: 18,
+          borderRadius: radius.row,
           opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
         },
         style,
@@ -290,8 +343,8 @@ export function Button({ label, icon, onPress, variant = 'primary', disabled, lo
         <ActivityIndicator size="small" color={fg} />
       ) : (
         <>
-          {icon ? <Icon name={icon} size={17} color={fg} /> : null}
-          <Text style={{ fontSize: 14.5, fontWeight: '650', color: fg }}>{label}</Text>
+          {icon ? <Icon name={icon} size={18} color={fg} /> : null}
+          <Text style={[type.button, { color: fg }]}>{label}</Text>
         </>
       )}
     </Pressable>
@@ -303,7 +356,7 @@ export function LinkButton({ label, onPress }) {
   const c = useColors();
   return (
     <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-      <Text style={{ fontSize: 12.5, fontWeight: '650', color: c.accent }}>{label}</Text>
+      <Text style={[type.chip, { color: c.accent }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -317,9 +370,9 @@ export function Chip({ label, active, onPress, icon }) {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        paddingHorizontal: 13,
-        paddingVertical: 8,
-        borderRadius: 999,
+        paddingHorizontal: 15,
+        paddingVertical: 9,
+        borderRadius: radius.pill,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: active ? 'transparent' : c.line,
         backgroundColor: active ? c.accent : c.surface,
@@ -327,9 +380,7 @@ export function Chip({ label, active, onPress, icon }) {
       })}
     >
       {icon ? <Icon name={icon} size={14} color={active ? c.onAccent : c.ink2} /> : null}
-      <Text style={{ fontSize: 12.5, fontWeight: '650', color: active ? c.onAccent : c.ink2 }}>
-        {label}
-      </Text>
+      <Text style={[type.chip, { color: active ? c.onAccent : c.ink2 }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -371,7 +422,7 @@ export function Switch({ on, onPress, disabled }) {
 export function Empty({ children }) {
   const c = useColors();
   return (
-    <Text style={{ fontSize: 13, color: c.ink3, textAlign: 'center', paddingVertical: 16 }}>
+    <Text style={[type.sub, { color: c.ink3, textAlign: 'center', paddingVertical: 18 }]}>
       {children}
     </Text>
   );
@@ -390,21 +441,10 @@ export function Loading({ label = 'Memuat…' }) {
 export function ErrorState({ message, onRetry }) {
   const c = useColors();
   return (
-    <Card style={{ gap: 12 }}>
-      <View style={{ flexDirection: 'row', gap: 11, alignItems: 'flex-start' }}>
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: c.criticalSoft,
-          }}
-        >
-          <Icon name="alert" size={16} color={c.critical} />
-        </View>
-        <View style={{ flex: 1, gap: 3 }}>
+    <Card style={{ gap: 14 }}>
+      <View style={{ flexDirection: 'row', gap: 13, alignItems: 'flex-start' }}>
+        <IconTile name="alert" bg={c.criticalSoft} color={c.critical} size={40} />
+        <View style={{ flex: 1, gap: 4 }}>
           <Title>Gagal memuat data</Title>
           <Note>{message}</Note>
         </View>

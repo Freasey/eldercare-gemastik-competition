@@ -12,20 +12,20 @@ import {
   Body,
   Button,
   Card,
-  CardHead,
   Chip,
   Empty,
   ErrorState,
+  IconTile,
   Loading,
   Note,
-  Row,
-  Rows,
+  Pill,
+  RowCard,
+  SectionTitle,
   Switch,
   Title,
 } from '../components/ui.js';
 import { Field, Input, Sheet } from '../components/Sheet.js';
-import { Icon } from '../components/Icon.js';
-import { useColors } from '../theme/theme.js';
+import { font } from '../theme/theme.js';
 import { useElders } from '../context/ElderContext.js';
 import { useApi } from '../lib/useApi.js';
 import {
@@ -87,22 +87,22 @@ export function ScheduleScreen() {
 
         {schedules ? (
           <>
-            <Card>
-              <CardHead>
-                <Title>Jadwal berulang</Title>
+            <View style={{ gap: 10 }}>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <SectionTitle>Jadwal berulang</SectionTitle>
                 <Note>{list.length} jadwal aktif</Note>
-              </CardHead>
+              </View>
 
               {list.length ? (
-                <Rows>
-                  {list.map((s) => (
-                    <BarisJadwal key={s.id} schedule={s} onPress={() => setSheet({ schedule: s })} />
-                  ))}
-                </Rows>
+                list.map((s) => (
+                  <BarisJadwal key={s.id} schedule={s} onPress={() => setSheet({ schedule: s })} />
+                ))
               ) : (
-                <Empty>Belum ada jadwal untuk kategori ini.</Empty>
+                <Card><Empty>Belum ada jadwal untuk kategori ini.</Empty></Card>
               )}
-            </Card>
+            </View>
 
             <Button label="Tambah jadwal" icon="plus" onPress={() => setSheet({})} />
 
@@ -125,46 +125,36 @@ export function ScheduleScreen() {
 }
 
 function BarisJadwal({ schedule, onPress }) {
-  const c = useColors();
   const meta = scheduleMeta(schedule.type);
 
-  const sub = [
-    formatDays(schedule.days_of_week),
-    schedule.dosage,
-    schedule.is_critical ? 'penting' : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  // "penting" tidak lagi ikut di baris keterangan sudah punya lencananya
+  // sendiri di sebelah judul, dan menyebutnya dua kali cuma jadi ulangan.
+  const sub = [formatDays(schedule.days_of_week), schedule.dosage].filter(Boolean).join(' · ');
 
   return (
-    <Row
+    <RowCard
       time={jamDariTime(schedule.time_of_day)}
       icon={meta.icon}
+      iconTint={meta.tint}
       title={schedule.title}
+      badge={
+        schedule.is_critical ? (
+          <Pill tone="warning" icon="alert">
+            Penting
+          </Pill>
+        ) : null
+      }
       sub={sub}
-      end={<Icon name="chevron" size={16} color={c.ink3} />}
       onPress={onPress}
     />
   );
 }
 
 function CatatanSinkron({ elder }) {
-  const c = useColors();
   return (
     <Card>
-      <View style={{ flexDirection: 'row', gap: 11, alignItems: 'flex-start' }}>
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: c.accentSoft,
-          }}
-        >
-          <Icon name="sync" size={16} color={c.accentInk} />
-        </View>
+      <View style={{ flexDirection: 'row', gap: 13, alignItems: 'flex-start' }}>
+        <IconTile name="sync" tint="accent" size={40} />
         <View style={{ flex: 1, gap: 4 }}>
           <Title>Langsung tersinkron</Title>
           <Note>
@@ -364,7 +354,7 @@ function FormJadwal({ elderId, schedule, onClose, onSaved }) {
         }}
       >
         <View style={{ flex: 1, gap: 3 }}>
-          <Body style={{ fontWeight: '600' }}>Tandai penting</Body>
+          <Body style={{ fontFamily: font.semibold }}>Tandai penting</Body>
           <Note>Kalau terlewat, keluarga langsung diberi tahu.</Note>
         </View>
         <Switch on={critical} onPress={() => setCritical((v) => !v)} />

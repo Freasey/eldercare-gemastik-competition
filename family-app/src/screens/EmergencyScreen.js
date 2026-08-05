@@ -7,25 +7,24 @@
  * Tidak ada SMS/telepon pulsa di mana pun.
  */
 import { useCallback } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ScreenShell } from '../components/ScreenShell.js';
 import {
   Avatar,
+  Body,
   Button,
   Card,
-  CardHead,
   Empty,
   ErrorState,
   Loading,
   Note,
   Pill,
-  Row,
-  Rows,
-  Title,
+  RowCard,
+  SectionTitle,
 } from '../components/ui.js';
 import { Icon } from '../components/Icon.js';
-import { useColors } from '../theme/theme.js';
+import { type, useColors } from '../theme/theme.js';
 import { useElders } from '../context/ElderContext.js';
 import { useApi } from '../lib/useApi.js';
 import { fetchContacts, fetchEmergencies } from '../api/caretaker.js';
@@ -73,23 +72,40 @@ export function EmergencyScreen() {
 
       {data ? (
         <>
-          <Card style={{ alignItems: 'center', gap: 12 }}>
+          <Card style={{ alignItems: 'center', gap: 14, paddingVertical: 26 }}>
             <View
               style={{
-                width: 46,
-                height: 46,
-                borderRadius: 23,
+                width: 78,
+                height: 78,
+                borderRadius: 39,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: aktif.length ? c.criticalSoft : c.goodSoft,
               }}
             >
-              <Icon name={aktif.length ? 'siren' : 'shield'} size={22} color={aktif.length ? c.critical : c.good} />
+              <Icon
+                name={aktif.length ? 'siren' : 'shield'}
+                size={34}
+                color={aktif.length ? c.critical : c.good}
+              />
             </View>
 
-            <Title style={{ fontSize: 16, textAlign: 'center' }}>
-              {aktif.length ? 'Ada kejadian yang perlu ditangani' : 'Tidak ada kejadian darurat'}
-            </Title>
+            <View style={{ alignItems: 'center', gap: 5 }}>
+              {/* Satu kata keadaan, lalu kalimat penjelasnya. Warnanya bukan
+                  satu-satunya penanda kata "Aman"/"Perlu ditangani" dan ikon
+                  perisai/sirene di atas sudah membedakan keduanya. */}
+              <Text
+                style={[
+                  type.screenTitle,
+                  { fontSize: 22, color: aktif.length ? c.critical : c.good },
+                ]}
+              >
+                {aktif.length ? 'Perlu ditangani' : 'Aman'}
+              </Text>
+              <Body style={{ color: aktif.length ? c.critical : c.good, textAlign: 'center' }}>
+                {aktif.length ? 'Ada kejadian yang belum selesai' : 'Tidak ada kejadian darurat'}
+              </Body>
+            </View>
 
             <Note style={{ textAlign: 'center' }}>
               {aktif.length
@@ -112,73 +128,67 @@ export function EmergencyScreen() {
             ) : null}
           </Card>
 
-          <Card>
-            <CardHead>
-              <Title>Bagaimana alurnya</Title>
-            </CardHead>
-            <Rows>
-              {LANGKAH.map(([ic, judul, isi], i) => (
-                <Row
-                  key={judul}
-                  icon={ic}
-                  iconBg={c.accentSoft}
-                  iconColor={c.accentInk}
-                  title={`${i + 1}. ${judul}`}
-                  sub={isi}
-                />
-              ))}
-            </Rows>
-          </Card>
+          <View style={{ gap: 10 }}>
+            <SectionTitle>Alur penanganan darurat</SectionTitle>
+            {LANGKAH.map(([ic, judul, isi], i) => (
+              <RowCard
+                key={judul}
+                icon={ic}
+                iconTint="accent"
+                title={
+                  <>
+                    <Text style={{ color: c.accent }}>{i + 1}.</Text> {judul}
+                  </>
+                }
+                sub={isi}
+              />
+            ))}
+          </View>
 
-          <Card>
-            <CardHead>
-              <Title>Riwayat kejadian</Title>
-            </CardHead>
+          <View style={{ gap: 10 }}>
+            <SectionTitle>Riwayat kejadian</SectionTitle>
             {data.events.length ? (
-              <Rows>
-                {data.events.map((e) => {
-                  const st = EMERGENCY_STATUS[e.status] || EMERGENCY_STATUS.detected;
-                  return (
-                    <Row
-                      key={e.id}
-                      icon="siren"
-                      iconBg={c.criticalSoft}
-                      iconColor={c.critical}
-                      title={EMERGENCY_TITLES[e.trigger_type] || 'Kejadian darurat'}
-                      sub={`${tanggal(e.created_at)} ${jam(e.created_at)}`}
-                      end={<Pill tone={st.tone}>{st.label}</Pill>}
-                      onPress={() =>
-                        nav.navigate('KejadianDarurat', { elderId: elder.id, eventId: e.id })
-                      }
-                    />
-                  );
-                })}
-              </Rows>
-            ) : (
-              <Empty>Belum pernah ada kejadian darurat. Semoga tetap begitu.</Empty>
-            )}
-          </Card>
-
-          <Card>
-            <CardHead>
-              <Title>Kontak darurat</Title>
-            </CardHead>
-            {data.contacts.length ? (
-              <Rows>
-                {data.contacts.map((k) => (
-                  <Row
-                    key={k.id}
-                    icon={<Avatar name={k.name} size={32} />}
-                    title={k.name}
-                    sub={[k.relation, k.phone].filter(Boolean).join(' · ')}
-                    end={k.user_id ? <Pill tone="good">Dalam app</Pill> : null}
+              data.events.map((e) => {
+                const st = EMERGENCY_STATUS[e.status] || EMERGENCY_STATUS.detected;
+                return (
+                  <RowCard
+                    key={e.id}
+                    icon="siren"
+                    iconBg={c.criticalSoft}
+                    iconColor={c.critical}
+                    title={EMERGENCY_TITLES[e.trigger_type] || 'Kejadian darurat'}
+                    sub={`${tanggal(e.created_at)} ${jam(e.created_at)}`}
+                    end={<Pill tone={st.tone}>{st.label}</Pill>}
+                    onPress={() =>
+                      nav.navigate('KejadianDarurat', { elderId: elder.id, eventId: e.id })
+                    }
                   />
-                ))}
-              </Rows>
+                );
+              })
             ) : (
-              <Empty>Belum ada kontak darurat.</Empty>
+              <Card><Empty>Belum pernah ada kejadian darurat. Semoga tetap begitu.</Empty></Card>
             )}
-          </Card>
+          </View>
+
+          <View style={{ gap: 10 }}>
+            <SectionTitle>Kontak darurat</SectionTitle>
+            {data.contacts.length ? (
+              data.contacts.map((k) => (
+                <RowCard
+                  key={k.id}
+                  icon={<Avatar name={k.name} size={44} />}
+                  // Avatar sudah bulat dan punya latarnya sendiri; tanpa ini
+                  // sudut ubin persegi-membulat mengintip di belakangnya.
+                  iconBg="transparent"
+                  title={k.name}
+                  sub={[k.relation, k.phone].filter(Boolean).join(' · ')}
+                  end={k.user_id ? <Pill tone="good">Dalam app</Pill> : null}
+                />
+              ))
+            ) : (
+              <Card><Empty>Belum ada kontak darurat.</Empty></Card>
+            )}
+          </View>
 
           <Note style={{ textAlign: 'center' }}>
             Panggilan berjalan lewat internet di dalam aplikasi, jadi tidak memakai pulsa dan{' '}

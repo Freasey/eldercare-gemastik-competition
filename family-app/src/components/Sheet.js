@@ -13,7 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useColors } from '../theme/theme.js';
+import { font, useColors } from '../theme/theme.js';
 import { Note } from './ui.js';
 
 export function Sheet({ visible, onClose, title, lead, children }) {
@@ -52,7 +52,9 @@ export function Sheet({ visible, onClose, title, lead, children }) {
 
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 14 }}>
               <View style={{ gap: 5 }}>
-                <Text style={{ fontSize: 19, fontWeight: '700', color: c.ink }}>{title}</Text>
+                <Text style={{ fontFamily: font.extrabold, fontSize: 20, letterSpacing: -0.3, color: c.ink }}>
+                  {title}
+                </Text>
                 {lead ? <Note>{lead}</Note> : null}
               </View>
               {children}
@@ -69,7 +71,7 @@ export function Field({ label, hint, children, style }) {
   const c = useColors();
   return (
     <View style={[{ gap: 6 }, style]}>
-      <Text style={{ fontSize: 12.5, fontWeight: '650', color: c.ink2 }}>{label}</Text>
+      <Text style={{ fontFamily: font.semibold, fontSize: 13, color: c.ink2 }}>{label}</Text>
       {children}
       {hint ? <Note style={{ color: c.ink3 }}>{hint}</Note> : null}
     </View>

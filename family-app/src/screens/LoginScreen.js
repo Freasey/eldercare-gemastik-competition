@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon.js';
 import { Body, Button, Note } from '../components/ui.js';
 import { useAuth } from '../context/AuthContext.js';
-import { useColors } from '../theme/theme.js';
+import { font, useColors } from '../theme/theme.js';
 import { API_URL } from '../api/client.js';
 
 export function LoginScreen() {
@@ -50,7 +50,7 @@ export function LoginScreen() {
         </View>
 
         <View style={{ gap: 10 }}>
-          <Text style={{ fontSize: 30, fontWeight: '700', lineHeight: 38, color: c.ink }}>
+          <Text style={{ fontFamily: font.extrabold, fontSize: 31, lineHeight: 40, letterSpacing: -0.8, color: c.ink }}>
             Tetap dekat{'\n'}dengan orang tua
           </Text>
           <Body style={{ color: c.ink2 }}>

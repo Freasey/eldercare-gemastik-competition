@@ -15,12 +15,12 @@ import {
   Card,
   CardHead,
   ErrorState,
+  IconTile,
   Loading,
   Note,
   SectionTitle,
   Title,
 } from '../components/ui.js';
-import { Icon } from '../components/Icon.js';
 import { useColors } from '../theme/theme.js';
 import { useApi } from '../lib/useApi.js';
 import { fetchConversation } from '../api/caretaker.js';
@@ -74,19 +74,8 @@ export function TranscriptScreen() {
 
             {data.transcriptWithheld ? (
               <Card>
-                <View style={{ flexDirection: 'row', gap: 11, alignItems: 'flex-start' }}>
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 10,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: c.surface2,
-                    }}
-                  >
-                    <Icon name="lock" size={16} color={c.ink2} />
-                  </View>
+                <View style={{ flexDirection: 'row', gap: 13, alignItems: 'flex-start' }}>
+                  <IconTile name="lock" bg={c.surface2} color={c.ink2} size={40} />
                   <View style={{ flex: 1, gap: 4 }}>
                     <Title>Transkrip tidak dibagikan</Title>
                     <Note>

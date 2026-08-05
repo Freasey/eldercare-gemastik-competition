@@ -112,7 +112,7 @@ export function ProfileScreen({ navigation }) {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Avatar name={data.elder.name} size={46} />
               <View style={{ flex: 1, gap: 2 }}>
-                <Title style={{ fontSize: 16 }}>{data.elder.name}</Title>
+                <Title>{data.elder.name}</Title>
                 {data.elder.address ? <Note>{data.elder.address}</Note> : null}
                 {data.elder.phone ? <Note>{data.elder.phone}</Note> : null}
               </View>
@@ -191,7 +191,8 @@ export function ProfileScreen({ navigation }) {
             </CardHead>
             <Rows>
               <Row
-                icon={<Avatar name={user?.name} size={32} />}
+                icon={<Avatar name={user?.name} size={44} />}
+                iconBg="transparent"
                 title={user?.name}
                 sub={`${user?.email} · ${user?.role}`}
               />
@@ -221,6 +222,17 @@ export function ProfileScreen({ navigation }) {
                   end={<Icon name="chevron" size={16} color={c.ink3} />}
                 />
               ) : null}
+              {/* Satu-satunya jalan masuk ke layar Tambah lansia selama masih
+                  ada satu lansia. Deretan chip di kepala layar baru muncul
+                  kalau lansianya lebih dari satu, jadi tanpa baris ini profil
+                  kedua tidak akan pernah bisa dibuat. */}
+              <Row
+                icon="plus"
+                title="Tambah lansia"
+                sub="Pantau orang tua atau kerabat lain dari akun yang sama"
+                onPress={() => navigation.navigate('TambahLansia')}
+                end={<Icon name="chevron" size={16} color={c.ink3} />}
+              />
             </Rows>
           </Card>
 

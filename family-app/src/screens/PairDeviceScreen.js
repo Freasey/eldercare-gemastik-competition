@@ -27,7 +27,7 @@ import {
   SectionTitle,
   Title,
 } from '../components/ui.js';
-import { useColors } from '../theme/theme.js';
+import { font, useColors } from '../theme/theme.js';
 import { useElders } from '../context/ElderContext.js';
 import { createPairingCode, unpairElder } from '../api/caretaker.js';
 import { shortName } from '../lib/format.js';
@@ -188,8 +188,8 @@ export function PairDeviceScreen({ route, navigation }) {
                   <View style={{ alignItems: 'center', gap: 4 }}>
                     <Body
                       style={{
-                        fontSize: 30,
-                        fontWeight: '700',
+                        fontFamily: font.extrabold,
+                        fontSize: 32,
                         letterSpacing: 6,
                         color: kedaluwarsa ? c.ink3 : c.ink,
                       }}

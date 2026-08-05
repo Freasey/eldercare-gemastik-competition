@@ -21,7 +21,7 @@ import { PairDeviceScreen } from '../screens/PairDeviceScreen.js';
 
 import { Icon } from '../components/Icon.js';
 import { Loading } from '../components/ui.js';
-import { useColors, useIsDark } from '../theme/theme.js';
+import { font, useColors, useIsDark } from '../theme/theme.js';
 import { useAuth } from '../context/AuthContext.js';
 import { ElderProvider, useElders } from '../context/ElderContext.js';
 import { useNotificationRouting } from '../notifications/useNotificationRouting.js';
@@ -48,8 +48,14 @@ function Tabs() {
         headerShown: false,
         tabBarActiveTintColor: c.accent,
         tabBarInactiveTintColor: c.ink3,
-        tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.line },
-        tabBarLabelStyle: { fontSize: 10.5, fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: c.surface,
+          borderTopColor: c.line,
+          height: 68,
+          paddingTop: 8,
+          paddingBottom: 10,
+        },
+        tabBarLabelStyle: { fontFamily: font.semibold, fontSize: 11 },
       }}
     >
       {TABS.map(([name, Component, icon]) => (
@@ -58,7 +64,21 @@ function Tabs() {
           name={name}
           component={Component}
           options={{
-            tabBarIcon: ({ color }) => <Icon name={icon} size={21} color={color} />,
+            // Ikon tab aktif duduk di atas pil teal lembut. Warnanya bukan
+            // satu-satunya penanda tab aktif labelnya ikut berubah warna dan
+            // posisinya sendiri sudah menunjukkan di mana penggunanya berada.
+            tabBarIcon: ({ color, focused }) => (
+              <View
+                style={{
+                  paddingHorizontal: 17,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                  backgroundColor: focused ? c.accentSoft : 'transparent',
+                }}
+              >
+                <Icon name={icon} size={22} color={color} />
+              </View>
+            ),
             // Lencana di Beranda memakai jumlah red flag dari daftar lansia,
             // supaya kelihatan tanpa harus membuka tabnya dulu.
             tabBarBadge: name === 'Beranda' && flagCount ? flagCount : undefined,
@@ -121,7 +141,7 @@ export function RootNavigator() {
             screenOptions={{
               headerStyle: { backgroundColor: c.surface },
               headerTintColor: c.ink,
-              headerTitleStyle: { fontSize: 16, fontWeight: '700' },
+              headerTitleStyle: { fontFamily: font.bold, fontSize: 16 },
               contentStyle: { backgroundColor: c.backdrop },
             }}
           >

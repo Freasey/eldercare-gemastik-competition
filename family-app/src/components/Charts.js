@@ -10,7 +10,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Circle, G, Line, Path, Rect, Svg, Text as SvgText } from 'react-native-svg';
-import { useColors } from '../theme/theme.js';
+import { font, type, useColors } from '../theme/theme.js';
 import { Note } from './ui.js';
 import { MOOD_LABEL, tanggal, toDate } from '../lib/format.js';
 
@@ -27,14 +27,14 @@ function ChartShell({ children, legend, table }) {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 14 }}>
         {legend.map((l) => (
           <View key={l.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: l.color }} />
-            <Text style={{ fontSize: 11.5, color: c.ink2 }}>{l.label}</Text>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: l.color }} />
+            <Text style={[type.sub, { color: c.ink2 }]}>{l.label}</Text>
           </View>
         ))}
       </View>
 
       <Pressable onPress={() => setShowTable((v) => !v)} hitSlop={6}>
-        <Text style={{ fontSize: 12.5, fontWeight: '650', color: c.accent }}>
+        <Text style={[type.chip, { color: c.accent }]}>
           {showTable ? 'Sembunyikan tabel' : 'Lihat sebagai tabel'}
         </Text>
       </Pressable>
@@ -52,7 +52,7 @@ function DataTable({ head, rows }) {
         {head.map((h) => (
           <Text
             key={h}
-            style={{ flex: 1, padding: 8, fontSize: 11.5, fontWeight: '700', color: c.ink2 }}
+            style={{ flex: 1, padding: 9, fontFamily: font.bold, fontSize: 11.5, color: c.ink2 }}
           >
             {h}
           </Text>
@@ -68,7 +68,7 @@ function DataTable({ head, rows }) {
           }}
         >
           {r.map((cell, j) => (
-            <Text key={j} style={{ flex: 1, padding: 8, fontSize: 12, color: c.ink }}>
+            <Text key={j} style={{ flex: 1, padding: 9, fontFamily: font.regular, fontSize: 12.5, color: c.ink }}>
               {cell}
             </Text>
           ))}
@@ -93,7 +93,7 @@ function Tooltip({ text }) {
         borderRadius: 8,
       }}
     >
-      <Text style={{ color: c.surface, fontSize: 11.5 }}>{text}</Text>
+      <Text style={{ color: c.surface, fontFamily: font.medium, fontSize: 12 }}>{text}</Text>
     </View>
   );
 }
@@ -122,9 +122,11 @@ export function AdherenceChart({ data }) {
   return (
     <View onLayout={onLayout}>
       <ChartShell
+        // Kedua label menyebut BAGIAN batang, bukan sifat harinya batangnya
+        // sekarang bertumpuk, jadi satu hari bisa punya dua-duanya sekaligus.
         legend={[
-          { color: c.series1, label: 'Lengkap' },
-          { color: c.critical, label: 'Ada yang terlewat' },
+          { color: c.series1, label: 'Sudah diminum' },
+          { color: c.critical, label: 'Terlewat' },
         ]}
         table={{
           head: ['Tanggal', 'Diminum', 'Total'],
@@ -164,26 +166,52 @@ export function AdherenceChart({ data }) {
                     />
 
                     {data.map((d, i) => {
-                      const pct = d.total ? (d.taken / d.total) * 100 : 0;
-                      const h = Math.max(2, (pct / 100) * plotH);
+                      // Batang bertumpuk: seluruh tingginya adalah total dosis
+                      // hari itu, bagian bawah (teal) yang sudah diminum dan
+                      // bagian atas (merah) yang terlewat. Versi sebelumnya
+                      // memakai satu batang yang BERGANTI warna kalau ada yang
+                      // terlewat, jadi hari dengan 3 dari 4 dosis terlihat sama
+                      // merahnya dengan hari yang tidak minum sama sekali.
                       const x = padL + i * slot + (slot - barW) / 2;
-                      const y = padT + plotH - h;
+                      const yTop = padT;
                       const kurang = d.taken < d.total;
-                      const r = Math.min(4, h);
+                      const rasio = d.total ? d.taken / d.total : 0;
+                      const hDiminum = Math.max(d.taken > 0 ? 2 : 0, rasio * plotH);
+                      const hTerlewat = plotH - hDiminum;
+                      const r = Math.min(4, plotH);
                       const dd = toDate(d.date);
 
                       return (
                         <G key={d.date}>
-                          <Path
-                            d={
-                              `M${x} ${y + h} L${x} ${y + r} Q${x} ${y} ${x + r} ${y} ` +
-                              `L${x + barW - r} ${y} Q${x + barW} ${y} ${x + barW} ${y + r} ` +
-                              `L${x + barW} ${y + h} Z`
-                            }
-                            fill={kurang ? c.critical : c.series1}
-                          />
+                          {/* Bagian terlewat menempel di puncak, jadi sudut
+                              membulatnya ada di atas. */}
+                          {kurang && hTerlewat > 0 ? (
+                            <Path
+                              d={
+                                `M${x} ${yTop + hTerlewat} L${x} ${yTop + r} Q${x} ${yTop} ${x + r} ${yTop} ` +
+                                `L${x + barW - r} ${yTop} Q${x + barW} ${yTop} ${x + barW} ${yTop + r} ` +
+                                `L${x + barW} ${yTop + hTerlewat} Z`
+                              }
+                              fill={c.critical}
+                            />
+                          ) : null}
+
+                          {hDiminum > 0 ? (
+                            <Path
+                              d={
+                                kurang
+                                  ? `M${x} ${yTop + plotH} L${x} ${yTop + hTerlewat} ` +
+                                    `L${x + barW} ${yTop + hTerlewat} L${x + barW} ${yTop + plotH} Z`
+                                  : `M${x} ${yTop + plotH} L${x} ${yTop + r} Q${x} ${yTop} ${x + r} ${yTop} ` +
+                                    `L${x + barW - r} ${yTop} Q${x + barW} ${yTop} ${x + barW} ${yTop + r} ` +
+                                    `L${x + barW} ${yTop + plotH} Z`
+                              }
+                              fill={c.series1}
+                            />
+                          ) : null}
+
                           {kurang ? (
-                            <Circle cx={x + barW / 2} cy={y - 6} r={2.6} fill={c.critical} />
+                            <Circle cx={x + barW / 2} cy={yTop - 6} r={2.6} fill={c.critical} />
                           ) : null}
                           {data.length <= 7 || i % 2 === 0 ? (
                             <SvgText
@@ -344,8 +372,8 @@ export function MoodChart({ data }) {
 export function ChartHero({ value, note }) {
   const c = useColors();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-      <Text style={{ fontSize: 27, fontWeight: '700', color: c.ink }}>{value}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
+      <Text style={[type.statNumber, { color: c.accent }]}>{value}</Text>
       <Note style={{ flex: 1 }}>{note}</Note>
     </View>
   );
