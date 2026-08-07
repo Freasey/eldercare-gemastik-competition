@@ -40,9 +40,29 @@ const light = {
   ink2: '#686c74',           // oklch(53% .014 265)
   ink3: '#9a9ea6',
 
-  accent: '#37858e',         // oklch(57.3% .077 205.6)  teal utama
-  accentInk: '#05585f',      // oklch(42% .07 205)       teal gelap untuk teks
-  accentSoft: '#daf2f3',     // oklch(94.5% .025 200)
+  /**
+   * Teal-nya SENGAJA tidak ikut prototipe.
+   *
+   * Prototipe memakai `#37858e`, tapi teks putih di atasnya cuma 4,28:1
+   * gagal WCAG AA untuk teks ukuran normal, dan label tombol di app ini
+   * semuanya 15px. Yang dipertahankan adalah `#0e7c6b`, warna yang sudah
+   * dipakai branding (splash, ikon notifikasi) dan oleh app lansia
+   * (`elder-app/src/theme.js`, yang komentarnya menyebut kesamaan itu
+   * disengaja). Karakter redesign datang dari latar krem, huruf besar, dan
+   * kartu-per-baris bukan dari teal-nya.
+   *
+   * DUA token, dan bedanya bukan selera:
+   * - `accent`    isian: tombol, bilah, batang grafik, ubin ikon.
+   * - `accentInk` semua teks teal di atas latar terang: jam baris, tautan,
+   *   label tab aktif, angka besar grafik.
+   *
+   * Memakai `accent` untuk teks adalah kesalahan yang mudah terulang: di
+   * monitor terang warnanya terlihat cukup gelap, dan angkanya baru ketahuan
+   * salah saat benar-benar diukur.
+   */
+  accent: '#0e7c6b',
+  accentInk: '#0a5f52',
+  accentSoft: '#e2f1ee',
   onAccent: '#ffffff',
 
   // Hijau sage dipakai sebagai latar ubin ikon, memberi variasi tanpa
@@ -62,7 +82,7 @@ const light = {
   critical: '#d02121',       // oklch(55.2% .208 27.5)
   criticalSoft: '#ffecea',   // oklch(95.8% .022 25)
 
-  series1: '#37858e',
+  series1: '#0e7c6b',
   grid: '#ece9e2',
   axis: '#d6d2c8',
 
@@ -87,10 +107,10 @@ const dark = {
   ink2: '#a9a49a',
   ink3: '#7d7970',
 
-  accent: '#5cb3bd',
-  accentInk: '#8ed3da',
-  accentSoft: '#17383c',
-  onAccent: '#08211f',
+  accent: '#3fbfa8',
+  accentInk: '#6fd6c3',
+  accentSoft: '#10302b',
+  onAccent: '#08201c',
 
   sage: '#4e7d66',
   sageSoft: '#1c3329',
@@ -105,7 +125,7 @@ const dark = {
   critical: '#e56a6a',
   criticalSoft: '#3a1a1a',
 
-  series1: '#5cb3bd',
+  series1: '#3fbfa8',
   grid: '#2b2822',
   axis: '#3d3931',
 

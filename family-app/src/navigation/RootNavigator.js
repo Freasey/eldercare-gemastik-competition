@@ -46,7 +46,9 @@ function Tabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: c.accent,
+        // accentInk, bukan accent: label tab cuma 11px, jadi tunduk pada ambang
+        // teks normal (4,5:1) bukan ambang teks besar.
+        tabBarActiveTintColor: c.accentInk,
         tabBarInactiveTintColor: c.ink3,
         tabBarStyle: {
           backgroundColor: c.surface,

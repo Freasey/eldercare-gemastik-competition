@@ -34,7 +34,7 @@ function ChartShell({ children, legend, table }) {
       </View>
 
       <Pressable onPress={() => setShowTable((v) => !v)} hitSlop={6}>
-        <Text style={[type.chip, { color: c.accent }]}>
+        <Text style={[type.chip, { color: c.accentInk }]}>
           {showTable ? 'Sembunyikan tabel' : 'Lihat sebagai tabel'}
         </Text>
       </Pressable>
@@ -373,7 +373,7 @@ export function ChartHero({ value, note }) {
   const c = useColors();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
-      <Text style={[type.statNumber, { color: c.accent }]}>{value}</Text>
+      <Text style={[type.statNumber, { color: c.accentInk }]}>{value}</Text>
       <Note style={{ flex: 1 }}>{note}</Note>
     </View>
   );

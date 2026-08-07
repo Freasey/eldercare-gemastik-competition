@@ -173,7 +173,7 @@ export function Row({
 
       {time || end ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {time ? <Text style={[type.rowTime, { color: c.accent }]}>{time}</Text> : null}
+          {time ? <Text style={[type.rowTime, { color: c.accentInk }]}>{time}</Text> : null}
           {end}
         </View>
       ) : null}
@@ -356,7 +356,7 @@ export function LinkButton({ label, onPress }) {
   const c = useColors();
   return (
     <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-      <Text style={[type.chip, { color: c.accent }]}>{label}</Text>
+      <Text style={[type.chip, { color: c.accentInk }]}>{label}</Text>
     </Pressable>
   );
 }
